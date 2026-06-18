@@ -1,0 +1,6 @@
+{
+  "name": "Enterprise RFID Attendance",
+  "description": "Enterprise RFID Attendance Management System for multi-campus educational organizations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
