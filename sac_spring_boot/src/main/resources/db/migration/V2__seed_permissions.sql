@@ -1,0 +1,20 @@
+-- Core Permission Data Seeds
+INSERT INTO `permissions` (`id`, `name`, `route`, `parent_id`, `type`, `status`) VALUES 
+(1, 'Dashboard', 'dashboard', 0, 1, 1),
+(2, 'Academics', 'academics', 0, 1, 1),
+(3, 'Class List', 'class', 2, 2, 1),
+(4, 'Section List', 'section', 2, 2, 1),
+(5, 'Subject List', 'subject', 2, 2, 1),
+(6, 'Assign Subject', 'assign_subject', 2, 2, 1),
+(7, 'Student Info', 'student_info', 0, 1, 1),
+(8, 'Student List', 'student_list', 7, 2, 1),
+(9, 'Student Admission', 'student_admission', 7, 2, 1),
+(10, 'Student Promotion', 'student_promote', 7, 2, 1),
+(11, 'Human Resource', 'human_resource', 0, 1, 1),
+(12, 'Staff Directory', 'staff_directory', 11, 2, 1),
+(13, 'Staff Attendance', 'staff_attendance', 11, 2, 1),
+(14, 'Payroll', 'payroll', 11, 2, 1),
+(15, 'Student Attendance', 'student_attendance', 7, 2, 1),
+(16, 'Leave Management', 'leave', 0, 1, 1),
+(17, 'Apply Leave', 'apply-leave', 16, 2, 1),
+(18, 'Approve Leave Request', 'approve-leave', 16, 2, 1);

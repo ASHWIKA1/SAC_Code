@@ -1,0 +1,8 @@
+Tables_in_u841409365_erpv0 (%permission%)
+assign_permissions
+infix_permission_assigns
+permission_sections
+permissions
+sm_module_permission_assigns
+sm_module_permissions
+sm_role_permissions

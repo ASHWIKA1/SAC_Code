@@ -1,0 +1,21 @@
+PassengerAppRoot /home/u841409365/domains/test1-technosprint.online/public_html/test-sacgotek
+PassengerAppType node
+PassengerNodejs /home/u841409365/.nvm/versions/node/v24.12.0/bin/node
+PassengerStartupFile server-test-sacgotek.js
+PassengerRestartDir /home/u841409365/domains/test1-technosprint.online/public_html/test-sacgotek/tmp
+SetEnv NODE_ENV production
+
+# Apache Fallback in case Passenger is not running
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Disable caching for proxy resources if necessary
+<IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+</IfModule>
