@@ -28,3 +28,5 @@ deploy.zip
 bugfix.zip
 vendor_temp.tar.gz
 *.zip
+database_dumps/
+logs_and_diagnostics/
