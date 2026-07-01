@@ -1571,3 +1571,27 @@ export function FrontNoticesPage() { return <SimpleFrontCmsPage title="Front Web
 export function FrontGalleryPage() { return <SimpleFrontCmsPage title="Media & Image Gallery Manager" />; }
 export function FrontSlidersPage() { return <SimpleFrontCmsPage title="Home Banner Sliders Manager" />; }
 export function FrontTestimonialsPage() { return <SimpleFrontCmsPage title="Student / Parent Testimonials CMS" />; }
+
+
+// Generated from table behaviour_record_settings
+export function BehaviorSettingPage() {
+  return <GenericCrudPage
+    title="Behaviour Record Settings"
+    breadcrumbs={[{ label: 'Behavior' }, { label: 'Behaviour Record Settings' }]}
+    apiPath="/api/v1/behavior/behaviorsetting"
+    addLabel="Add Behaviour Record Settings"
+    columns={[
+      { label: 'Student Comment', key: 'studentComment' },
+      { label: 'Parent Comment', key: 'parentComment' },
+      { label: 'Student View', key: 'studentView' },
+      { label: 'Parent View', key: 'parentView' }
+    ]}
+    formFields={[
+      { key: 'studentComment', label: 'Student Comment', type: 'number', placeholder: 'Enter student comment' },
+      { key: 'parentComment', label: 'Parent Comment', type: 'number', placeholder: 'Enter parent comment' },
+      { key: 'studentView', label: 'Student View', type: 'number', placeholder: 'Enter student view' },
+      { key: 'parentView', label: 'Parent View', type: 'number', placeholder: 'Enter parent view' }
+    ]}
+    mockData={[]}
+  />;
+}

@@ -121,7 +121,8 @@ import {
   FrontNoticesPage,
   FrontGalleryPage,
   FrontSlidersPage,
-  FrontTestimonialsPage
+  FrontTestimonialsPage,
+  BehaviorSettingPage
 } from './pages/modules/AllModules';
 
 // Fallback placeholder component
@@ -321,6 +322,7 @@ export default function App() {
           <Route path="settings/social" element={<SocialMediaPage />} />
           <Route path="settings/maintenance" element={<MaintenancePage />} />
           <Route path="settings/backup" element={<BackupPage />} />
+          <Route path="settings/behavior" element={<BehaviorSettingPage />} />
 
           {/* Roles & Permissions */}
           <Route path="roles" element={<RolesPage />} />

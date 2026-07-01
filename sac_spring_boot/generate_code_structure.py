@@ -1,5 +1,7 @@
 import re
 import os
+import sys
+import argparse
 
 sql_filepath = r"c:\Users\ashwi\Downloads\SAC_Php\sac_spring_boot\src\main\resources\db\migration\V8__custom_modules_schema.sql"
 java_base_dir = r"c:\Users\ashwi\Downloads\SAC_Php\sac_spring_boot\src\main\java\com\sac\erp\modules"
@@ -20,6 +22,45 @@ def snake_to_camel(snake_str):
     components = snake_str.split('_')
     return components[0] + ''.join(x.title() for x in components[1:])
 
+def infer_module_and_class(table_name):
+    clean_name = table_name
+    if clean_name.startswith('sm_'):
+        clean_name = clean_name[3:]
+    elif clean_name.startswith('front_'):
+        clean_name = clean_name[6:]
+        
+    parts = clean_name.split('_')
+    
+    def singularize(word):
+        if word.endswith('ies'):
+            return word[:-3] + 'y'
+        elif word.endswith('es') and not word.endswith('ees'):
+            return word[:-2]
+        elif word.endswith('s') and not word.endswith('ss'):
+            return word[:-1]
+        return word
+        
+    first_part = parts[0]
+    if first_part in ['canteen', 'chat', 'jitsi', 'timetable', 'behaviour', 'leave', 'payroll']:
+        if first_part == 'behaviour':
+            module = 'behavior'
+        else:
+            module = first_part
+        remaining_parts = parts[1:]
+    else:
+        module = first_part
+        remaining_parts = parts[1:] if len(parts) > 1 else parts
+        
+    if first_part == 'behaviour':
+        singular_parts = ['Behavior'] + [singularize(p).capitalize() for p in remaining_parts]
+    elif first_part in ['canteen', 'chat', 'jitsi', 'timetable']:
+        singular_parts = [first_part.capitalize()] + [singularize(p).capitalize() for p in remaining_parts]
+    else:
+        singular_parts = [singularize(p).capitalize() for p in parts]
+        
+    class_name = ''.join(singular_parts)
+    return module, class_name
+
 def clean_type(db_type):
     db_type = db_type.lower()
     if 'int' in db_type:
@@ -34,17 +75,18 @@ def clean_type(db_type):
         return 'double'
     return 'varchar'
 
-def parse_sql(filepath):
+def parse_sql(filepath, target_table=None, all_tables=False):
     with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
         content = f.read()
     
-    # We want to match CREATE TABLE `name` (columns)
     tables = {}
-    pattern = re.compile(r'CREATE TABLE\s+`([^`]+)`\s*\((.*?)\n\)\s*(?:ENGINE|DEFAULT CHARSET|COLLATE|AUTO_INCREMENT|;)', re.DOTALL | re.IGNORECASE)
+    pattern = re.compile(r'CREATE TABLE\s+(?:IF NOT EXISTS\s+)?`([^`]+)`\s*\((.*?)\n\)\s*(?:ENGINE|DEFAULT CHARSET|COLLATE|AUTO_INCREMENT|;)', re.DOTALL | re.IGNORECASE)
     
     for match in pattern.finditer(content):
         table_name = match.group(1)
-        if table_name not in singular_map:
+        if not all_tables and target_table is not None and table_name != target_table:
+            continue
+        if not all_tables and target_table is None and table_name not in singular_map:
             continue
             
         columns_text = match.group(2)
@@ -60,10 +102,15 @@ def parse_sql(filepath):
         
     return tables
 
-def generate_java_files(tables):
+def generate_java_files(tables, override_module=None, override_class=None):
     for table_name, columns in tables.items():
-        module = module_map[table_name]
-        class_name = singular_map[table_name]
+        module = override_module if override_module else module_map.get(table_name)
+        if not module:
+            module, _ = infer_module_and_class(table_name)
+            
+        class_name = override_class if override_class else singular_map.get(table_name)
+        if not class_name:
+            _, class_name = infer_module_and_class(table_name)
         
         # Prepare folders
         entity_dir = os.path.join(java_base_dir, module, "entity")
@@ -284,6 +331,27 @@ def generate_java_files(tables):
     print("All Java files generated successfully!")
 
 if __name__ == "__main__":
-    tables = parse_sql(sql_filepath)
+    parser = argparse.ArgumentParser(description="Generate Spring Boot code from SQL migrations.")
+    parser.add_argument("--sql", default=sql_filepath, help="Path to SQL file")
+    parser.add_argument("--table", help="Specific table name to generate code for")
+    parser.add_argument("--module", help="Override module name")
+    parser.add_argument("--class-name", help="Override class name")
+    parser.add_argument("--all", action="store_true", help="Generate all tables found in the SQL file")
+    
+    args = parser.parse_args()
+    
+    sql_file = os.path.abspath(args.sql)
+    if not os.path.exists(sql_file):
+        print(f"Error: SQL file not found at {sql_file}")
+        sys.exit(1)
+        
+    tables = parse_sql(sql_file, target_table=args.table, all_tables=args.all)
+    if not tables:
+        if args.table:
+            print(f"Error: Table '{args.table}' not found in {sql_file}")
+        else:
+            print(f"No tables resolved for generation in {sql_file}")
+        sys.exit(1)
+        
     print(f"Parsed {len(tables)} target tables from SQL file.")
-    generate_java_files(tables)
+    generate_java_files(tables, override_module=args.module, override_class=args.class_name)

@@ -74,6 +74,7 @@ com\sac\erp\modules\finance\controller\ExpenseHeadController.class
 com\sac\erp\modules\transport\repository\AssignVehicleRepository.class
 com\sac\erp\modules\whatsapp\repository\WhatsappSettingRepository.class
 com\sac\erp\modules\finance\entity\Income.class
+com\sac\erp\modules\behavior\service\BehaviorSettingService.class
 com\sac\erp\modules\hr\repository\LeaveDefineRepository.class
 com\sac\erp\modules\chat\entity\ChatGroupMessageRemove.class
 com\sac\erp\modules\jitsi\repository\JitsiSettingRepository.class
@@ -157,6 +158,7 @@ com\sac\erp\modules\finance\entity\BankAccount.class
 com\sac\erp\modules\fees\service\FeesServiceImpl.class
 com\sac\erp\entity\Permission.class
 com\sac\erp\tenant\TenantIdentifierResolver.class
+com\sac\erp\modules\behavior\service\BehaviorSettingServiceImpl.class
 com\sac\erp\modules\cms\service\NewsCategoryService.class
 com\sac\erp\modules\library\repository\BookBankRepository.class
 com\sac\erp\modules\timetable\entity\TimetableTeacherConstraint.class
@@ -470,6 +472,7 @@ com\sac\erp\modules\exam\repository\ExamTypeRepository.class
 com\sac\erp\modules\fees\service\FeesAssignServiceImpl.class
 com\sac\erp\modules\zoom\repository\ZoomSettingRepository.class
 com\sac\erp\modules\cms\entity\Event.class
+com\sac\erp\modules\behavior\controller\BehaviorSettingController.class
 com\sac\erp\modules\library\service\BookCategoryService.class
 com\sac\erp\modules\cms\controller\CoursePageController.class
 com\sac\erp\modules\cms\service\AboutPageServiceImpl.class

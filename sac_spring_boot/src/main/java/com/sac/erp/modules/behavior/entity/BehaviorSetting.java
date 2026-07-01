@@ -4,6 +4,7 @@ import com.sac.erp.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
 @Getter
 @Setter
 @Entity
@@ -15,16 +16,17 @@ public class BehaviorSetting extends BaseEntity {
     private Long id;
 
     @Column(name = "student_comment")
-    private Integer studentComment = 0;
+    private Integer studentComment;
 
     @Column(name = "parent_comment")
-    private Integer parentComment = 0;
+    private Integer parentComment;
 
     @Column(name = "student_view")
-    private Integer studentView = 0;
+    private Integer studentView;
 
     @Column(name = "parent_view")
-    private Integer parentView = 0;
+    private Integer parentView;
+
     @Column(name = "school_id")
     private String schoolId;
 }
