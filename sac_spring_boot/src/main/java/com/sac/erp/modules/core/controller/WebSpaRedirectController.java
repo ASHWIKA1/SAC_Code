@@ -1,4 +1,4 @@
-package com.sac.erp.controller;
+package com.sac.erp.modules.core.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;

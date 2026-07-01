@@ -1,10 +1,10 @@
-package com.sac.erp.controller;
+package com.sac.erp.modules.core.controller;
 
-import com.sac.erp.entity.Language;
-import com.sac.erp.entity.TwoFactorSetting;
+import com.sac.erp.modules.core.entity.Language;
+import com.sac.erp.modules.core.entity.TwoFactorSetting;
 import com.sac.erp.modules.finance.entity.Transcation;
-import com.sac.erp.repository.LanguageRepository;
-import com.sac.erp.repository.TwoFactorSettingRepository;
+import com.sac.erp.modules.core.repository.LanguageRepository;
+import com.sac.erp.modules.core.repository.TwoFactorSettingRepository;
 import com.sac.erp.modules.finance.repository.TranscationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

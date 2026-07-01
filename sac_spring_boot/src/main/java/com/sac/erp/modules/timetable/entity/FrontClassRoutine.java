@@ -1,6 +1,6 @@
 package com.sac.erp.modules.timetable.entity;
 
-import com.sac.erp.entity.BaseEntity;
+import com.sac.erp.modules.core.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

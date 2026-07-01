@@ -1,16 +1,16 @@
 package com.sac.erp.modules.permission.service;
 
-import com.sac.erp.entity.AssignPermission;
-import com.sac.erp.entity.Menu;
-import com.sac.erp.entity.Permission;
-import com.sac.erp.entity.User;
+import com.sac.erp.modules.core.entity.AssignPermission;
+import com.sac.erp.modules.core.entity.Menu;
+import com.sac.erp.modules.core.entity.Permission;
+import com.sac.erp.modules.core.entity.User;
 import com.sac.erp.modules.permission.dto.MenuDto;
 import com.sac.erp.modules.superadmin.entity.SuperAdmin;
 import com.sac.erp.modules.superadmin.repository.SuperAdminRepository;
-import com.sac.erp.repository.AssignPermissionRepository;
-import com.sac.erp.repository.MenuRepository;
-import com.sac.erp.repository.PermissionRepository;
-import com.sac.erp.repository.UserRepository;
+import com.sac.erp.modules.core.repository.AssignPermissionRepository;
+import com.sac.erp.modules.core.repository.MenuRepository;
+import com.sac.erp.modules.core.repository.PermissionRepository;
+import com.sac.erp.modules.core.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

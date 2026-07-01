@@ -1,4 +1,4 @@
-package com.sac.erp.dto;
+package com.sac.erp.modules.core.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

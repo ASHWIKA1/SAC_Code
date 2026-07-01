@@ -1,6 +1,6 @@
-package com.sac.erp.repository;
+package com.sac.erp.modules.core.repository;
 
-import com.sac.erp.entity.AssignPermission;
+import com.sac.erp.modules.core.entity.AssignPermission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,6 +1,6 @@
 package com.sac.erp.modules.academic.entity;
 
-import com.sac.erp.entity.BaseEntity;
+import com.sac.erp.modules.core.entity.BaseEntity;
 import com.sac.erp.modules.hr.entity.Staff;
 import jakarta.persistence.*;
 import lombok.Getter;

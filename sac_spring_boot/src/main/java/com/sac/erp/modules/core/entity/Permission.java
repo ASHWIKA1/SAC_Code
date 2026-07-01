@@ -1,4 +1,4 @@
-package com.sac.erp.entity;
+package com.sac.erp.modules.core.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

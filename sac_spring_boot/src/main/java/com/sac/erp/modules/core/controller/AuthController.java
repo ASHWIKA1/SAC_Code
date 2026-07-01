@@ -1,11 +1,11 @@
-package com.sac.erp.controller;
+package com.sac.erp.modules.core.controller;
 
-import com.sac.erp.dto.AuthResponse;
-import com.sac.erp.dto.LoginRequest;
-import com.sac.erp.entity.User;
+import com.sac.erp.modules.core.dto.AuthResponse;
+import com.sac.erp.modules.core.dto.LoginRequest;
+import com.sac.erp.modules.core.entity.User;
 import com.sac.erp.modules.superadmin.entity.SuperAdmin;
 import com.sac.erp.modules.superadmin.repository.SuperAdminRepository;
-import com.sac.erp.repository.UserRepository;
+import com.sac.erp.modules.core.repository.UserRepository;
 import com.sac.erp.security.JwtUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

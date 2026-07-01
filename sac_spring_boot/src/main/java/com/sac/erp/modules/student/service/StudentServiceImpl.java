@@ -1,6 +1,6 @@
 package com.sac.erp.modules.student.service;
 
-import com.sac.erp.entity.User;
+import com.sac.erp.modules.core.entity.User;
 import com.sac.erp.modules.academic.entity.ClassRecord;
 import com.sac.erp.modules.academic.entity.Section;
 import com.sac.erp.modules.academic.repository.ClassRecordRepository;
@@ -12,7 +12,7 @@ import com.sac.erp.modules.student.entity.StudentRecord;
 import com.sac.erp.modules.student.repository.ParentRepository;
 import com.sac.erp.modules.student.repository.StudentRepository;
 import com.sac.erp.modules.student.repository.StudentRecordRepository;
-import com.sac.erp.repository.UserRepository;
+import com.sac.erp.modules.core.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;

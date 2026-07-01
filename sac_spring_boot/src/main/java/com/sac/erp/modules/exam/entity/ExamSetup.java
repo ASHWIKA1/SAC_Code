@@ -1,6 +1,6 @@
 package com.sac.erp.modules.exam.entity;
 
-import com.sac.erp.entity.BaseEntity;
+import com.sac.erp.modules.core.entity.BaseEntity;
 import com.sac.erp.modules.academic.entity.ClassRecord;
 import com.sac.erp.modules.academic.entity.Section;
 import com.sac.erp.modules.academic.entity.Subject;

@@ -1,6 +1,6 @@
 package com.sac.erp.modules.hr.service;
 
-import com.sac.erp.entity.User;
+import com.sac.erp.modules.core.entity.User;
 import com.sac.erp.modules.hr.entity.LeaveDefine;
 import com.sac.erp.modules.hr.entity.LeaveRequest;
 import com.sac.erp.modules.hr.entity.LeaveType;
@@ -11,7 +11,7 @@ import com.sac.erp.modules.hr.repository.LeaveRequestRepository;
 import com.sac.erp.modules.hr.repository.LeaveTypeRepository;
 import com.sac.erp.modules.hr.repository.PayrollGenerateRepository;
 import com.sac.erp.modules.hr.repository.StaffRepository;
-import com.sac.erp.repository.UserRepository;
+import com.sac.erp.modules.core.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

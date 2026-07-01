@@ -1,7 +1,7 @@
 package com.sac.erp.modules.hr.entity;
 
-import com.sac.erp.entity.BaseEntity;
-import com.sac.erp.entity.User;
+import com.sac.erp.modules.core.entity.BaseEntity;
+import com.sac.erp.modules.core.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

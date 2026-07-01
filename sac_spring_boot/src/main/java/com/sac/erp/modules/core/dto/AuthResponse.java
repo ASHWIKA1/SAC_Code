@@ -1,4 +1,4 @@
-package com.sac.erp.dto;
+package com.sac.erp.modules.core.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

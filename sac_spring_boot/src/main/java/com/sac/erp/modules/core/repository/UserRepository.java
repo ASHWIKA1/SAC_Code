@@ -1,6 +1,6 @@
-package com.sac.erp.repository;
+package com.sac.erp.modules.core.repository;
 
-import com.sac.erp.entity.User;
+import com.sac.erp.modules.core.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

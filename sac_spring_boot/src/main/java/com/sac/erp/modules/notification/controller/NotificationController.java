@@ -2,8 +2,8 @@ package com.sac.erp.modules.notification.controller;
 
 import com.sac.erp.modules.notification.entity.Notification;
 import com.sac.erp.modules.notification.service.NotificationService;
-import com.sac.erp.repository.UserRepository;
-import com.sac.erp.entity.User;
+import com.sac.erp.modules.core.repository.UserRepository;
+import com.sac.erp.modules.core.entity.User;
 import com.sac.erp.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
