@@ -19,8 +19,18 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('/api/stats').then(res => res.json()).then(setStats);
-    fetch('/api/attendance/logs').then(res => res.json()).then(setLogs);
+    let queryParams = '';
+    try {
+      const userObj = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      if (userObj.role === 'Super Admin' && userObj.institutionId) {
+        queryParams = `?institutionId=${userObj.institutionId}`;
+      } else if (userObj.role === 'Admin' && userObj.branchId) {
+        queryParams = `?branchId=${userObj.branchId}`;
+      }
+    } catch(e) {}
+
+    fetch(`/api/stats${queryParams}`).then(res => res.json()).then(setStats);
+    fetch(`/api/attendance/logs${queryParams}`).then(res => res.json()).then(setLogs);
   }, []);
 
   if (!stats) return <div className="animate-pulse space-y-4 pt-12 max-w-7xl mx-auto"><div className="h-32 bg-slate-200 rounded-2xl"></div></div>;
@@ -127,16 +137,21 @@ export default function Dashboard() {
                   );
                 }
 
-                const initials = log.student.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2);
+                const studentName = log.student.name || log.student.Name || log.student['Student Name'] || 'Unknown Student';
+                const initials = typeof studentName === 'string' && studentName.trim() ? studentName.trim().split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'U';
+                const dept = log.student.department || log.student.Class || log.student.Department || '';
+                const year = log.student.year || log.student.Sec || log.student.Year || '';
                 
                 return (
                   <div key={log.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-indigo-50 border-2 border-white shadow-sm flex flex-shrink-0 items-center justify-center text-indigo-500 font-bold text-xs">
+                    <div className="w-10 h-10 rounded-full bg-indigo-50 border-2 border-white shadow-sm flex flex-shrink-0 items-center justify-center text-indigo-500 font-bold text-xs uppercase">
                       {initials}
                     </div>
                     <div className="flex-1 overflow-hidden">
-                      <p className="text-xs font-bold text-slate-900 truncate">{log.student.name}</p>
-                      <p className="text-[10px] text-slate-400 truncate">{log.student.department} • Yr {log.student.year}</p>
+                      <p className="text-xs font-bold text-slate-900 truncate">{studentName}</p>
+                      <p className="text-[10px] text-slate-400 truncate">
+                        {dept} {year && `• ${year}`}
+                      </p>
                     </div>
                     <p className={`text-[10px] font-mono font-bold whitespace-nowrap ${isLate ? 'text-amber-500' : 'text-emerald-500'}`}>
                       {new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}

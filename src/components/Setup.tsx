@@ -119,30 +119,57 @@ export default function Setup() {
 function AdminManager() {
   const [admins, setAdmins] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'Super Admin' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'Super Admin', institutionId: '', branchId: '', kioskType: 'Student' });
+  const [institutions, setInstitutions] = useState<any[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const fetchAdmins = async () => {
-    const res = await fetch('/api/admins');
+    let queryParams = '';
+    try {
+      const userObj = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      setCurrentUser(userObj);
+      if (userObj.role === 'Super Admin' && userObj.institutionId) {
+        queryParams = `?institutionId=${userObj.institutionId}`;
+      } else if (userObj.role === 'Admin' && userObj.branchId) {
+        queryParams = `?branchId=${userObj.branchId}`;
+      }
+    } catch(e) {}
+
+    const res = await fetch(`/api/admins${queryParams}`);
     const data = await res.json();
     setAdmins(data);
   };
 
   useEffect(() => {
     fetchAdmins();
+    fetch('/api/institutions').then(res => res.json()).then(setInstitutions);
   }, []);
+
+  useEffect(() => {
+    if (currentUser && currentUser.institutionId) {
+      fetch(`/api/branches?institutionId=${currentUser.institutionId}`).then(res => res.json()).then(setBranches);
+    }
+  }, [currentUser]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const payload = { ...formData };
+      if (currentUser?.role === 'Super Admin') {
+        payload.institutionId = currentUser.institutionId;
+        payload.role = 'Admin';
+      }
+
       const res = await fetch('/api/admins', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         toast.success("Admin created successfully");
         setIsOpen(false);
-        setFormData({ name: '', email: '', password: '', role: 'Super Admin' });
+        setFormData({ name: '', email: '', password: '', role: 'Super Admin', institutionId: '', branchId: '', kioskType: 'Student' });
         fetchAdmins();
       } else {
         const data = await res.json();
@@ -197,11 +224,58 @@ function AdminManager() {
                 <Select value={formData.role} onValueChange={(val) => setFormData({...formData, role: val})}>
                   <SelectTrigger className="bg-slate-50"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Super Admin">Super Admin</SelectItem>
-                    <SelectItem value="Admin">Admin</SelectItem>
+                    {currentUser?.role === 'Ultra Admin' && (
+                      <SelectItem value="Super Admin">Super Admin</SelectItem>
+                    )}
+                    {(currentUser?.role === 'Ultra Admin' || currentUser?.role === 'Super Admin') && (
+                      <SelectItem value="Admin">Admin</SelectItem>
+                    )}
+                    {(currentUser?.role === 'Super Admin' || currentUser?.role === 'Admin') && (
+                      <SelectItem value="User">Device (Kiosk User)</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
+              {formData.role === 'User' && (
+                <div className="space-y-2">
+                  <Label htmlFor="kioskType">Terminal Type</Label>
+                  <Select value={formData.kioskType} onValueChange={(val) => setFormData({...formData, kioskType: val})}>
+                    <SelectTrigger className="bg-slate-50"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Student">Student Only</SelectItem>
+                      <SelectItem value="Staff">Staff Only</SelectItem>
+                      {/* Note: Combined is only permitted if the branch settings allow it, but we offer it here and backend/frontend logic will apply constraints if needed */}
+                      <SelectItem value="Combined">Combined (Student & Staff)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {currentUser?.role === 'Ultra Admin' && formData.role === 'Super Admin' && (
+                <div className="space-y-2">
+                  <Label>Assign Institution</Label>
+                  <Select value={formData.institutionId} onValueChange={(val) => setFormData({...formData, institutionId: val})}>
+                    <SelectTrigger className="bg-slate-50"><SelectValue placeholder="Select Institution" /></SelectTrigger>
+                    <SelectContent>
+                      {institutions.map(inst => (
+                        <SelectItem key={inst.id} value={inst.id}>{inst.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {currentUser?.role === 'Super Admin' && (
+                <div className="space-y-2">
+                  <Label>Assign Branch</Label>
+                  <Select value={formData.branchId} onValueChange={(val) => setFormData({...formData, branchId: val})}>
+                    <SelectTrigger className="bg-slate-50"><SelectValue placeholder="Select Branch" /></SelectTrigger>
+                    <SelectContent>
+                      {branches.map(br => (
+                        <SelectItem key={br.id} value={br.id}>{br.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="pt-2 flex justify-end gap-3">
                 <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Cancel</Button>
                 <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white">Create Account</Button>
@@ -228,8 +302,8 @@ function AdminManager() {
                   <div className="text-xs text-slate-500">{admin.email}</div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${admin.role === 'Ultra Admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}`}>
-                    {admin.role}
+                  <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${admin.role === 'Ultra Admin' ? 'bg-indigo-100 text-indigo-700' : admin.role === 'User' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                    {admin.role === 'User' ? `${admin.kioskType} Kiosk` : admin.role}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">

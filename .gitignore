@@ -4,3 +4,6 @@ uploads/
 .DS_Store
 build/
 *.zip
+
+dist/
+deploy_temp/

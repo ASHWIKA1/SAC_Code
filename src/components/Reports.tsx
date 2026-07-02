@@ -7,7 +7,19 @@ export default function Reports() {
   const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('/api/attendance/logs')
+    let queryParams = '';
+    try {
+      const userObj = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      if (userObj.role === 'Super Admin' && userObj.institutionId) {
+        queryParams = `?institutionId=${userObj.institutionId}`;
+      } else if (userObj.role === 'Admin' && userObj.branchId) {
+        queryParams = `?branchId=${userObj.branchId}`;
+      } else if (userObj.role === 'User' && userObj.sessionId) {
+        queryParams = `?deviceId=${userObj.sessionId}`;
+      }
+    } catch(e) {}
+
+    fetch(`/api/attendance/logs${queryParams}`)
       .then(res => res.json())
       .then(setLogs);
   }, []);
@@ -15,8 +27,8 @@ export default function Reports() {
   const handleExport = async () => {
     const { utils, writeFile } = await import('xlsx');
     const exportData = logs.map(l => ({
-      'Student Name': l.student?.name || 'Unknown',
-      'Roll Number': l.student?.rollNumber || 'N/A',
+      'Student Name': l.student?.name || l.student?.Name || l.student?.['Student Name'] || 'Unknown',
+      'Roll Number': l.student?.rollNumber || l.student?.['Roll Number'] || l.student?.RollNo || 'N/A',
       'Time': new Date(l.timestamp).toLocaleString(),
       'Status': l.status
     }));
@@ -53,8 +65,8 @@ export default function Reports() {
             {logs.map((log) => (
               <tr key={log.id} className="hover:bg-slate-50/50">
                 <td className="px-6 py-4 font-medium text-slate-800">
-                  {log.student?.name || 'Unknown Card'}
-                  <div className="text-xs text-slate-400 font-normal">{log.student?.rollNumber || log.rfidUid}</div>
+                  {log.student?.name || log.student?.Name || log.student?.['Student Name'] || 'Unknown Card'}
+                  <div className="text-xs text-slate-400 font-normal">{log.student?.rollNumber || log.student?.['Roll Number'] || log.student?.RollNo || log.rfidUid}</div>
                 </td>
                 <td className="px-6 py-4 text-slate-600">{new Date(log.timestamp).toLocaleString()}</td>
                 <td className="px-6 py-4">

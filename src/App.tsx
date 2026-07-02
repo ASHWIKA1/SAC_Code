@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { 
   BarChart, Users, ScanLine, Settings, Menu, Bell,
-  Search, Sun, Moon, LogOut, FileText
+  Search, Sun, Moon, LogOut, FileText, Building2, Network,
+  TrendingUp, PieChart
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from './components/ui/button';
@@ -14,11 +15,22 @@ import AttendanceScanner from './components/AttendanceScanner';
 import Setup from './components/Setup';
 import Reports from './components/Reports';
 import Login from './components/Login';
+import Institutions from './components/Institutions';
+import Branches from './components/Branches';
+import DeviceSettings from './components/DeviceSettings';
+import OverallAnalytics from './components/OverallAnalytics';
+import SpecificAnalytics from './components/SpecificAnalytics';
+import IndividualAnalytics from './components/IndividualAnalytics';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<any>(() => {
-    const savedUser = localStorage.getItem('currentUser');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('currentUser');
+      return savedUser && savedUser !== 'undefined' ? JSON.parse(savedUser) : null;
+    } catch (e) {
+      localStorage.removeItem('currentUser');
+      return null;
+    }
   });
 
   const handleLogin = (user: any) => {
@@ -38,6 +50,10 @@ export default function App() {
         <Toaster />
       </>
     );
+  }
+
+  if (currentUser.role === 'User') {
+    // Return standard layout instead of fullscreen so they get the sidebar
   }
 
   return (
@@ -78,11 +94,42 @@ export default function App() {
           {/* Page Content */}
           <main className="flex-1 p-8 overflow-y-auto w-full max-w-7xl mx-auto">
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/students" element={<Students />} />
-              <Route path="/scan" element={<AttendanceScanner />} />
-              <Route path="/settings" element={<Setup />} />
-              <Route path="/reports" element={<Reports />} />
+              {currentUser.role === 'Ultra Admin' && (
+                <>
+                  <Route path="/" element={<Institutions />} />
+                  <Route path="/settings" element={<Setup />} />
+                </>
+              )}
+              {currentUser.role === 'Super Admin' && (
+                <>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/analytics" element={<OverallAnalytics />} />
+                  <Route path="/analytics/specific" element={<SpecificAnalytics />} />
+                  <Route path="/analytics/individual" element={<IndividualAnalytics />} />
+                  <Route path="/branches" element={<Branches institutionId={currentUser.institutionId} />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/settings" element={<Setup />} />
+                </>
+              )}
+              {currentUser.role === 'Admin' && (
+                <>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/analytics/individual" element={<IndividualAnalytics />} />
+                  <Route path="/students" element={<Students />} />
+                  <Route path="/scan" element={<AttendanceScanner />} />
+                  <Route path="/settings" element={<Setup />} />
+                  <Route path="/reports" element={<Reports />} />
+                </>
+              )}
+              {currentUser.role === 'User' && (
+                <>
+                  <Route path="/" element={<AttendanceScanner />} />
+                  <Route path="/scan" element={<AttendanceScanner />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/settings" element={<DeviceSettings />} />
+                </>
+              )}
+              <Route path="*" element={<div className="text-center py-12 text-slate-500">Page not found or you do not have permission.</div>} />
             </Routes>
           </main>
         </div>
@@ -94,13 +141,39 @@ export default function App() {
 
 function Sidebar({ currentUser, onLogout }: { currentUser: any, onLogout: () => void }) {
   const location = useLocation();
-  const navigation = [
-    { name: 'Dashboard', path: '/', icon: BarChart },
-    { name: 'Attendance', path: '/scan', icon: ScanLine },
-    { name: 'Students', path: '/students', icon: Users },
-    { name: 'Reports', path: '/reports', icon: FileText },
-    { name: 'Settings', path: '/settings', icon: Settings },
-  ];
+  let navigation: any[] = [];
+  
+  if (currentUser.role === 'Ultra Admin') {
+    navigation = [
+      { name: 'Institutions', path: '/', icon: Building2 },
+      { name: 'Settings', path: '/settings', icon: Settings },
+    ];
+  } else if (currentUser.role === 'Super Admin') {
+    navigation = [
+      { name: 'Dashboard', path: '/', icon: BarChart },
+      { name: 'Overall Analytics', path: '/analytics', icon: TrendingUp },
+      { name: 'Specific Analytics', path: '/analytics/specific', icon: PieChart },
+      { name: 'Individual Analytics', path: '/analytics/individual', icon: Users },
+      { name: 'Branches', path: '/branches', icon: Network },
+      { name: 'Reports', path: '/reports', icon: FileText },
+      { name: 'Settings', path: '/settings', icon: Settings },
+    ];
+  } else if (currentUser.role === 'Admin') {
+    navigation = [
+      { name: 'Dashboard', path: '/', icon: BarChart },
+      { name: 'Individual Analytics', path: '/analytics/individual', icon: Users },
+      { name: 'Attendance', path: '/scan', icon: ScanLine },
+      { name: 'Students', path: '/students', icon: Users },
+      { name: 'Reports', path: '/reports', icon: FileText },
+      { name: 'Settings', path: '/settings', icon: Settings },
+    ];
+  } else if (currentUser.role === 'User') {
+    navigation = [
+      { name: 'Scanner', path: '/', icon: ScanLine },
+      { name: 'Device Logs', path: '/reports', icon: FileText },
+      { name: 'Terminal Info', path: '/settings', icon: Settings },
+    ];
+  }
 
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 hidden md:flex h-screen">
@@ -137,8 +210,8 @@ function Sidebar({ currentUser, onLogout }: { currentUser: any, onLogout: () => 
             {currentUser?.name?.charAt(0) || 'U'}
           </div>
           <div className="overflow-hidden flex-1">
-            <p className="text-sm font-semibold truncate text-slate-900">{currentUser?.name || 'Jameson Miller'}</p>
-            <p className="text-xs text-slate-500 truncate">{currentUser?.role || 'Super Admin'}</p>
+            <p className="text-sm font-semibold truncate text-slate-900">{currentUser?.name || 'User'}</p>
+            <p className="text-xs text-slate-500 truncate">{currentUser?.role || 'Role'}</p>
           </div>
           <button className="text-slate-400 hover:text-red-600 transition-colors" onClick={onLogout}>
              <LogOut className="w-4 h-4" />

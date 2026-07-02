@@ -37,14 +37,30 @@ export default function Students() {
   const [selectedHeaders, setSelectedHeaders] = useState<string[]>([]);
   const [photoColumn, setPhotoColumn] = useState<string>('');
 
+  const getBranchQuery = () => {
+    try {
+      const userObj = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      if (userObj.role === 'Admin' && userObj.branchId) return `?branchId=${userObj.branchId}`;
+    } catch(e) {}
+    return '';
+  };
+
+  const getBranchId = () => {
+    try {
+      const userObj = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      if (userObj.role === 'Admin') return userObj.branchId;
+    } catch(e) {}
+    return undefined;
+  };
+
   const fetchStudents = () => {
-    fetch('/api/students')
+    fetch(`/api/students${getBranchQuery()}`)
       .then(res => res.json())
       .then(setStudents);
   };
 
   const fetchSettings = () => {
-    fetch('/api/settings/columns')
+    fetch(`/api/settings/columns${getBranchQuery()}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.columns) {
@@ -111,6 +127,8 @@ export default function Students() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
+    const branchId = getBranchId();
+    if (branchId) data.branchId = branchId;
 
     await fetch('/api/students', {
       method: 'POST',
@@ -127,6 +145,8 @@ export default function Students() {
     if (!selectedStudent) return;
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
+    const branchId = getBranchId();
+    if (branchId) data.branchId = branchId;
 
     try {
       const res = await fetch(`/api/students/${selectedStudent.id}`, {
@@ -174,11 +194,12 @@ export default function Students() {
   const processImport = async (cols: string[], photoCol: string, data: any[]) => {
     setIsImporting(true);
     try {
+      const branchId = getBranchId();
       if (!savedColumns) {
         await fetch('/api/settings/columns', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ columns: cols, photoColumn: photoCol })
+          body: JSON.stringify({ columns: cols, photoColumn: photoCol, branchId })
         });
         setSavedColumns({ columns: cols, photoColumn: photoCol });
       }
@@ -204,6 +225,7 @@ export default function Students() {
         }
 
         const studentData: any = { photoUrl };
+        if (branchId) studentData.branchId = branchId;
         cols.forEach(c => {
           studentData[c] = row[c] || '';
         });
@@ -257,8 +279,8 @@ export default function Students() {
     <div className="space-y-6 max-w-[1400px] mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Students</h1>
-          <p className="text-slate-500 mt-1 text-sm">Manage student directory and RFID assignments.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Directory</h1>
+          <p className="text-slate-500 mt-1 text-sm">Manage student and staff directory and RFID assignments.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" className="rounded-lg h-9" onClick={handleExport}>
@@ -270,7 +292,7 @@ export default function Students() {
             <DialogTrigger asChild>
               <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-9 shadow-sm border-none">
                 <Plus className="w-4 h-4 mr-2" />
-                Add Students
+                Add Members
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md sm:rounded-2xl border-slate-200">
@@ -288,6 +310,18 @@ export default function Students() {
                     {savedColumns ? (
                       <>
                         <div className="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2">
+                          <div className="space-y-1.5 col-span-2">
+                            <Label htmlFor="memberType" className="text-xs uppercase tracking-widest text-slate-500 font-bold">Member Type</Label>
+                            <Select name="memberType" defaultValue="Student">
+                              <SelectTrigger className="bg-slate-50 rounded-lg border-slate-200 h-9">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Student">Student</SelectItem>
+                                <SelectItem value="Staff">Staff</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                           {savedColumns.columns.map(col => (
                             <div key={col} className="space-y-1.5">
                               <Label htmlFor={col} className="text-xs uppercase tracking-widest text-slate-500 font-bold">{col}</Label>
@@ -297,7 +331,7 @@ export default function Students() {
                         </div>
                         <div className="pt-4 flex justify-end gap-3">
                           <Button type="button" variant="ghost" className="rounded-lg h-9" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-                          <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-9">Save Student</Button>
+                          <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-9">Save Member</Button>
                         </div>
                       </>
                     ) : (
@@ -427,6 +461,7 @@ export default function Students() {
               <thead className="text-[10px] text-slate-400 font-bold uppercase tracking-widest bg-slate-50/50 border-b border-slate-100">
                 <tr>
                   <th className="px-6 py-4 font-bold w-12 text-center">Photo</th>
+                  <th className="px-6 py-4 font-bold">Type</th>
                   {savedColumns.columns.map(col => (
                     <th key={col} className="px-6 py-4 font-bold">{col}</th>
                   ))}
@@ -449,6 +484,12 @@ export default function Students() {
                       )}
                     </td>
                     
+                    <td className="px-6 py-4 text-slate-700 font-medium">
+                      <span className={`px-2 py-1 rounded-md text-xs font-bold ${student.memberType === 'Staff' ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                        {student.memberType || 'Student'}
+                      </span>
+                    </td>
+
                     {savedColumns.columns.map(col => (
                       <td key={col} className="px-6 py-4 text-slate-700">
                         {student[col] || '-'}
@@ -585,6 +626,18 @@ export default function Students() {
           {selectedStudent && (
             <form onSubmit={handleEditSubmit} className="space-y-4 py-2 mt-2">
               <div className="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2">
+                <div className="space-y-1.5 col-span-2">
+                  <Label htmlFor="edit-memberType" className="text-xs uppercase tracking-widest text-slate-500 font-bold">Member Type</Label>
+                  <Select name="memberType" defaultValue={selectedStudent.memberType || 'Student'}>
+                    <SelectTrigger className="bg-slate-50 rounded-lg border-slate-200 h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Student">Student</SelectItem>
+                      <SelectItem value="Staff">Staff</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 {savedColumns?.columns.map(col => (
                   <div key={col} className="space-y-1.5">
                     <Label htmlFor={`edit-${col}`} className="text-xs uppercase tracking-widest text-slate-500 font-bold">{col}</Label>
@@ -594,7 +647,7 @@ export default function Students() {
               </div>
               <div className="pt-4 flex justify-end gap-3">
                 <Button type="button" variant="ghost" className="rounded-lg h-9" onClick={() => setIsEditOpen(false)}>Cancel</Button>
-                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-9">Update Student</Button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-9">Update Member</Button>
               </div>
             </form>
           )}

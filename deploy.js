@@ -4,7 +4,7 @@ import { exec } from 'child_process';
 import path from 'path';
 
 const ssh = new NodeSSH();
-const REMOTE_DIR = 'domains/rfid-attendence-test.goteksuite.com/public_html';
+const REMOTE_DIR = 'domains/goteksuite.com/public_html/rfid-attendence-test';
 
 
 
@@ -57,7 +57,7 @@ PORT=3000
 
     console.log('Connecting to Hostinger via SSH...');
     await ssh.connect({
-      host: 'rfid-attendence-test.goteksuite.com',
+      host: '82.25.120.218',
       username: 'u856184323',
       password: 'Eash@2005',
       port: 65002
@@ -65,6 +65,9 @@ PORT=3000
 
     console.log('Uploading archive...');
     await ssh.putFile(zipPath, `${REMOTE_DIR}/deploy.zip`);
+
+    console.log('Cleaning up Hostinger defaults...');
+    await ssh.execCommand(`rm -f default.php`, { cwd: REMOTE_DIR });
 
     console.log('Extracting on server...');
     await ssh.execCommand(`unzip -o deploy.zip`, { cwd: REMOTE_DIR });
