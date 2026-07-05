@@ -40,6 +40,7 @@ const ADMIN_MENU = [
         label: 'Homework', icon: 'ti-pencil-alt', children: [
           { label: 'All Homework', path: '/homework/list' },
           { label: 'Add Homework', path: '/homework/create' },
+          { label: 'Submit Assignment', path: '/homework/submit' },
         ]
       },
     ]
@@ -404,7 +405,7 @@ const STUDENT_MENU = [
       { label: 'My Attendance', icon: 'ti-check-box', path: '/student/attendance' },
       { label: 'My Results', icon: 'ti-bar-chart', path: '/student/results' },
       { label: 'My Fees', icon: 'ti-money', path: '/student/fees' },
-      { label: 'Homework', icon: 'ti-pencil-alt', path: '/student/homework' },
+      { label: 'Submit Assignment', icon: 'ti-pencil-alt', path: '/homework/submit' },
       { label: 'Online Exam', icon: 'ti-write', path: '/student/online-exam' },
       { label: 'Notice Board', icon: 'ti-comment-alt', path: '/student/notice-board' },
       { label: 'Video Watch', icon: 'ti-video-camera', path: '/student/videos' },
