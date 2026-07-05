@@ -43,6 +43,7 @@ const ADMIN_MENU = [
           { label: 'Submit Assignment', path: '/homework/submit' },
         ]
       },
+      { label: 'LMS Workspace', icon: 'ti-cup', path: '/modules/lms' },
     ]
   },
   // ── STUDENT INFORMATION ──
@@ -283,7 +284,6 @@ const ADMIN_MENU = [
       { label: 'Wallet', icon: 'ti-wallet', path: '/modules/wallet' },
       { label: 'Download Center', icon: 'ti-download', path: '/modules/downloads' },
       { label: 'Chat', icon: 'ti-comments', path: '/modules/chat' },
-      { label: 'LMS / Courses', icon: 'ti-cup', path: '/modules/lms' },
       { label: 'Alumni', icon: 'ti-crown', path: '/modules/alumni' },
       { label: 'Clubs & Activities', icon: 'ti-flag', path: '/modules/clubs' },
       { label: 'User Forum', icon: 'ti-comment', path: '/modules/forum' },
@@ -383,6 +383,7 @@ const TEACHER_MENU = [
           { label: 'Homework List', path: '/teacher/homework' },
         ]
       },
+      { label: 'LMS Workspace', icon: 'ti-cup', path: '/modules/lms' },
       {
         label: 'Lesson Plan', icon: 'ti-agenda', children: [
           { label: 'My Lesson Plans', path: '/teacher/lesson' },
@@ -406,6 +407,7 @@ const STUDENT_MENU = [
       { label: 'My Results', icon: 'ti-bar-chart', path: '/student/results' },
       { label: 'My Fees', icon: 'ti-money', path: '/student/fees' },
       { label: 'Submit Assignment', icon: 'ti-pencil-alt', path: '/homework/submit' },
+      { label: 'LMS Workspace', icon: 'ti-cup', path: '/modules/lms' },
       { label: 'Online Exam', icon: 'ti-write', path: '/student/online-exam' },
       { label: 'Notice Board', icon: 'ti-comment-alt', path: '/student/notice-board' },
       { label: 'Video Watch', icon: 'ti-video-camera', path: '/student/videos' },
@@ -424,6 +426,7 @@ const PARENT_MENU = [
       { label: "Child's Attendance", icon: 'ti-check-box', path: '/parent/attendance' },
       { label: "Child's Results", icon: 'ti-bar-chart', path: '/parent/results' },
       { label: "Child's Fees", icon: 'ti-money', path: '/parent/fees' },
+      { label: 'LMS Workspace', icon: 'ti-cup', path: '/modules/lms' },
       { label: 'Notice Board', icon: 'ti-comment-alt', path: '/parent/notice-board' },
       { label: 'My Profile', icon: 'ti-id-badge', path: '/parent/profile' },
     ]
