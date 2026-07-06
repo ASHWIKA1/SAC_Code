@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS media_types (
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     updated_by_user INT,
     FOREIGN KEY (updated_by_user) REFERENCES users(id) ON DELETE SET NULL
-   
+);
 
 -- Student Media Tracking
 CREATE TABLE IF NOT EXISTS student_media_content (
