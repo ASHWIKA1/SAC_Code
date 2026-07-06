@@ -1,18 +1,18 @@
 package com.sac.erp;
 
-import com.sac.erp.modules.core.entity.AssignPermission;
-import com.sac.erp.modules.core.entity.Menu;
-import com.sac.erp.modules.core.entity.Permission;
-import com.sac.erp.modules.core.entity.Role;
-import com.sac.erp.modules.core.entity.User;
+import com.sac.erp.entity.AssignPermission;
+import com.sac.erp.entity.Menu;
+import com.sac.erp.entity.Permission;
+import com.sac.erp.entity.Role;
+import com.sac.erp.entity.User;
 import com.sac.erp.modules.permission.dto.MenuDto;
 import com.sac.erp.modules.permission.service.MenuPermissionServiceImpl;
 import com.sac.erp.modules.superadmin.entity.SuperAdmin;
 import com.sac.erp.modules.superadmin.repository.SuperAdminRepository;
-import com.sac.erp.modules.core.repository.AssignPermissionRepository;
-import com.sac.erp.modules.core.repository.MenuRepository;
-import com.sac.erp.modules.core.repository.PermissionRepository;
-import com.sac.erp.modules.core.repository.UserRepository;
+import com.sac.erp.repository.AssignPermissionRepository;
+import com.sac.erp.repository.MenuRepository;
+import com.sac.erp.repository.PermissionRepository;
+import com.sac.erp.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
