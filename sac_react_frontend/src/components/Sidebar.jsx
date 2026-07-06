@@ -41,7 +41,6 @@ const ADMIN_MENU = [
           { label: 'All Homework', path: '/homework/list' },
           { label: 'Add Homework', path: '/homework/create' },
           { label: 'Submit Assignment', path: '/homework/submit' },
-          { label: 'LMS Workspace', path: '/modules/lms' },
         ]
       },
       { label: 'LMS Workspace', icon: 'ti-cup', path: '/modules/lms' },
@@ -382,7 +381,6 @@ const TEACHER_MENU = [
         label: 'Homework', icon: 'ti-pencil-alt', children: [
           { label: 'Assign Homework', path: '/teacher/homework/create' },
           { label: 'Homework List', path: '/teacher/homework' },
-          { label: 'LMS Workspace', path: '/modules/lms' },
         ]
       },
       { label: 'LMS Workspace', icon: 'ti-cup', path: '/modules/lms' },
