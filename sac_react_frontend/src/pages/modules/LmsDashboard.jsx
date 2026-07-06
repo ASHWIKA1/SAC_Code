@@ -1238,8 +1238,68 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
   const [qOptions, setQOptions] = useState(['', '', '', '']);
   const [qCorrect, setQCorrect] = useState(0);
 
+  // AI Question Generator States
+  const [showAiGenerator, setShowAiGenerator] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiFile, setAiFile] = useState('');
+  const [aiCount, setAiCount] = useState(5);
+  const [aiDifficulty, setAiDifficulty] = useState('medium');
+  const [generatedQuestions, setGeneratedQuestions] = useState([]);
+
   // Timer interval reference
   const intervalRef = useRef(null);
+
+  // AI Generation handler
+  const handleAiGenerate = (e) => {
+    e.preventDefault();
+    if (!aiFile) {
+      alert("Please select or specify a question source file.");
+      return;
+    }
+    setAiGenerating(true);
+    setTimeout(() => {
+      const lowerName = aiFile.toLowerCase();
+      let list = [];
+      
+      if (lowerName.includes("gravit") || lowerName.includes("physic")) {
+        list = [
+          { id: 'ai_' + Date.now() + '_1', type: 'mcq-single', text: 'Which of the following constants represents Newton\'s gravitational constant?', options: ['G = 6.674 x 10^-11 N m^2/kg^2', 'g = 9.8 m/s^2', 'c = 3.00 x 10^8 m/s', 'h = 6.626 x 10^-34 J s'], correct: 0, selected: true },
+          { id: 'ai_' + Date.now() + '_2', type: 'mcq-single', text: 'What is the relationship between gravitational force and distance between two bodies?', options: ['Directly proportional', 'Inversely proportional to distance', 'Inversely proportional to square of distance', 'No relation'], correct: 2, selected: true },
+          { id: 'ai_' + Date.now() + '_3', type: 'mcq-single', text: 'Where is the acceleration due to gravity (g) maximum on Earth\'s surface?', options: ['At the Equator', 'At the Poles', 'At the Center of Earth', 'At Mount Everest'], correct: 1, selected: true },
+          { id: 'ai_' + Date.now() + '_4', type: 'descriptive', text: 'Define escape velocity and write its expression for Earth\'s surface.', correct: null, selected: true }
+        ];
+      } else if (lowerName.includes("tree") || lowerName.includes("data") || lowerName.includes("cs")) {
+        list = [
+          { id: 'ai_' + Date.now() + '_1', type: 'mcq-single', text: 'What is the worst-case time complexity of searching in a Binary Search Tree (BST)?', options: ['O(1)', 'O(log n)', 'O(n)', 'O(n log n)'], correct: 2, selected: true },
+          { id: 'ai_' + Date.now() + '_2', type: 'mcq-single', text: 'Which traversal of a Binary Search Tree outputs the keys in sorted order?', options: ['Pre-order', 'In-order', 'Post-order', 'Level-order'], correct: 1, selected: true },
+          { id: 'ai_' + Date.now() + '_3', type: 'mcq-single', text: 'What is the maximum number of children a node in a binary tree can have?', options: ['1', '2', '3', 'Unlimited'], correct: 1, selected: true },
+          { id: 'ai_' + Date.now() + '_4', type: 'descriptive', text: 'Explain the difference between a AVL Tree and a normal Binary Search Tree.', correct: null, selected: true }
+        ];
+      } else {
+        list = [
+          { id: 'ai_' + Date.now() + '_1', type: 'mcq-single', text: 'What is the primary method to optimize memory usage in web applications?', options: ['Garbage collection tuning', 'Caching static assets', 'Using small image formats', 'Code splitting and lazy loading'], correct: 3, selected: true },
+          { id: 'ai_' + Date.now() + '_2', type: 'mcq-single', text: 'Which HTTP status code represents a successful REST request?', options: ['200 OK', '404 Not Found', '500 Internal Server Error', '302 Found'], correct: 0, selected: true },
+          { id: 'ai_' + Date.now() + '_3', type: 'descriptive', text: 'Describe the main differences between relational databases and NoSQL databases.', correct: null, selected: true }
+        ];
+      }
+
+      setGeneratedQuestions(list.slice(0, aiCount));
+      setAiGenerating(false);
+    }, 2000);
+  };
+
+  const handleAddAiQuestions = () => {
+    const selected = generatedQuestions.filter(q => q.selected);
+    if (selected.length === 0) {
+      alert("Please select at least one question to add.");
+      return;
+    }
+    const formatted = selected.map(({ selected, ...rest }) => rest);
+    setQuestions([...questions, ...formatted]);
+    setGeneratedQuestions([]);
+    setShowAiGenerator(false);
+    setAiFile('');
+  };
 
   // Start attempt timer
   useEffect(() => {
@@ -1570,9 +1630,104 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
                 </div>
               )}
 
-              <button type="button" className="btn-secondary-outline btn_sm" onClick={handleAddQuestion}>
-                Add Question to Quiz
-              </button>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="button" className="btn-secondary-outline btn_sm" onClick={handleAddQuestion}>
+                  Add Question to Quiz
+                </button>
+                <button 
+                  type="button" 
+                  className="btn-secondary-outline btn_sm" 
+                  style={{ borderColor: '#7C32FF', color: '#7C32FF', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  onClick={() => setShowAiGenerator(!showAiGenerator)}
+                >
+                  ✨ AI Question Generator
+                </button>
+              </div>
+
+              {/* AI Generator Panel */}
+              {showAiGenerator && (
+                <div style={{ border: '1px dashed #7C32FF', padding: '16px', background: '#fafaff', borderRadius: '4px', marginTop: '14px' }}>
+                  <h6 style={{ fontWeight: 700, fontSize: '11px', color: '#7C32FF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
+                    ✨ AI Question Generation Engine
+                  </h6>
+                  
+                  {generatedQuestions.length === 0 && !aiGenerating && (
+                    <form onSubmit={handleAiGenerate}>
+                      <FormGroup label="Select Source Document / File (Simulated)">
+                        <select className="form-control" value={aiFile} onChange={e => setAiFile(e.target.value)} required>
+                          <option value="">-- Select Material to Read --</option>
+                          <option value="gravity_notes.txt">gravity_notes.txt (Physics Coursework)</option>
+                          <option value="bst_lecture.pdf">bst_lecture.pdf (Computer Science Slides)</option>
+                          <option value="general_math.docx">general_math.docx (Calculus Integrals)</option>
+                        </select>
+                      </FormGroup>
+                      
+                      <div className="row">
+                        <div className="col-6">
+                          <FormGroup label="Questions Count">
+                            <input type="number" className="form-control" min={1} max={10} value={aiCount} onChange={e => setAiCount(Number(e.target.value))} required />
+                          </FormGroup>
+                        </div>
+                        <div className="col-6">
+                          <FormGroup label="Difficulty Level">
+                            <select className="form-control" value={aiDifficulty} onChange={e => setAiDifficulty(e.target.value)}>
+                              <option value="easy">Easy</option>
+                              <option value="medium">Medium</option>
+                              <option value="hard">Hard</option>
+                            </select>
+                          </FormGroup>
+                        </div>
+                      </div>
+                      
+                      <button type="submit" className="primary_btn btn_sm" style={{ background: 'linear-gradient(90deg, #7C32FF, #C738D8)', border: 'none', width: '100%', justifyContent: 'center' }}>
+                        Generate AI Questions
+                      </button>
+                    </form>
+                  )}
+
+                  {aiGenerating && (
+                    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                      <div className="spinner-border text-primary mb-2" role="status" style={{ width: '24px', height: '24px', animation: 'spin 1s linear infinite' }}></div>
+                      <div style={{ fontSize: '12px', color: '#666', fontWeight: 600 }}>
+                        🤖 AI is analyzing file and auto-generating questions...
+                      </div>
+                    </div>
+                  )}
+
+                  {generatedQuestions.length > 0 && (
+                    <div>
+                      <h6 style={{ fontSize: '11.5px', fontWeight: 600, marginBottom: '10px' }}>AI Generated Questions Preview:</h6>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '200px', overflowY: 'auto', background: '#fff', padding: '10px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '12px' }}>
+                        {generatedQuestions.map((q, idx) => (
+                          <div key={q.id} style={{ display: 'flex', gap: '8px', fontSize: '12px', borderBottom: idx < generatedQuestions.length - 1 ? '1px solid #eee' : 'none', paddingBottom: '8px' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={q.selected} 
+                              onChange={() => {
+                                setGeneratedQuestions(generatedQuestions.map(x => x.id === q.id ? { ...x, selected: !x.selected } : x));
+                              }} 
+                              style={{ marginTop: '3px' }}
+                            />
+                            <div>
+                              <div><strong>Q{idx + 1}:</strong> {q.text}</div>
+                              <span style={{ fontSize: '10px', color: 'var(--primary-color)', fontWeight: 600 }}>({q.type.toUpperCase()})</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                        <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setGeneratedQuestions([])}>
+                          Discard
+                        </button>
+                        <button type="button" className="primary_btn btn_sm" style={{ background: 'linear-gradient(90deg, #7C32FF, #C738D8)', border: 'none' }} onClick={handleAddAiQuestions}>
+                          Add Selected to Quiz
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
