@@ -1,0 +1,77 @@
+# Developer Guide: Sidebar & Module Integration
+
+This document explains the internal architecture of the SAC developed by TIS sidebar system and the steps required to register new modules or menu items correctly.
+
+## 🏗️ Architectural Overview
+
+The sidebar is driven by three main database tables and a specific Blade rendering logic:
+
+1.  **`sm_menus`**: Controls the structure, order, and hierarchy of the sidebar items.
+2.  **`permissions`**: The master list of all accessible routes. Items must exist here to show up in the **Sidebar Manager** and **Role Permissions** pages.
+3.  **`assign_permissions`**: Bridges Roles/Schools to Permissions. If a role doesn't have an entry here for a specific permission ID, the item is hidden.
+
+---
+
+## 🚀 Steps to Add a New Module
+
+### 1. Register the Laravel Route
+In `routes/admin_tenant.php`, define your route with a clear **Name**.
+```php
+// Correct
+Route::get('tc-list', 'Controller@index')->name('tc.index');
+
+// Incorrect (for sidebar linking)
+Route::get('tc-list', 'Controller@index'); 
+```
+
+### 2. Add to the `permissions` Table
+Every clickable item and section header must have a row in the `permissions` table. Use a script or migration to insert them.
+
+| Column | Value for Section | Value for Sub-menu |
+| :--- | :--- | :--- |
+| `name` | "New Section" | "New Item" |
+| `route` | `new_section_route` | `item.index` (Must match Route Name) |
+| `parent_route` | `NULL` | `new_section_route` |
+| `permission_section` | `1` | `0` |
+| `is_menu` | `1` | `1` |
+| `module` | `NULL` | `NULL` |
+
+> [!CAUTION]
+> **The `module` field**: If you set this to a string (e.g., 'MyModule'), the system will hide the item unless a folder exists in `Modules/MyModule/`. For core features, always keep this **NULL**.
+
+### 3. Add to the `sm_menus` Table
+This defines the visual hierarchy in the sidebar.
+
+- **Section Header**: Set `permission_section = 1` and `parent_id = NULL`.
+- **Children**: Set `permission_section = 0` and `parent_id = {ID of the Header}`.
+- **Route**: Use the **Laravel Named Route** (e.g., `tc.index`), NOT the URL path.
+
+### 4. Grant Permissions (`assign_permissions`)
+You must insert rows into `assign_permissions` for every school (`school_id`) and role (e.g., `role_id=1` for Super Admin) that should see the item.
+
+### 5. UI Rendering Logic (Blade & JS)
+The file `resources/views/backEnd/menu/staff.blade.php` uses a JavaScript guard to hide empty sections.
+- For a header to show, at least one child `<li>` must have a CSS class matching the header's `route` value.
+- **Fix applied**: We patched the `<li>` items to dynamically include the section route class: `<li class="... {{ $menu->route }}">`.
+
+---
+
+## 🛠️ Troubleshooting Blank Pages
+
+If a sidebar link is visible but leads to a blank page or a redirect:
+1.  **Check Route Name**: Ensure `sm_menus.route` exactly matches `Route::get(...)->name('...')`.
+2.  **Check `user-custom-menu` URL**: If the URL in your browser looks like `/user-custom-menu/something`, it means the helper function `validRouteUrl()` failed to find the route and fell back to a custom menu handler.
+3.  **Clear Cache**: Always run `php artisan optimize:clear` after database changes.
+
+## 📝 SQL Reference Snippets
+
+### Clearing Module Blocking
+```sql
+UPDATE sm_menus SET module = NULL WHERE route IN ('tc.index', 'medical.records', ...);
+```
+
+### Fixing Route Mismatches
+```sql
+UPDATE sm_menus SET route = 'tc.index' WHERE route = 'tc-list';
+UPDATE permissions SET route = 'tc.index' WHERE route = 'tc-list';
+```
