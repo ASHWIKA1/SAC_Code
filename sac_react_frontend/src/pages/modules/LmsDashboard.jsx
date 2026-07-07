@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth, ROLES } from '../../contexts/AuthContext';
 import { PageHeader, WhiteCard, FormGroup, Alert, Badge } from '../../components/UI';
 import { 
@@ -151,8 +152,27 @@ const MOCK_ANALYTICS = {
 export default function LmsDashboard() {
   const { user } = useAuth();
   const role = user?.role || ROLES.ADMIN;
+  const location = useLocation();
+  const path = location.pathname;
 
-  const [activeTab, setActiveTab] = useState('courses');
+  // Determine activeTab based on current URL path
+  let activeTab = 'courses';
+  let pageTitle = 'Course Management';
+  let breadcrumbLabel = 'Course Management';
+
+  if (path.includes('/lms/quizzes')) {
+    activeTab = 'quizzes';
+    pageTitle = 'Online Quizzes';
+    breadcrumbLabel = 'Online Quizzes';
+  } else if (path.includes('/lms/forum')) {
+    activeTab = 'forums';
+    pageTitle = 'Discussion Forum';
+    breadcrumbLabel = 'Discussion Forum';
+  } else if (path.includes('/lms/progress')) {
+    activeTab = 'progress';
+    pageTitle = 'Progress & Analytics';
+    breadcrumbLabel = 'Progress & Analytics';
+  }
 
   // --- Dynamic Shared State ---
   const [courses, setCourses] = useState(INITIAL_COURSES);
@@ -246,8 +266,8 @@ export default function LmsDashboard() {
   return (
     <>
       <PageHeader 
-        title="LMS Workspace & Learning Portal" 
-        breadcrumbs={[{ label: 'Modules' }, { label: 'LMS Dashboard' }]} 
+        title={pageTitle} 
+        breadcrumbs={[{ label: 'LMS' }, { label: breadcrumbLabel }]} 
       />
 
       {/* Role Banner */}
@@ -260,45 +280,8 @@ export default function LmsDashboard() {
       </div>
 
       <div className="row">
-        {/* Left Hand Tab Navigation */}
-        <div className="col-12 col-md-3 mb-4">
-          <WhiteCard bodyPadding={false}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
-              <h5 style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '11px', letterSpacing: '1px', color: 'var(--primary-color)' }}>
-                LMS Navigation
-              </h5>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', padding: '10px 0' }}>
-              <button 
-                onClick={() => setActiveTab('courses')} 
-                style={styles.tabButton(activeTab === 'courses')}
-              >
-                <BookOpen size={16} /> Course Management
-              </button>
-              <button 
-                onClick={() => setActiveTab('quizzes')} 
-                style={styles.tabButton(activeTab === 'quizzes')}
-              >
-                <Award size={16} /> Online Quizzes
-              </button>
-              <button 
-                onClick={() => setActiveTab('forums')} 
-                style={styles.tabButton(activeTab === 'forums')}
-              >
-                <MessageSquare size={16} /> Discussion Forum
-              </button>
-              <button 
-                onClick={() => setActiveTab('progress')} 
-                style={styles.tabButton(activeTab === 'progress')}
-              >
-                <TrendingUp size={16} /> Progress & Analytics
-              </button>
-            </div>
-          </WhiteCard>
-        </div>
-
-        {/* Right Hand Dashboard Tab Content */}
-        <div className="col-12 col-md-9">
+        {/* Right Hand Dashboard Tab Content (Full Width) */}
+        <div className="col-12">
           {activeTab === 'courses' && (
             <CourseManagementTab 
               role={role}

@@ -312,6 +312,10 @@ export default function App() {
           <Route path="modules/downloads" element={<DownloadCenterPage />} />
           <Route path="modules/chat" element={<ChatPage />} />
           <Route path="modules/lms" element={<LmsDashboard />} />
+          <Route path="lms/courses" element={<LmsDashboard />} />
+          <Route path="lms/quizzes" element={<LmsDashboard />} />
+          <Route path="lms/forum" element={<LmsDashboard />} />
+          <Route path="lms/progress" element={<LmsDashboard />} />
           <Route path="modules/alumni" element={<AlumniPage />} />
           <Route path="modules/clubs" element={<ClubsPage />} />
           <Route path="modules/forum" element={<UserForumPage />} />
