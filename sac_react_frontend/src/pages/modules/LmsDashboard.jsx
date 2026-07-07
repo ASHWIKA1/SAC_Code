@@ -15,6 +15,22 @@ import {
 } from 'recharts';
 import api from '../../utils/api';
 
+// Helper function to format minutes into human readable hours and minutes
+const formatDurationToHours = (mins) => {
+  const m = Number(mins);
+  if (isNaN(m) || m <= 0) return '';
+  const hours = Math.floor(m / 60);
+  const remainingMins = m % 60;
+  
+  if (hours === 0) {
+    return `${remainingMins} min${remainingMins !== 1 ? 's' : ''}`;
+  } else if (remainingMins === 0) {
+    return `${hours} hr${hours !== 1 ? 's' : ''}`;
+  } else {
+    return `${hours} hr${hours !== 1 ? 's' : ''} ${remainingMins} min${remainingMins !== 1 ? 's' : ''}`;
+  }
+};
+
 // --- STYLES FOR CARD HOVERS & CUSTOM GRAPHICS ---
 const styles = {
   tabButton: (isActive) => ({
@@ -882,6 +898,11 @@ function CourseManagementTab({
                   <div className="col-6">
                     <FormGroup label="Duration (Mins)" required={true}>
                       <input type="number" className="form-control" value={liveDur} onChange={e => setLiveDur(e.target.value)} required />
+                      {liveDur && (
+                        <div style={{ fontSize: '11px', color: '#7C32FF', marginTop: '4px', fontWeight: 600 }}>
+                          ⏱️ {formatDurationToHours(liveDur)}
+                        </div>
+                      )}
                     </FormGroup>
                   </div>
                 </div>
@@ -1558,6 +1579,11 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
             </div>
             <FormGroup label="Duration (Minutes)" required={true}>
               <input type="number" className="form-control" value={duration} onChange={e => setDuration(e.target.value)} required min={1} />
+              {duration && (
+                <div style={{ fontSize: '11px', color: '#7C32FF', marginTop: '4px', fontWeight: 600 }}>
+                  ⏱️ {formatDurationToHours(duration)}
+                </div>
+              )}
             </FormGroup>
 
             {/* Questions Builder Section */}
