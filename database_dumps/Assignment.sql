@@ -15,14 +15,14 @@ CREATE TABLE IF NOT EXISTS media_types (
     name VARCHAR(50) NOT NULL UNIQUE,
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    updated_by_user INT,
+    updated_by_user INT UNSIGNED,
     FOREIGN KEY (updated_by_user) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- Student Media Tracking
 CREATE TABLE IF NOT EXISTS student_media_content (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id INT NOT NULL,
+    student_id INT UNSIGNED NOT NULL,
     media_content_id INT NOT NULL,
     accessed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS media_content (
     status TINYINT(1) DEFAULT 1 COMMENT '1 = Active, 0 = Inactive',
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    updated_by_user INT, -- Fixed: Changed from BIGINT UNSIGNED to INT
+    updated_by_user INT UNSIGNED, -- Fixed: Changed from BIGINT UNSIGNED to INT UNSIGNED
     is_deleted TINYINT(1) DEFAULT 0 COMMENT '0 = Alive, 1 = Soft Deleted',
     
     -- Foreign Key constraints
