@@ -40,8 +40,19 @@ const ADMIN_MENU = [
         label: 'Homework', icon: 'ti-pencil-alt', children: [
           { label: 'All Homework', path: '/homework/list' },
           { label: 'Add Homework', path: '/homework/create' },
+          { label: 'Submit Assignment', path: '/homework/submit' },
         ]
       },
+    ]
+  },
+  // ── LMS NAVIGATION ──
+  {
+    section: 'lms_navigation', label: 'LMS Navigation',
+    items: [
+      { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
+      { label: 'Online Quizzes', icon: 'ti-medal', path: '/lms/quizzes' },
+      { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
+      { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
   },
   // ── STUDENT INFORMATION ──
@@ -282,7 +293,6 @@ const ADMIN_MENU = [
       { label: 'Wallet', icon: 'ti-wallet', path: '/modules/wallet' },
       { label: 'Download Center', icon: 'ti-download', path: '/modules/downloads' },
       { label: 'Chat', icon: 'ti-comments', path: '/modules/chat' },
-      { label: 'LMS / Courses', icon: 'ti-cup', path: '/modules/lms' },
       { label: 'Alumni', icon: 'ti-crown', path: '/modules/alumni' },
       { label: 'Clubs & Activities', icon: 'ti-flag', path: '/modules/clubs' },
       { label: 'User Forum', icon: 'ti-comment', path: '/modules/forum' },
@@ -394,6 +404,16 @@ const TEACHER_MENU = [
       { label: 'Notice Board', icon: 'ti-comment-alt', path: '/teacher/notice-board' },
     ]
   },
+  // ── LMS NAVIGATION ──
+  {
+    section: 'lms_navigation', label: 'LMS Navigation',
+    items: [
+      { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
+      { label: 'Online Quizzes', icon: 'ti-medal', path: '/lms/quizzes' },
+      { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
+      { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
+    ]
+  },
 ];
 
 const STUDENT_MENU = [
@@ -404,13 +424,23 @@ const STUDENT_MENU = [
       { label: 'My Attendance', icon: 'ti-check-box', path: '/student/attendance' },
       { label: 'My Results', icon: 'ti-bar-chart', path: '/student/results' },
       { label: 'My Fees', icon: 'ti-money', path: '/student/fees' },
-      { label: 'Homework', icon: 'ti-pencil-alt', path: '/student/homework' },
+      { label: 'Submit Assignment', icon: 'ti-pencil-alt', path: '/homework/submit' },
       { label: 'Online Exam', icon: 'ti-write', path: '/student/online-exam' },
       { label: 'Notice Board', icon: 'ti-comment-alt', path: '/student/notice-board' },
       { label: 'Video Watch', icon: 'ti-video-camera', path: '/student/videos' },
       { label: 'Downloads', icon: 'ti-download', path: '/student/downloads' },
       { label: 'My Wallet', icon: 'ti-wallet', path: '/student/wallet' },
       { label: 'My Profile', icon: 'ti-id-badge', path: '/student/profile' },
+    ]
+  },
+  // ── LMS NAVIGATION ──
+  {
+    section: 'lms_navigation', label: 'LMS Navigation',
+    items: [
+      { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
+      { label: 'Online Quizzes', icon: 'ti-medal', path: '/lms/quizzes' },
+      { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
+      { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
   },
 ];
@@ -425,6 +455,16 @@ const PARENT_MENU = [
       { label: "Child's Fees", icon: 'ti-money', path: '/parent/fees' },
       { label: 'Notice Board', icon: 'ti-comment-alt', path: '/parent/notice-board' },
       { label: 'My Profile', icon: 'ti-id-badge', path: '/parent/profile' },
+    ]
+  },
+  // ── LMS NAVIGATION ──
+  {
+    section: 'lms_navigation', label: 'LMS Navigation',
+    items: [
+      { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
+      { label: 'Online Quizzes', icon: 'ti-medal', path: '/lms/quizzes' },
+      { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
+      { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
   },
 ];
