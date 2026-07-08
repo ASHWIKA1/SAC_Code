@@ -1241,6 +1241,19 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
   const [qType, setQType] = useState('mcq-single');
   const [qOptions, setQOptions] = useState(['', '', '', '']);
   const [qCorrect, setQCorrect] = useState(0);
+  const [qImageUrl, setQImageUrl] = useState('');
+  const [showQBank, setShowQBank] = useState(false);
+  const [selectedAttemptReport, setSelectedAttemptReport] = useState(null);
+  const [docxParsing, setDocxParsing] = useState(false);
+  const [docxSuccess, setDocxSuccess] = useState(false);
+
+  // Question Bank Mock Repository
+  const QUESTION_BANK_REPO = [
+    { id: 'qb1', type: 'mcq-single', text: 'What is the velocity of light in a vacuum?', options: ['3 x 10^8 m/s', '3 x 10^6 m/s', '1.5 x 10^8 m/s', '3 x 10^10 m/s'], correct: 0 },
+    { id: 'qb2', type: 'mcq-single', text: 'Which data structure follows the Last-In-First-Out (LIFO) principle?', options: ['Queue', 'Linked List', 'Stack', 'Tree'], correct: 2 },
+    { id: 'qb3', type: 'mcq-multiple', text: 'Select all prime numbers from the list below:', options: ['2', '4', '9', '11'], correct: [0, 3] },
+    { id: 'qb4', type: 'descriptive', text: 'Explain the difference between a process and a thread.', correct: null }
+  ];
 
   // AI Question Generator States
   const [showAiGenerator, setShowAiGenerator] = useState(false);
@@ -1334,11 +1347,12 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
       id: 'att' + (quizAttempts.length + 1),
       quizId: activeQuizAttempt.id,
       studentName: 'Rahul Student',
-      score: null, // to be evaluated
-      evaluated: false,
+      score: 28, // auto evaluated mock score
+      evaluated: true,
       answers: selectedAnswers,
-      remarks: '',
-      allowedReattempt: false
+      remarks: 'Well done on completing the quiz within the time limit!',
+      allowedReattempt: false,
+      quizQuestions: activeQuizAttempt.questions // Keep list of questions for detailed student report!
     };
 
     setQuizAttempts([...quizAttempts, newAttempt]);
@@ -1355,10 +1369,12 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
       type: qType,
       text: qText.trim(),
       options: qType.startsWith('mcq') ? [...qOptions] : [],
-      correct: qType === 'mcq-single' ? Number(qCorrect) : qCorrect
+      correct: qType === 'mcq-single' ? Number(qCorrect) : qCorrect,
+      imageUrl: qImageUrl.trim() || null
     };
     setQuestions([...questions, newQ]);
     setQText('');
+    setQImageUrl('');
     setQOptions(['', '', '', '']);
   };
 
@@ -1449,6 +1465,17 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
               <h5 style={{ fontWeight: 600, fontSize: '14.5px', marginBottom: '14px' }}>
                 Question {currentQIndex + 1}: {activeQuizAttempt.questions[currentQIndex].text}
               </h5>
+
+              {/* Image based question support */}
+              {activeQuizAttempt.questions[currentQIndex].imageUrl && (
+                <div style={{ marginBottom: '14px', borderRadius: '4px', overflow: 'hidden', border: '1px solid #eee', maxWidth: '300px' }}>
+                  <img 
+                    src={activeQuizAttempt.questions[currentQIndex].imageUrl} 
+                    alt="Question illustration" 
+                    style={{ width: '100%', height: 'auto', display: 'block' }} 
+                  />
+                </div>
+              )}
 
               {/* Single MCQ */}
               {activeQuizAttempt.questions[currentQIndex].type === 'mcq-single' && (
@@ -1591,7 +1618,20 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
               <h6 style={{ fontWeight: 600, marginBottom: '10px', fontSize: '12px' }}>Question Builder ({questions.length} Questions Added)</h6>
               
               <FormGroup label="Question Text">
+                {/* Rich Editor Manual Upload Toolbar */}
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', fontWeight: 700 }} onClick={() => setQText(prev => prev + ' **Bold Text**')}>B</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', fontStyle: 'italic' }} onClick={() => setQText(prev => prev + ' *Italic Text*')}>I</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', textDecoration: 'underline' }} onClick={() => setQText(prev => prev + ' <u>Underlined Text</u>')}>U</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', fontFamily: 'monospace' }} onClick={() => setQText(prev => prev + ' `code_here`')}>Code</button>
+                  <span style={{ fontSize: '11px', color: 'var(--text-light)', alignSelf: 'center', marginLeft: 'auto' }}>Rich formatting helper</span>
+                </div>
                 <input type="text" className="form-control" value={qText} onChange={e => setQText(e.target.value)} placeholder="Enter question..." />
+              </FormGroup>
+
+              {/* Image Based Question URL */}
+              <FormGroup label="Question Image URL (Optional for Image-Based Questions)">
+                <input type="text" className="form-control" value={qImageUrl} onChange={e => setQImageUrl(e.target.value)} placeholder="e.g. https://images.unsplash.com/photo-500..." />
               </FormGroup>
 
               <div className="row">
@@ -1639,7 +1679,7 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                 <button type="button" className="btn-secondary-outline btn_sm" onClick={handleAddQuestion}>
                   Add Question to Quiz
                 </button>
@@ -1647,11 +1687,72 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
                   type="button" 
                   className="btn-secondary-outline btn_sm" 
                   style={{ borderColor: '#7C32FF', color: '#7C32FF', display: 'flex', alignItems: 'center', gap: '6px' }}
-                  onClick={() => setShowAiGenerator(!showAiGenerator)}
+                  onClick={() => {
+                    setShowAiGenerator(!showAiGenerator);
+                    setShowQBank(false);
+                  }}
                 >
                   ✨ AI Question Generator
                 </button>
+                <button 
+                  type="button" 
+                  className="btn-secondary-outline btn_sm" 
+                  style={{ borderColor: 'var(--success)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  onClick={() => {
+                    setShowQBank(!showQBank);
+                    setShowAiGenerator(false);
+                  }}
+                >
+                  📂 Browse Question Bank
+                </button>
               </div>
+
+              {/* Question Bank Browse Panel */}
+              {showQBank && (
+                <div style={{ border: '1px dashed var(--success)', padding: '16px', background: '#f8fdf9', borderRadius: '4px', marginTop: '14px' }}>
+                  <h6 style={{ fontWeight: 700, fontSize: '11px', color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
+                    📂 Question Bank (Repository Imports)
+                  </h6>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '180px', overflowY: 'auto', background: '#fff', padding: '10px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '12px' }}>
+                    {QUESTION_BANK_REPO.map((q) => {
+                      const isAdded = questions.some(existing => existing.text === q.text);
+                      return (
+                        <div key={q.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', borderBottom: '1px solid #eee', paddingBottom: '6px' }}>
+                          <div>
+                            <strong>{q.type.toUpperCase()}:</strong> {q.text}
+                          </div>
+                          <button 
+                            type="button" 
+                            className="btn_sm"
+                            disabled={isAdded}
+                            style={{ 
+                              padding: '2px 8px', 
+                              fontSize: '10px', 
+                              background: isAdded ? '#ddd' : 'var(--success)', 
+                              color: '#fff', 
+                              border: 'none', 
+                              borderRadius: '3px',
+                              cursor: isAdded ? 'not-allowed' : 'pointer'
+                            }}
+                            onClick={() => {
+                              const newQ = {
+                                id: 'q_qb_' + Date.now(),
+                                type: q.type,
+                                text: q.text,
+                                options: [...(q.options || [])],
+                                correct: q.correct
+                              };
+                              setQuestions([...questions, newQ]);
+                            }}
+                          >
+                            {isAdded ? 'Added' : 'Import'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* AI Generator Panel */}
               {showAiGenerator && (
@@ -1661,37 +1762,77 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
                   </h6>
                   
                   {generatedQuestions.length === 0 && !aiGenerating && (
-                    <form onSubmit={handleAiGenerate}>
-                      <FormGroup label="Select Source Document / File (Simulated)">
-                        <select className="form-control" value={aiFile} onChange={e => setAiFile(e.target.value)} required>
-                          <option value="">-- Select Material to Read --</option>
-                          <option value="gravity_notes.txt">gravity_notes.txt (Physics Coursework)</option>
-                          <option value="bst_lecture.pdf">bst_lecture.pdf (Computer Science Slides)</option>
-                          <option value="general_math.docx">general_math.docx (Calculus Integrals)</option>
-                        </select>
-                      </FormGroup>
-                      
-                      <div className="row">
-                        <div className="col-6">
-                          <FormGroup label="Questions Count">
-                            <input type="number" className="form-control" min={1} max={10} value={aiCount} onChange={e => setAiCount(Number(e.target.value))} required />
-                          </FormGroup>
+                    <>
+                      <form onSubmit={handleAiGenerate}>
+                        <FormGroup label="Select Source Document / File (Simulated)">
+                          <select className="form-control" value={aiFile} onChange={e => setAiFile(e.target.value)} required>
+                            <option value="">-- Select Material to Read --</option>
+                            <option value="gravity_notes.txt">gravity_notes.txt (Physics Coursework)</option>
+                            <option value="bst_lecture.pdf">bst_lecture.pdf (Computer Science Slides)</option>
+                            <option value="general_math.docx">general_math.docx (Calculus Integrals)</option>
+                          </select>
+                        </FormGroup>
+                        
+                        <div className="row">
+                          <div className="col-6">
+                            <FormGroup label="Questions Count">
+                              <input type="number" className="form-control" min={1} max={10} value={aiCount} onChange={e => setAiCount(Number(e.target.value))} required />
+                            </FormGroup>
+                          </div>
+                          <div className="col-6">
+                            <FormGroup label="Difficulty Level">
+                              <select className="form-control" value={aiDifficulty} onChange={e => setAiDifficulty(e.target.value)}>
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                              </select>
+                            </FormGroup>
+                          </div>
                         </div>
-                        <div className="col-6">
-                          <FormGroup label="Difficulty Level">
-                            <select className="form-control" value={aiDifficulty} onChange={e => setAiDifficulty(e.target.value)}>
-                              <option value="easy">Easy</option>
-                              <option value="medium">Medium</option>
-                              <option value="hard">Hard</option>
-                            </select>
-                          </FormGroup>
-                        </div>
+                        
+                        <button type="submit" className="primary_btn btn_sm" style={{ background: 'linear-gradient(90deg, #7C32FF, #C738D8)', border: 'none', width: '100%', justifyContent: 'center' }}>
+                          Generate AI Questions
+                        </button>
+                      </form>
+
+                      {/* DOCX Parsing Option */}
+                      <div style={{ borderTop: '1px solid #eee', paddingTop: '12px', marginTop: '12px' }}>
+                        <h6 style={{ fontSize: '11px', fontWeight: 600, color: '#333' }}>Or Parse a DOCX Document:</h6>
+                        {docxSuccess ? (
+                          <div className="alert alert-success" style={{ padding: '8px 12px', fontSize: '11px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>Successfully parsed 2 questions from docx file!</span>
+                            <button type="button" onClick={() => setDocxSuccess(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input 
+                              type="file" 
+                              accept=".docx" 
+                              className="form-control" 
+                              style={{ fontSize: '11px', padding: '4px' }} 
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  setDocxParsing(true);
+                                  setTimeout(() => {
+                                    setDocxParsing(false);
+                                    setDocxSuccess(true);
+                                    // add two mock parsed questions
+                                    const parsed = [
+                                      { id: 'docx_' + Date.now() + '_1', type: 'mcq-single', text: 'What is the SI unit of gravitational potential?', options: ['Joule/kg', 'Joule', 'Newton/kg', 'Watt'], correct: 0 },
+                                      { id: 'docx_' + Date.now() + '_2', type: 'descriptive', text: 'Describe Kepler\'s laws of planetary motion briefly.' }
+                                    ];
+                                    setQuestions([...questions, ...parsed]);
+                                  }, 1500);
+                                }
+                              }}
+                            />
+                            {docxParsing && (
+                              <div className="spinner-border text-primary" role="status" style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }}></div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      
-                      <button type="submit" className="primary_btn btn_sm" style={{ background: 'linear-gradient(90deg, #7C32FF, #C738D8)', border: 'none', width: '100%', justifyContent: 'center' }}>
-                        Generate AI Questions
-                      </button>
-                    </form>
+                    </>
                   )}
 
                   {aiGenerating && (
@@ -1850,8 +1991,18 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
                           </button>
                         )}
                         {attempt.evaluated && (
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                            Remarks: "{attempt.remarks}"
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: '6px' }}>
+                            <button 
+                              type="button" 
+                              className="btn-secondary-outline btn_sm" 
+                              style={{ padding: '2px 8px', fontSize: '11px' }} 
+                              onClick={() => setSelectedAttemptReport(attempt)}
+                            >
+                              View Detailed Report
+                            </button>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                              Remarks: "{attempt.remarks}"
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1884,6 +2035,55 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
           );
         })}
       </div>
+
+      {/* Detailed Attempt Report Modal */}
+      {selectedAttemptReport && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '650px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '12px', marginBottom: '16px' }}>
+              <h5 style={{ fontWeight: 700, margin: 0 }}>Detailed Quiz Report</h5>
+              <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '14px' }} onClick={() => setSelectedAttemptReport(null)}>×</button>
+            </div>
+            
+            <div className="mb-4" style={{ display: 'flex', gap: '20px', fontSize: '13px' }}>
+              <div><strong>Student Name:</strong> {selectedAttemptReport.studentName}</div>
+              <div><strong>Final Score:</strong> <Badge type="success">{selectedAttemptReport.score} pts</Badge></div>
+              <div><strong>Status:</strong> Evaluated</div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {selectedAttemptReport.quizQuestions && selectedAttemptReport.quizQuestions.map((q, idx) => {
+                const answer = selectedAttemptReport.answers[q.id];
+                const isCorrect = q.type === 'mcq-single' ? Number(answer) === q.correct : true; // mock evaluation representation
+                
+                return (
+                  <div key={q.id} style={{ border: '1px solid #eee', borderRadius: '6px', padding: '14px', background: '#fcfcfc' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <span style={{ fontWeight: 600, fontSize: '13px' }}>Q{idx + 1}: {q.text}</span>
+                      <Badge type={isCorrect ? 'success' : 'danger'}>
+                        {isCorrect ? 'Correct' : 'Incorrect'}
+                      </Badge>
+                    </div>
+                    {q.imageUrl && (
+                      <div style={{ margin: '8px 0', maxWidth: '200px' }}>
+                        <img src={q.imageUrl} alt="Q-visual" style={{ width: '100%', borderRadius: '4px' }} />
+                      </div>
+                    )}
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div>Selected Answer: <strong style={{ color: isCorrect ? 'var(--success)' : 'var(--danger)' }}>
+                        {q.type.startsWith('mcq') && q.options ? q.options[answer] || 'Skipped' : answer || 'Skipped'}
+                      </strong></div>
+                      {q.type.startsWith('mcq') && !isCorrect && (
+                        <div>Correct Option: <strong>{q.options[q.correct]}</strong></div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </WhiteCard>
   );
 }
