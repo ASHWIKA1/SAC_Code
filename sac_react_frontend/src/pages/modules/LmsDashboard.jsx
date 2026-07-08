@@ -2101,6 +2101,22 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
   
   // Attachments simulator
   const [attachment, setAttachment] = useState('');
+  
+  // Membership & Notification states
+  const [showMemberManager, setShowMemberManager] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: "New discussion group 'Science Projects' was created by Faculty Mary.", time: '5m ago' },
+    { id: 2, text: "Rahul Student posted in 'Exam Prep 101'.", time: '12m ago' }
+  ]);
+
+  const USER_LIST = [
+    { name: 'Faculty John', role: 'teacher' },
+    { name: 'Faculty Mary', role: 'teacher' },
+    { name: 'Rahul Student', role: 'student' },
+    { name: 'Anjali Student', role: 'student' },
+    { name: 'Mr. Sharma Parent', role: 'parent' },
+    { name: 'Mrs. Gupta Parent', role: 'parent' }
+  ];
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -2109,7 +2125,7 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
     const newMsg = {
       sender: userName,
       senderRole: role,
-      text: typedMessage.trim() + (attachment ? ` [Attachment: ${attachment}]` : ''),
+      text: typedMessage.trim() + (attachment ? ` [📎 Attachment: ${attachment}]` : ''),
       timestamp: new Date().toISOString()
     };
 
@@ -2130,7 +2146,7 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
     const newGroup = {
       id: newGroupId,
       name: newGroupName.trim(),
-      members: ['Faculty John', 'Rahul Student'],
+      members: [userName], // starts with creator only
       createdBy: userName
     };
 
@@ -2180,6 +2196,23 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
       <div className="row" style={{ minHeight: '400px' }}>
         {/* Left Side: Groups List */}
         <div className="col-12 col-md-4" style={{ borderRight: '1px solid var(--border-color)', paddingRight: '15px' }}>
+          {/* Notifications feed [RBAC] */}
+          {isTeacher && notifications.length > 0 && (
+            <div style={{ background: '#fffbeb', border: '1px solid #fef3c7', padding: '10px', borderRadius: '4px', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#d97706' }}>🔔 Forum Notifications</span>
+                <button type="button" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '10px', color: '#999' }} onClick={() => setNotifications([])}>Clear</button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {notifications.map(n => (
+                  <div key={n.id} style={{ fontSize: '10.5px', color: '#78350f', lineHeight: 1.3 }}>
+                    • {n.text}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <h6 style={{ fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '12px' }}>Groups</h6>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {forumGroups.map(g => (
@@ -2217,19 +2250,111 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
           {selectedGroup ? (
             <>
               {/* Chat Header */}
-              <div style={{ paddingBottom: '10px', borderBottom: '1px solid var(--border-color)', marginBottom: '12px' }}>
-                <h5 style={{ fontWeight: 600, fontSize: '14px' }}>
-                  {forumGroups.find(g => g.id === selectedGroup)?.name}
-                </h5>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                  Members: {forumGroups.find(g => g.id === selectedGroup)?.members.join(', ')}
-                </span>
-                {isParent && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--warning)', fontSize: '11px', marginTop: '4px', fontWeight: 600 }}>
-                    <Info size={11} /> Parent Sandbox: Messages will not be directly visible to students (direct messaging disabled).
-                  </div>
+              <div style={{ paddingBottom: '10px', borderBottom: '1px solid var(--border-color)', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <h5 style={{ fontWeight: 600, fontSize: '14px', margin: 0 }}>
+                    {forumGroups.find(g => g.id === selectedGroup)?.name}
+                  </h5>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    Members: {forumGroups.find(g => g.id === selectedGroup)?.members.join(', ')}
+                  </span>
+                  {isParent && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--warning)', fontSize: '11px', marginTop: '4px', fontWeight: 600 }}>
+                      <Info size={11} /> Parent Sandbox: Messages will not be directly visible to students (direct messaging disabled).
+                    </div>
+                  )}
+                </div>
+                {isTeacher && (
+                  <button 
+                    type="button"
+                    className="btn-secondary-outline btn_sm"
+                    style={{ fontSize: '11px', padding: '4px 8px' }}
+                    onClick={() => setShowMemberManager(!showMemberManager)}
+                  >
+                    Manage Members
+                  </button>
                 )}
               </div>
+
+              {/* Member Manager Panel */}
+              {showMemberManager && isTeacher && (
+                <div style={{ background: '#fcfcfc', border: '1px solid #ddd', padding: '14px', borderRadius: '4px', marginBottom: '12px' }}>
+                  <h6 style={{ fontWeight: 600, fontSize: '12px', marginBottom: '8px' }}>Manage Group Members</h6>
+                  
+                  {/* Test case rules validation */}
+                  {(() => {
+                    const currentGroupObj = forumGroups.find(g => g.id === selectedGroup);
+                    if (!currentGroupObj) return null;
+                    const hasParents = currentGroupObj.members.some(m => USER_LIST.find(x => x.name === m)?.role === 'parent');
+                    const hasStudents = currentGroupObj.members.some(m => USER_LIST.find(x => x.name === m)?.role === 'student');
+                    
+                    return (
+                      <>
+                        {hasParents && (
+                          <div style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: 600, marginBottom: '8px' }}>
+                            ⚠️ Parent Communication Rules: Student members cannot be added to this group.
+                          </div>
+                        )}
+                        {hasStudents && (
+                          <div style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: 600, marginBottom: '8px' }}>
+                            ⚠️ Parent Communication Rules: Parent members cannot be added to this group.
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {USER_LIST.map(u => {
+                            const isMember = currentGroupObj.members.includes(u.name);
+                            const isBlocked = (u.role === 'student' && hasParents) || (u.role === 'parent' && hasStudents);
+                            
+                            return (
+                              <div 
+                                key={u.name} 
+                                style={{ 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  gap: '6px', 
+                                  fontSize: '11.5px', 
+                                  padding: '4px 8px', 
+                                  borderRadius: '20px', 
+                                  background: isMember ? 'rgba(124,50,255,0.08)' : '#f3f3f3',
+                                  border: isMember ? '1px solid var(--primary-color)' : '1px solid #ddd',
+                                  opacity: isBlocked ? 0.5 : 1
+                                }}
+                              >
+                                <span>{u.name} ({u.role.toUpperCase()})</span>
+                                {isMember ? (
+                                  <button 
+                                    type="button" 
+                                    style={{ border: 'none', background: 'none', color: 'var(--danger)', cursor: 'pointer', padding: 0, fontWeight: 700 }}
+                                    onClick={() => {
+                                      const nextMembers = currentGroupObj.members.filter(m => m !== u.name);
+                                      setForumGroups(forumGroups.map(g => g.id === selectedGroup ? { ...g, members: nextMembers } : g));
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                ) : (
+                                  <button 
+                                    type="button" 
+                                    disabled={isBlocked}
+                                    style={{ border: 'none', background: 'none', color: isBlocked ? '#999' : 'var(--primary-color)', cursor: isBlocked ? 'not-allowed' : 'pointer', padding: 0, fontWeight: 700 }}
+                                    onClick={() => {
+                                      const nextMembers = [...currentGroupObj.members, u.name];
+                                      setForumGroups(forumGroups.map(g => g.id === selectedGroup ? { ...g, members: nextMembers } : g));
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
 
               {/* Message List */}
               <div style={{ flex: 1, overflowY: 'auto', paddingRight: '6px', marginBottom: '14px' }}>
@@ -2276,17 +2401,32 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
                   required
                 />
                 
-                {/* Faculty Only: Attachments option */}
+                {/* Faculty Only: Attachments option [RBAC] */}
                 {isTeacher && (
-                  <div style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <input 
-                      type="text" 
-                      className="form-control" 
-                      style={{ width: '130px', fontSize: '11px', padding: '6px' }}
-                      value={attachment} 
-                      onChange={e => setAttachment(e.target.value)} 
-                      placeholder="Attach file..." 
+                      type="file" 
+                      id="forumFile"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setAttachment(e.target.files[0].name);
+                        }
+                      }}
                     />
+                    <button 
+                      type="button" 
+                      className="btn-secondary-outline btn_sm" 
+                      style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', padding: '6px 10px' }}
+                      onClick={() => document.getElementById('forumFile').click()}
+                    >
+                      <UploadCloud size={13} /> {attachment ? 'Change File' : 'Upload File'}
+                    </button>
+                    {attachment && (
+                      <span style={{ fontSize: '11px', color: 'var(--text-light)', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        📎 {attachment}
+                      </span>
+                    )}
                   </div>
                 )}
 
