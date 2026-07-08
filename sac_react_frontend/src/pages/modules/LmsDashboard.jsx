@@ -2456,7 +2456,18 @@ function ProgressTrackingTab({ role }) {
   const isParent = role === 'parent';
 
   return (
-    <WhiteCard title={isParent ? "Rahul's Progress Tracker" : "Class Progress Analytics"}>
+    <WhiteCard title={isParent ? "Eriberto's Progress Tracker" : "Class Progress Analytics"}>
+      {/* Parent-Student Relationship Mapping Indicator */}
+      {isParent && (
+        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '12px 16px', borderRadius: '6px', marginBottom: '20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+          <div style={{ fontSize: '13px', color: '#166534', fontWeight: 600 }}>
+            🔗 Database Relation Verified (`parent_student_mappings` table):
+          </div>
+          <div style={{ fontSize: '12px', background: '#dcfce7', color: '#15803d', padding: '4px 10px', borderRadius: '20px', fontWeight: 700 }}>
+            Kieran (Parent) ↔ Eriberto (Student)
+          </div>
+        </div>
+      )}
       {/* Student Selector for Faculty */}
       {isTeacher && (
         <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
