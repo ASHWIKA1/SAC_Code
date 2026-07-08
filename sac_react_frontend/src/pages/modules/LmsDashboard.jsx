@@ -1234,6 +1234,8 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [duration, setDuration] = useState(30);
+  const [quizClass, setQuizClass] = useState('Class 10');
+  const [quizSection, setQuizSection] = useState('Section A');
   const [questions, setQuestions] = useState([]);
   
   // Question Builder states
@@ -1389,12 +1391,16 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
       end: endDate || '2026-07-10T10:00',
       duration: Number(duration),
       status: 'Pending',
-      questions
+      questions,
+      assignedClass: quizClass || 'Class 10',
+      assignedSection: quizSection || 'Section A'
     };
 
     setQuizzes([...quizzes, newQuiz]);
     setActiveQuizBuilder(false);
     setQuizTitle('');
+    setQuizClass('Class 10');
+    setQuizSection('Section A');
     setQuestions([]);
   };
 
@@ -1612,6 +1618,28 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
                 </div>
               )}
             </FormGroup>
+
+            <div className="row">
+              <div className="col-6">
+                <FormGroup label="Assign to Class" required={true}>
+                  <select className="form-control" value={quizClass} onChange={e => setQuizClass(e.target.value)} required>
+                    <option value="Class 10">Class 10 (High School)</option>
+                    <option value="Class 11">Class 11 (Junior Year)</option>
+                    <option value="Class 12">Class 12 (Senior Year)</option>
+                    <option value="Class 9">Class 9 (Freshman)</option>
+                  </select>
+                </FormGroup>
+              </div>
+              <div className="col-6">
+                <FormGroup label="Assign to Section" required={true}>
+                  <select className="form-control" value={quizSection} onChange={e => setQuizSection(e.target.value)} required>
+                    <option value="Section A">Section A (Advanced)</option>
+                    <option value="Section B">Section B (General)</option>
+                    <option value="Section C">Section C (Standard)</option>
+                  </select>
+                </FormGroup>
+              </div>
+            </div>
 
             {/* Questions Builder Section */}
             <div style={{ border: '1px solid #e1e1f5', borderRadius: '4px', padding: '16px', background: '#fff', marginBottom: '16px' }}>
@@ -1932,8 +1960,9 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
             <div key={q.id} style={styles.quizCard}>
               <div>
                 <h4 style={{ fontSize: '14.5px', fontWeight: 600 }}>{q.title}</h4>
-                <div style={{ display: 'flex', gap: '12px', marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                   <span>Duration: <strong>{q.duration} Mins</strong></span>
+                  <span>Target: <strong style={{ color: 'var(--primary-color)' }}>{q.assignedClass || 'Class 10'} ({q.assignedSection || 'Section A'})</strong></span>
                   <span>Start: <strong>{new Date(q.start).toLocaleString()}</strong></span>
                   <span>Status: 
                     <strong style={{ marginLeft: '4px', color: q.status === 'Published' ? 'var(--success)' : 'var(--warning)' }}>
