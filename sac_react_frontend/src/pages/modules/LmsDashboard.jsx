@@ -1816,10 +1816,16 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
                     {allAttempts.length > 0 && (
                       <div style={{ marginTop: '4px' }}>
                         {allAttempts.map(att => (
-                          <div key={att.id} style={{ display: 'flex', gap: '6px', marginTop: '3px' }}>
-                            <button className="btn-success btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => setActiveEvaluation(att)}>
-                              Evaluate {att.studentName}
-                            </button>
+                          <div key={att.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                            {!att.evaluated ? (
+                              <button className="btn-success btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => setActiveEvaluation(att)}>
+                                Evaluate {att.studentName}
+                              </button>
+                            ) : (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>
+                                <CheckCircle size={14} /> {att.studentName}: {att.score} pts (Evaluated)
+                              </div>
+                            )}
                             <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => handleReattemptAllow(att.id)}>
                               Allow Reattempt
                             </button>
