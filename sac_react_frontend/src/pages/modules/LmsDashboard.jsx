@@ -50,16 +50,20 @@ const styles = {
     borderRadius: '0 4px 4px 0'
   }),
   innerTabButton: (isActive) => ({
-    padding: '8px 16px',
+    padding: '10px 24px',
     border: 'none',
-    background: isActive ? 'var(--primary-color)' : 'none',
-    color: isActive ? '#fff' : '#555',
-    borderRadius: '20px',
+    background: isActive ? 'rgba(124, 50, 255, 0.12)' : 'transparent',
+    color: isActive ? 'var(--primary-color, #7c32ff)' : '#475569',
+    borderRadius: '4px',
     cursor: 'pointer',
-    fontSize: '12.5px',
-    fontWeight: isActive ? '600' : '400',
-    transition: 'all 0.2s',
-    border: isActive ? '1px solid var(--primary-color)' : '1px solid var(--border-color)'
+    fontSize: '13px',
+    fontWeight: '600',
+    transition: 'all 0.15s ease',
+    textTransform: 'uppercase',
+    letterSpacing: '0.6px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
   }),
   quizCard: {
     padding: '16px',
@@ -280,7 +284,217 @@ export default function LmsDashboard() {
   }, []);
 
   return (
-    <>
+    <div className="lms-dashboard-style-wrapper">
+      <style>{`
+        /* --- LMS Local UI Overrides --- */
+        .lms-dashboard-style-wrapper {
+          font-family: 'Poppins', 'Inter', sans-serif;
+        }
+
+        /* Form spacing and layout alignment */
+        .lms-dashboard-style-wrapper .form-group {
+          margin-bottom: 20px !important;
+          text-align: left !important;
+        }
+
+        /* Form Section Headers */
+        .lms-dashboard-style-wrapper h3, 
+        .lms-dashboard-style-wrapper h4, 
+        .lms-dashboard-style-wrapper .section-header {
+          text-transform: uppercase !important;
+          font-size: 13px !important;
+          font-weight: 700 !important;
+          color: #475569 !important;
+          letter-spacing: 0.8px;
+          margin-bottom: 20px;
+          border-bottom: none !important;
+          text-align: left;
+        }
+
+        /* Input fields labels */
+        .lms-dashboard-style-wrapper .form-group label {
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          color: #475569 !important;
+          letter-spacing: 0.6px;
+          margin-bottom: 8px;
+          display: inline-block;
+        }
+
+        /* Form Fields Alignment & Heights */
+        .lms-dashboard-style-wrapper input[type="text"],
+        .lms-dashboard-style-wrapper input[type="number"],
+        .lms-dashboard-style-wrapper input[type="date"],
+        .lms-dashboard-style-wrapper input[type="datetime-local"],
+        .lms-dashboard-style-wrapper input[type="email"],
+        .lms-dashboard-style-wrapper input[type="password"],
+        .lms-dashboard-style-wrapper input[type="url"],
+        .lms-dashboard-style-wrapper select,
+        .lms-dashboard-style-wrapper .form-control {
+          border-radius: 4px !important;
+          border: 1px solid #cbd5e1 !important;
+          background-color: #fff !important;
+          color: #1e293b !important;
+          padding: 8px 14px !important;
+          font-size: 13px !important;
+          font-weight: 400 !important;
+          width: 100% !important;
+          outline: none !important;
+          transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+          height: 42px !important; /* Perfect uniform height alignment */
+          box-sizing: border-box !important;
+        }
+
+        .lms-dashboard-style-wrapper textarea {
+          border-radius: 4px !important;
+          border: 1px solid #cbd5e1 !important;
+          background-color: #fff !important;
+          color: #1e293b !important;
+          padding: 10px 14px !important;
+          font-size: 13px !important;
+          font-weight: 400 !important;
+          width: 100% !important;
+          outline: none !important;
+          transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+          height: auto !important;
+          min-height: 100px !important;
+          box-sizing: border-box !important;
+        }
+
+        .lms-dashboard-style-wrapper input:focus,
+        .lms-dashboard-style-wrapper select:focus,
+        .lms-dashboard-style-wrapper textarea:focus {
+          border-color: var(--primary-color, #7c32ff) !important;
+          box-shadow: 0 0 0 2px rgba(124, 50, 255, 0.1) !important;
+        }
+
+        /* Buttons styling */
+        .lms-dashboard-style-wrapper .primary_btn {
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          background: var(--primary-color, #7c32ff) !important;
+          color: #fff !important;
+          border-radius: 4px !important;
+          padding: 10px 24px !important;
+          letter-spacing: 0.8px;
+          border: none !important;
+          cursor: pointer !important;
+          transition: all 0.15s ease !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 8px !important;
+          box-shadow: none !important;
+          height: 42px !important; /* Match uniform height alignment */
+          box-sizing: border-box !important;
+        }
+
+        .lms-dashboard-style-wrapper .primary_btn:hover {
+          background: #631ee6 !important;
+          transform: translateY(-1px);
+        }
+
+        .lms-dashboard-style-wrapper .primary_btn.btn_sm {
+          padding: 8px 16px !important;
+          height: 34px !important;
+          font-size: 10.5px !important;
+        }
+
+        .lms-dashboard-style-wrapper .btn-secondary-outline {
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          background: transparent !important;
+          color: #475569 !important;
+          border-radius: 4px !important;
+          padding: 10px 24px !important;
+          letter-spacing: 0.8px;
+          border: 1px solid #cbd5e1 !important;
+          cursor: pointer !important;
+          transition: all 0.15s ease !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 8px !important;
+          height: 42px !important; /* Match uniform height alignment */
+          box-sizing: border-box !important;
+        }
+
+        .lms-dashboard-style-wrapper .btn-secondary-outline:hover {
+          background: #f8fafc !important;
+          color: #1e293b !important;
+          border-color: #94a3b8 !important;
+        }
+
+        .lms-dashboard-style-wrapper .btn-secondary-outline.btn_sm {
+          padding: 8px 16px !important;
+          height: 34px !important;
+          font-size: 10.5px !important;
+        }
+
+        /* WhiteCard layout improvements to match screenshot */
+        .lms-dashboard-style-wrapper .white_card {
+          border-radius: 6px !important;
+          border: 1px solid #e2e8f0 !important;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+          margin-bottom: 24px !important;
+          background: #fff !important;
+        }
+
+        .lms-dashboard-style-wrapper .white_card_header {
+          padding: 20px 24px !important;
+          border-bottom: 1px solid #e2e8f0 !important;
+          background-color: #fff !important;
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+        }
+
+        .lms-dashboard-style-wrapper .white_card_header h4 {
+          font-size: 15px !important;
+          font-weight: 600 !important;
+          color: #1e293b !important;
+          margin: 0 !important;
+          text-transform: none !important;
+        }
+
+        .lms-dashboard-style-wrapper .white_card_body {
+          padding: 24px !important;
+        }
+
+        /* Professional Tables Styling & Alignment */
+        .lms-dashboard-style-wrapper table.data_table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+          margin-top: 8px !important;
+          text-align: left !important;
+        }
+
+        .lms-dashboard-style-wrapper table.data_table th {
+          background-color: #f8fafc !important;
+          color: #475569 !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.5px;
+          padding: 12px 16px !important;
+          border-bottom: 1px solid #cbd5e1 !important;
+        }
+
+        .lms-dashboard-style-wrapper table.data_table td {
+          padding: 14px 16px !important;
+          font-size: 13px !important;
+          color: #1e293b !important;
+          border-bottom: 1px solid #f1f5f9 !important;
+          vertical-align: middle !important;
+        }
+
+        .lms-dashboard-style-wrapper table.data_table tr:hover {
+          background-color: #f8fafc !important;
+        }
+      `}</style>
       <PageHeader 
         title={pageTitle} 
         breadcrumbs={[{ label: 'LMS' }, { label: breadcrumbLabel }]} 
@@ -326,7 +540,7 @@ export default function LmsDashboard() {
           {activeTab === 'forums' && (
             <DiscussionForumTab 
               role={role}
-              userName={user?.name || 'User'}
+              userName={user?.name || 'Rahul Student'}
               forumGroups={forumGroups}
               setForumGroups={setForumGroups}
               messages={messages}
@@ -341,7 +555,7 @@ export default function LmsDashboard() {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -391,9 +605,33 @@ function CourseManagementTab({
   const [dueDate, setDueDate] = useState('');
   const [maxMarks, setMaxMarks] = useState(100);
 
+  // Editing Assignment Mode
+  const [editingAssignmentId, setEditingAssignmentId] = useState(null);
+  
+  // Enhanced Form Fields
+  const [newSubject, setNewSubject] = useState('Physics');
+  const [newBatch, setNewBatch] = useState('2026 Batch');
+  const [newSemester, setNewSemester] = useState('Semester 1');
+  const [portalMode, setPortalMode] = useState('College'); // 'College' or 'School'
+  const [schoolClass, setSchoolClass] = useState('Class 10');
+  const [schoolSection, setSchoolSection] = useState('Section A');
+  const [schoolTerm, setSchoolTerm] = useState('Term I');
+  const [schoolGradingScale, setSchoolGradingScale] = useState('Marks');
+  const [parentSignatureRequired, setParentSignatureRequired] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [passingMarks, setPassingMarks] = useState(40);
+  const [assignmentType, setAssignmentType] = useState('Written Essay');
+  const [allowedFileTypes, setAllowedFileTypes] = useState('pdf, zip, docx');
+  const [maxFileSize, setMaxFileSize] = useState(10); // MB
+  const [allowLateSub, setAllowLateSub] = useState(true);
+  const [assignmentStatus, setAssignmentStatus] = useState('Published');
+  const [attachmentsList, setAttachmentsList] = useState([]);
+
   // Student Submit State
   const [subText, setSubText] = useState('');
   const [subFile, setSubFile] = useState('assignment_work.pdf');
+  const [resubmitting, setResubmitting] = useState(false);
 
   // Faculty Grading State (Rubrics)
   const [gradeFeedback, setGradeFeedback] = useState('');
@@ -421,25 +659,91 @@ function CourseManagementTab({
     return 'F';
   };
 
-  // Handle Faculty creating assignment
+  // Handle Faculty creating or editing assignment
   const handleAddAssignment = (e) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const newAssign = {
-      id: 'a' + (assignments.length + 1),
-      courseId: selectedCourse,
-      title: newTitle.trim(),
-      description: newDesc.trim(),
-      dueDate: dueDate || '2026-07-30',
-      maxMarks: Number(maxMarks),
-      submissionsCount: 0
-    };
+    if (editingAssignmentId) {
+      setAssignments(assignments.map(a => a.id === editingAssignmentId ? {
+        ...a,
+        courseId: selectedCourse,
+        title: newTitle.trim(),
+        description: newDesc.trim(),
+        dueDate: dueDate || '2026-07-30',
+        maxMarks: Number(maxMarks),
+        subject: newSubject,
+        batch: newBatch,
+        semester: newSemester,
+        startDate,
+        endDate,
+        passingMarks: Number(passingMarks),
+        assignmentType,
+        allowedFileTypes,
+        maxFileSize: Number(maxFileSize),
+        allowLateSubmission: allowLateSub ? 1 : 0,
+        status: assignmentStatus,
+        attachments: [...attachmentsList],
+        portalMode,
+        schoolClass: portalMode === 'School' ? schoolClass : null,
+        schoolSection: portalMode === 'School' ? schoolSection : null,
+        schoolTerm: portalMode === 'School' ? schoolTerm : null,
+        schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
+        parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false
+      } : a));
+      setEditingAssignmentId(null);
+    } else {
+      const newAssign = {
+        id: 'a' + (assignments.length + 1),
+        courseId: selectedCourse,
+        title: newTitle.trim(),
+        description: newDesc.trim(),
+        dueDate: dueDate || '2026-07-30',
+        maxMarks: Number(maxMarks),
+        submissionsCount: 0,
+        subject: newSubject,
+        batch: newBatch,
+        semester: newSemester,
+        startDate,
+        endDate,
+        passingMarks: Number(passingMarks),
+        assignmentType,
+        allowedFileTypes,
+        maxFileSize: Number(maxFileSize),
+        allowLateSubmission: allowLateSub ? 1 : 0,
+        status: assignmentStatus,
+        attachments: [...attachmentsList],
+        portalMode,
+        schoolClass: portalMode === 'School' ? schoolClass : null,
+        schoolSection: portalMode === 'School' ? schoolSection : null,
+        schoolTerm: portalMode === 'School' ? schoolTerm : null,
+        schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
+        parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false
+      };
+      setAssignments([newAssign, ...assignments]);
+    }
 
-    setAssignments([newAssign, ...assignments]);
     setShowAddForm(false);
     setNewTitle('');
     setNewDesc('');
+    setNewSubject('Physics');
+    setNewBatch('2026 Batch');
+    setNewSemester('Semester 1');
+    setStartDate('');
+    setEndDate('');
+    setPassingMarks(40);
+    setAssignmentType('Written Essay');
+    setAllowedFileTypes('pdf, zip, docx');
+    setMaxFileSize(10);
+    setAllowLateSub(true);
+    setAssignmentStatus('Published');
+    setAttachmentsList([]);
+    setPortalMode('College');
+    setSchoolClass('Class 10');
+    setSchoolSection('Section A');
+    setSchoolTerm('Term I');
+    setSchoolGradingScale('Marks');
+    setParentSignatureRequired(false);
   };
 
   // Handle Student submitting assignment
@@ -605,38 +909,246 @@ function CourseManagementTab({
         >
           {/* Create Assignment Form */}
           {showAddForm && (
-            <div style={{ padding: '16px', background: '#f8f8ff', border: '1px solid #e8e4ff', borderRadius: '6px', marginBottom: '20px' }}>
+            <div style={{ padding: '20px', background: '#f8f8ff', border: '1px solid #e8e4ff', borderRadius: '6px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                <h5 style={{ fontWeight: 600 }}>Create Assignment</h5>
-                <button onClick={() => setShowAddForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>×</button>
+                <h5 style={{ fontWeight: 600 }}>{editingAssignmentId ? 'Edit Assignment' : 'Create Assignment'}</h5>
+                <button onClick={() => { setShowAddForm(false); setEditingAssignmentId(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>×</button>
               </div>
               <form onSubmit={handleAddAssignment}>
-                <FormGroup label="Course" required={true}>
-                  <select className="form-control" value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)}>
-                    {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </FormGroup>
+                {/* School vs College Portal Mode Toggle Selector */}
+                <div style={{ marginBottom: '16px', background: 'rgba(124,50,255,0.04)', padding: '10px 14px', borderRadius: '6px', border: '1px solid rgba(124,50,255,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-dark)' }}>Portal Mode Configuration:</span>
+                  <div className="btn-group" style={{ display: 'flex', border: '1px solid #7C32FF', borderRadius: '4px', overflow: 'hidden' }}>
+                    <button 
+                      type="button" 
+                      style={{ padding: '3px 12px', fontSize: '11px', cursor: 'pointer', border: 'none', background: portalMode === 'College' ? '#7C32FF' : '#fff', color: portalMode === 'College' ? '#fff' : '#7C32FF' }}
+                      onClick={() => setPortalMode('College')}
+                    >
+                      🎓 College Assignment
+                    </button>
+                    <button 
+                      type="button" 
+                      style={{ padding: '3px 12px', fontSize: '11px', cursor: 'pointer', border: 'none', background: portalMode === 'School' ? '#7C32FF' : '#fff', color: portalMode === 'School' ? '#fff' : '#7C32FF' }}
+                      onClick={() => setPortalMode('School')}
+                    >
+                      🏫 School Assignment
+                    </button>
+                  </div>
+                </div>
+
+                {/* College Portal Fields */}
+                {portalMode === 'College' && (
+                  <>
+                    <div className="row">
+                      <div className="col-4">
+                        <FormGroup label="Course" required={true}>
+                          <select className="form-control" value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)}>
+                            {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                          </select>
+                        </FormGroup>
+                      </div>
+                      <div className="col-4">
+                        <FormGroup label="Subject" required={true}>
+                          <select className="form-control" value={newSubject} onChange={e => setNewSubject(e.target.value)}>
+                            <option value="Physics">Physics</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Mathematics">Mathematics</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                      <div className="col-4">
+                        <FormGroup label="Batch" required={true}>
+                          <select className="form-control" value={newBatch} onChange={e => setNewBatch(e.target.value)}>
+                            <option value="2026 Batch">2026 Batch</option>
+                            <option value="2027 Batch">2027 Batch</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-6">
+                        <FormGroup label="Semester" required={true}>
+                          <select className="form-control" value={newSemester} onChange={e => setNewSemester(e.target.value)}>
+                            <option value="Semester 1">Semester 1</option>
+                            <option value="Semester 2">Semester 2</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                      <div className="col-6">
+                        <FormGroup label="Assignment Type" required={true}>
+                          <select className="form-control" value={assignmentType} onChange={e => setAssignmentType(e.target.value)}>
+                            <option value="Lab Work">Lab Work</option>
+                            <option value="Written Essay">Written Essay</option>
+                            <option value="Project">Project</option>
+                            <option value="Practical Code">Practical Code</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* School Portal Fields */}
+                {portalMode === 'School' && (
+                  <>
+                    <div className="row">
+                      <div className="col-4">
+                        <FormGroup label="Class Level" required={true}>
+                          <select className="form-control" value={schoolClass} onChange={e => setSchoolClass(e.target.value)}>
+                            <option value="Class 9">Class 9</option>
+                            <option value="Class 10">Class 10</option>
+                            <option value="Class 11">Class 11</option>
+                            <option value="Class 12">Class 12</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                      <div className="col-4">
+                        <FormGroup label="Section" required={true}>
+                          <select className="form-control" value={schoolSection} onChange={e => setSchoolSection(e.target.value)}>
+                            <option value="Section A">Section A</option>
+                            <option value="Section B">Section B</option>
+                            <option value="Section C">Section C</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                      <div className="col-4">
+                        <FormGroup label="Subject" required={true}>
+                          <select className="form-control" value={newSubject} onChange={e => setNewSubject(e.target.value)}>
+                            <option value="Physics">Physics</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Mathematics">Mathematics</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-4">
+                        <FormGroup label="School Term" required={true}>
+                          <select className="form-control" value={schoolTerm} onChange={e => setSchoolTerm(e.target.value)}>
+                            <option value="Term I">Term I (Quarterly)</option>
+                            <option value="Term II">Term II (Half Yearly)</option>
+                            <option value="Term III">Term III (Annual)</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                      <div className="col-4">
+                        <FormGroup label="Grading Scale" required={true}>
+                          <select className="form-control" value={schoolGradingScale} onChange={e => setSchoolGradingScale(e.target.value)}>
+                            <option value="Marks">Raw Marks (0-100)</option>
+                            <option value="Grade A-F">Letter Grades (A, B, C, D, F)</option>
+                            <option value="GPA">GPA Scale (0.0 - 4.0)</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                      <div className="col-4" style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '14px' }}>
+                          <input 
+                            type="checkbox" 
+                            id="parentSigCheck" 
+                            checked={parentSignatureRequired} 
+                            onChange={e => setParentSignatureRequired(e.target.checked)} 
+                          />
+                          <label htmlFor="parentSigCheck" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-dark)', cursor: 'pointer', margin: 0 }}>
+                            ✍️ Require Parent Signature
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <FormGroup label="Assignment Title" required={true}>
                   <input type="text" className="form-control" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. Lab Report 2" required />
                 </FormGroup>
-                <FormGroup label="Instructions / Description">
-                  <textarea className="form-control" rows={3} value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Provide detailed steps..." />
+
+                <FormGroup label="Description (Rich Text Editor Helper)">
+                  <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                    <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', fontWeight: 700 }} onClick={() => setNewDesc(p => p + ' **Bold Text**')}>B</button>
+                    <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', fontStyle: 'italic' }} onClick={() => setNewDesc(p => p + ' *Italic Text*')}>I</button>
+                    <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', textDecoration: 'underline' }} onClick={() => setNewDesc(p => p + ' <u>Underline</u>')}>U</button>
+                    <span style={{ fontSize: '11px', color: '#999', alignSelf: 'center', marginLeft: 'auto' }}>Standard WYSIWYG format options</span>
+                  </div>
+                  <textarea className="form-control" rows={3} value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Provide detailed description..." />
                 </FormGroup>
+
                 <div className="row">
                   <div className="col-6">
-                    <FormGroup label="Due Date" required={true}>
+                    <FormGroup label="Start Date">
+                      <input type="date" className="form-control" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                    </FormGroup>
+                  </div>
+                  <div className="col-6">
+                    <FormGroup label="Due / End Date" required={true}>
                       <input type="date" className="form-control" value={dueDate} onChange={e => setDueDate(e.target.value)} required />
                     </FormGroup>
                   </div>
-                  <div className="col-6">
-                    <FormGroup label="Max Marks" required={true}>
+                </div>
+
+                <div className="row">
+                  <div className="col-4">
+                    <FormGroup label="Total Marks" required={true}>
                       <input type="number" className="form-control" value={maxMarks} onChange={e => setMaxMarks(e.target.value)} required min={1} />
                     </FormGroup>
                   </div>
+                  <div className="col-4">
+                    <FormGroup label="Passing Marks" required={true}>
+                      <input type="number" className="form-control" value={passingMarks} onChange={e => setPassingMarks(e.target.value)} required min={1} />
+                    </FormGroup>
+                  </div>
+                  <div className="col-4">
+                    <FormGroup label="Max File Size (MB)" required={true}>
+                      <input type="number" className="form-control" value={maxFileSize} onChange={e => setMaxFileSize(e.target.value)} required min={1} />
+                    </FormGroup>
+                  </div>
                 </div>
+
+                <div className="row">
+                  <div className="col-6">
+                    <FormGroup label="Allowed File Types" required={true}>
+                      <input type="text" className="form-control" value={allowedFileTypes} onChange={e => setAllowedFileTypes(e.target.value)} placeholder="e.g. pdf, zip, docx" required />
+                    </FormGroup>
+                  </div>
+                  <div className="col-6">
+                    <FormGroup label="Status" required={true}>
+                      <select className="form-control" value={assignmentStatus} onChange={e => setAssignmentStatus(e.target.value)}>
+                        <option value="Draft">Draft</option>
+                        <option value="Published">Published</option>
+                        <option value="Closed">Closed</option>
+                        <option value="Archived">Archived</option>
+                      </select>
+                    </FormGroup>
+                  </div>
+                </div>
+
+                <div style={{ margin: '14px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input type="checkbox" id="allowLate" checked={allowLateSub} onChange={e => setAllowLateSub(e.target.checked)} />
+                  <label htmlFor="allowLate" style={{ fontSize: '13px', cursor: 'pointer', margin: 0 }}>Allow Late Submission</label>
+                </div>
+
+                {/* Upload attachments simulator */}
+                <div style={{ background: '#fff', border: '1px solid #e1e1f5', borderRadius: '4px', padding: '14px', marginBottom: '16px' }}>
+                  <h6 style={{ fontWeight: 600, fontSize: '12px', marginBottom: '8px' }}>Upload Reference Attachments:</h6>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                    <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setAttachmentsList([...attachmentsList, 'syllabus_ref.pdf'])}>📎 Attach PDF</button>
+                    <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setAttachmentsList([...attachmentsList, 'setup_guide.zip'])}>📦 Attach ZIP</button>
+                    <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setAttachmentsList([...attachmentsList, 'https://youtube.com/lecture'])}>🔗 Attach URL</button>
+                  </div>
+                  {attachmentsList.length > 0 && (
+                    <div style={{ fontSize: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {attachmentsList.map((file, i) => (
+                        <span key={i} style={{ background: '#f0efff', color: '#7C32FF', padding: '2px 8px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          {file} <span style={{ cursor: 'pointer', fontWeight: 'bold' }} onClick={() => setAttachmentsList(attachmentsList.filter((_, idx) => idx !== i))}>×</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
-                  <button type="button" className="btn-secondary-outline" onClick={() => setShowAddForm(false)}>Cancel</button>
-                  <button type="submit" className="primary_btn">Publish Assignment</button>
+                  <button type="button" className="btn-secondary-outline" onClick={() => { setShowAddForm(false); setEditingAssignmentId(null); }}>Cancel</button>
+                  <button type="submit" className="primary_btn">{editingAssignmentId ? 'Save Edits' : 'Publish Assignment'}</button>
                 </div>
               </form>
             </div>
@@ -653,14 +1165,75 @@ function CourseManagementTab({
                 <div key={a.id} className="white_card" style={{ border: '1px solid var(--border-color)', boxShadow: 'none', marginBottom: '16px' }}>
                   <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
                     <div>
-                      <Badge type="info">{course ? course.name : 'General'}</Badge>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        <Badge type="info">{course ? course.name : 'General'}</Badge>
+                        <Badge type="purple">{a.subject || 'Physics'}</Badge>
+                        <Badge type="warning">{a.semester || 'Semester 1'} ({a.batch || '2026 Batch'})</Badge>
+                        <Badge type={a.status === 'Published' ? 'success' : a.status === 'Archived' ? 'danger' : 'secondary'}>{a.status || 'Published'}</Badge>
+                      </div>
                       <h4 style={{ fontSize: '15px', fontWeight: 600, marginTop: '8px', color: 'var(--text-dark)' }}>{a.title}</h4>
                       <p style={{ color: 'var(--text-muted)', fontSize: '12.5px', marginTop: '4px', whiteSpace: 'pre-line' }}>{a.description}</p>
                       
-                      <div style={{ display: 'flex', gap: '16px', marginTop: '10px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                      <div style={{ display: 'flex', gap: '16px', marginTop: '10px', fontSize: '12px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                         <span><Clock size={12} style={{ marginRight: '4px', verticalAlign: 'middle' }} /> Due: <strong>{a.dueDate}</strong></span>
                         <span>Max Marks: <strong>{a.maxMarks}</strong></span>
+                        <span>Type: <strong>{a.assignmentType || 'Written Essay'}</strong></span>
+                        <span>Allowed Types: <strong>{a.allowedFileTypes || 'pdf, zip, docx'}</strong></span>
                       </div>
+
+                      {/* Reference Attachments Listing */}
+                      {a.attachments && a.attachments.length > 0 && (
+                        <div style={{ marginTop: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '12px', color: '#666' }}>Reference files:</span>
+                          {a.attachments.map((file, i) => (
+                            <a href={`#download-${file}`} key={i} style={{ fontSize: '12px', color: 'var(--primary-color)', textDecoration: 'none', background: '#f5f5fc', padding: '2px 8px', borderRadius: '4px' }}>
+                              📎 {file}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Faculty Action Controls */}
+                      {isTeacher && (
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                          <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => {
+                            setEditingAssignmentId(a.id);
+                            setSelectedCourse(a.courseId);
+                            setNewTitle(a.title);
+                            setNewDesc(a.description);
+                            setDueDate(a.dueDate);
+                            setMaxMarks(a.maxMarks);
+                            setNewSubject(a.subject || 'Physics');
+                            setNewBatch(a.batch || '2026 Batch');
+                            setNewSemester(a.semester || 'Semester 1');
+                            setStartDate(a.startDate || '');
+                            setEndDate(a.endDate || '');
+                            setPassingMarks(a.passingMarks || 40);
+                            setAssignmentType(a.assignmentType || 'Written Essay');
+                            setAllowedFileTypes(a.allowedFileTypes || 'pdf, zip, docx');
+                            setMaxFileSize(a.maxFileSize || 10);
+                            setAllowLateSub(a.allowLateSubmission !== 0);
+                            setAssignmentStatus(a.status || 'Published');
+                            setAttachmentsList(a.attachments || []);
+                            setShowAddForm(true);
+                          }}>Edit</button>
+                          <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', color: 'var(--danger)' }} onClick={() => {
+                            setAssignments(assignments.filter(x => x.id !== a.id));
+                          }}>Delete</button>
+                          <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => {
+                            setAssignments(assignments.map(x => x.id === a.id ? { ...x, status: 'Archived' } : x));
+                          }}>Archive</button>
+                          <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => {
+                            const dup = {
+                              ...a,
+                              id: 'a' + (assignments.length + 1),
+                              title: a.title + ' (Copy)',
+                              submissionsCount: 0
+                            };
+                            setAssignments([dup, ...assignments]);
+                          }}>Duplicate</button>
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -817,7 +1390,7 @@ function CourseManagementTab({
             {courseContents.map(cnt => {
               const course = courses.find(c => c.id === cnt.courseId);
               return (
-                <div key={cnt.id} className="col-12 col-md-6 mb-3">
+                <div key={cnt.id} className="col-6 mb-3">
                   <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', padding: '16px', background: '#fff', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1194,13 +1767,20 @@ function CourseManagementTab({
           <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '500px', padding: '24px' }}>
             <h5 style={{ fontWeight: 600, marginBottom: '14px' }}>Upload Assignment Work</h5>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Submitting for: <strong>{showSubmitModal.title}</strong>
+              Submitting for: <strong>{showSubmitModal.title}</strong><br />
+              Allowed Types: <strong style={{ color: 'var(--primary-color)' }}>{showSubmitModal.allowedFileTypes || 'pdf, zip, docx'}</strong> (Max Size: {showSubmitModal.maxFileSize || 10} MB)
             </p>
             <form onSubmit={handleStudentSubmit}>
               <FormGroup label="Submission Text / Comments" required={true}>
                 <textarea className="form-control" rows={4} value={subText} onChange={e => setSubText(e.target.value)} placeholder="Type comments or description..." required />
               </FormGroup>
-              <FormGroup label="Upload File (Simulated)">
+              <FormGroup label="Attached Work File (Select Type to Simulate)">
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setSubFile('my_submission.pdf')}>📁 pdf</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setSubFile('solution_code.zip')}>📦 zip</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setSubFile('screenshot.png')}>🖼️ image</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setSubFile('practical_demo.mp4')}>🎥 video</button>
+                </div>
                 <input type="text" className="form-control" value={subFile} onChange={e => setSubFile(e.target.value)} placeholder="e.g. homework_v2.pdf" required />
               </FormGroup>
               <div style={{ display: 'flex', justify: 'flex-end', gap: '10px', marginTop: '16px' }}>
@@ -1261,48 +1841,162 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
   const [showAiGenerator, setShowAiGenerator] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiFile, setAiFile] = useState('');
+  const [aiUploadedFile, setAiUploadedFile] = useState(null);
+  const [aiUploadedFileName, setAiUploadedFileName] = useState('');
   const [aiCount, setAiCount] = useState(5);
   const [aiDifficulty, setAiDifficulty] = useState('medium');
+  const [aiTopicInput, setAiTopicInput] = useState('');
+  const [aiBloomLevelInput, setAiBloomLevelInput] = useState('Understand');
+  const [aiQTypeInput, setAiQTypeInput] = useState('mcq-single');
   const [generatedQuestions, setGeneratedQuestions] = useState([]);
+  const [aiHistoryLogs, setAiHistoryLogs] = useState([]);
 
   // Timer interval reference
   const intervalRef = useRef(null);
 
   // AI Generation handler
-  const handleAiGenerate = (e) => {
-    e.preventDefault();
-    if (!aiFile) {
-      alert("Please select or specify a question source file.");
+  const handleAiGenerate = async (e) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+    if (!aiUploadedFile && !aiUploadedFileName) {
+      alert("Please upload a source document file first.");
+      return;
+    }
+    if (!aiTopicInput.trim()) {
+      alert("Please enter a topic name.");
       return;
     }
     setAiGenerating(true);
-    setTimeout(() => {
-      const lowerName = aiFile.toLowerCase();
-      let list = [];
+    setTimeout(async () => {
+      const topic = aiTopicInput.trim() || "General Concepts";
+      const difficulty = aiDifficulty || "medium";
+      const bloomLevel = aiBloomLevelInput || "Understand";
+      const qType = aiQTypeInput || "mcq-single";
       
-      if (lowerName.includes("gravit") || lowerName.includes("physic")) {
-        list = [
-          { id: 'ai_' + Date.now() + '_1', type: 'mcq-single', text: 'Which of the following constants represents Newton\'s gravitational constant?', options: ['G = 6.674 x 10^-11 N m^2/kg^2', 'g = 9.8 m/s^2', 'c = 3.00 x 10^8 m/s', 'h = 6.626 x 10^-34 J s'], correct: 0, selected: true },
-          { id: 'ai_' + Date.now() + '_2', type: 'mcq-single', text: 'What is the relationship between gravitational force and distance between two bodies?', options: ['Directly proportional', 'Inversely proportional to distance', 'Inversely proportional to square of distance', 'No relation'], correct: 2, selected: true },
-          { id: 'ai_' + Date.now() + '_3', type: 'mcq-single', text: 'Where is the acceleration due to gravity (g) maximum on Earth\'s surface?', options: ['At the Equator', 'At the Poles', 'At the Center of Earth', 'At Mount Everest'], correct: 1, selected: true },
-          { id: 'ai_' + Date.now() + '_4', type: 'descriptive', text: 'Define escape velocity and write its expression for Earth\'s surface.', correct: null, selected: true }
-        ];
-      } else if (lowerName.includes("tree") || lowerName.includes("data") || lowerName.includes("cs")) {
-        list = [
-          { id: 'ai_' + Date.now() + '_1', type: 'mcq-single', text: 'What is the worst-case time complexity of searching in a Binary Search Tree (BST)?', options: ['O(1)', 'O(log n)', 'O(n)', 'O(n log n)'], correct: 2, selected: true },
-          { id: 'ai_' + Date.now() + '_2', type: 'mcq-single', text: 'Which traversal of a Binary Search Tree outputs the keys in sorted order?', options: ['Pre-order', 'In-order', 'Post-order', 'Level-order'], correct: 1, selected: true },
-          { id: 'ai_' + Date.now() + '_3', type: 'mcq-single', text: 'What is the maximum number of children a node in a binary tree can have?', options: ['1', '2', '3', 'Unlimited'], correct: 1, selected: true },
-          { id: 'ai_' + Date.now() + '_4', type: 'descriptive', text: 'Explain the difference between a AVL Tree and a normal Binary Search Tree.', correct: null, selected: true }
-        ];
-      } else {
-        list = [
-          { id: 'ai_' + Date.now() + '_1', type: 'mcq-single', text: 'What is the primary method to optimize memory usage in web applications?', options: ['Garbage collection tuning', 'Caching static assets', 'Using small image formats', 'Code splitting and lazy loading'], correct: 3, selected: true },
-          { id: 'ai_' + Date.now() + '_2', type: 'mcq-single', text: 'Which HTTP status code represents a successful REST request?', options: ['200 OK', '404 Not Found', '500 Internal Server Error', '302 Found'], correct: 0, selected: true },
-          { id: 'ai_' + Date.now() + '_3', type: 'descriptive', text: 'Describe the main differences between relational databases and NoSQL databases.', correct: null, selected: true }
-        ];
+      let generated = [];
+      
+      for (let i = 0; i < aiCount; i++) {
+        const qNum = i + 1;
+        let qText = '';
+        let options = [];
+        let correct = 0;
+        let explanation = `This question evaluates the student's ability to ${bloomLevel.toLowerCase()} the principles of "${topic}" at a ${difficulty} difficulty level.`;
+        
+        if (qType === 'mcq-single') {
+          const templates = [
+            `Which of the following is a primary characteristic of ${topic} under standard conditions?`,
+            `What is the main limitation encountered when analyzing ${topic} at a ${difficulty} level?`,
+            `How does a change in boundary variables affect the overall behavior of ${topic}?`,
+            `Which method is most recommended to ${bloomLevel.toLowerCase()} the performance of ${topic}?`,
+            `What is the standard mathematical representation for the base rate of ${topic}?`,
+            `Which of the following plays the most critical role in the stabilization of ${topic}?`,
+            `What is the expected outcome if the primary constant of ${topic} is doubled?`,
+            `Which scientific theory provides the underlying framework for ${topic}?`
+          ];
+          qText = templates[i % templates.length];
+          options = [
+            `Standard equilibrium state of ${topic}`,
+            `Transient variable fluctuations`,
+            `External force field interference`,
+            `Non-linear threshold limit`
+          ];
+          correct = (i + 1) % 4;
+        } else if (qType === 'mcq-multi') {
+          const templates = [
+            `Identify all valid assertions regarding the behavior of ${topic} under standard conditions (Choose all that apply):`,
+            `Which of the following factors directly influence the state variables of ${topic}?`,
+            `Select all recommended practices when evaluating the metrics of ${topic}:`,
+            `Which components are essential to construct a valid model of ${topic}?`
+          ];
+          qText = templates[i % templates.length];
+          options = [
+            `It behaves linearly in ideal conditions`,
+            `It converges to stable equilibrium`,
+            `It remains unaffected by thermal noise`,
+            `It requires continuous validation`
+          ];
+          correct = [0, 1];
+        } else if (qType === 'true-false') {
+          const templates = [
+            `True or False: The basic principles governing ${topic} remain constant under all standard conditions.`,
+            `True or False: Analyzing the metrics of ${topic} does not require specialized calibration.`,
+            `True or False: Higher difficulty levels of ${topic} introduce non-linear variables.`,
+            `True or False: The effect of ${topic} is negligible at macroscopic scales.`
+          ];
+          qText = templates[i % templates.length];
+          options = ["True", "False"];
+          correct = i % 2;
+        } else if (qType === 'fill-blank') {
+          const templates = [
+            `In standard experimental studies, the behavior of ${topic} is represented by the __________ equation.`,
+            `The study of ${topic} requires a clear understanding of the __________ coefficient.`,
+            `When applying ${bloomLevel.toLowerCase()} levels of analysis, the principal variable in ${topic} is __________.`
+          ];
+          qText = templates[i % templates.length];
+          options = ["Linear", "Differential", "Quadratic", "Empirical"];
+          correct = (i + 2) % 4;
+        } else {
+          // descriptive
+          const templates = [
+            `Provide a comprehensive overview of ${topic}, discussing its fundamental principles and practical applications.`,
+            `Detail how one would ${bloomLevel.toLowerCase()} the performance metrics of ${topic} at a ${difficulty} difficulty tier.`,
+            `Analyze the main challenges associated with stabilizing ${topic} in real-world deployments.`,
+            `Describe a standard laboratory experiment to measure the rate of change of ${topic}.`
+          ];
+          qText = templates[i % templates.length];
+          options = [];
+          correct = "";
+        }
+        
+        generated.push({
+          id: `ai_${Date.now()}_${qNum}`,
+          type: qType,
+          text: qText,
+          options,
+          correct,
+          explanation,
+          difficulty,
+          bloomLevel,
+          topic,
+          suggestedMarks: qType === 'descriptive' ? 5 : 2,
+          selected: true
+        });
       }
 
-      setGeneratedQuestions(list.slice(0, aiCount));
+      setGeneratedQuestions(generated);
+
+      // Call Backend REST API to log AI generation request
+      try {
+        const backendPayload = generated.map(q => ({
+          questionText: q.text,
+          correctAnswer: q.options && q.options[q.correct] ? String(q.options[q.correct]) : String(q.correct),
+          explanation: q.explanation || '',
+          difficulty: q.difficulty || aiDifficulty,
+          topic: q.topic || aiTopicInput,
+          bloomLevel: q.bloomLevel || aiBloomLevelInput,
+          suggestedMarks: q.suggestedMarks || 2
+        }));
+        await api.post(`/api/v1/lms/ai/generate?subject=Physics&topic=${aiTopicInput}&difficulty=${aiDifficulty}&bloomLevel=${aiBloomLevelInput}&questionType=${aiQTypeInput}`, backendPayload);
+      } catch (err) {
+        console.warn("Backend AI log failed, using local simulation.");
+      }
+
+      // Add to local history list
+      setAiHistoryLogs([
+        {
+          id: Date.now(),
+          subject: 'Physics',
+          topic: aiTopicInput,
+          difficulty: aiDifficulty,
+          bloomLevel: aiBloomLevelInput,
+          questionType: aiQTypeInput,
+          count: generated.length,
+          createdAt: new Date().toISOString()
+        },
+        ...aiHistoryLogs
+      ]);
+
       setAiGenerating(false);
     }, 2000);
   };
@@ -1786,28 +2480,98 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
               {showAiGenerator && (
                 <div style={{ border: '1px dashed #7C32FF', padding: '16px', background: '#fafaff', borderRadius: '4px', marginTop: '14px' }}>
                   <h6 style={{ fontWeight: 700, fontSize: '11px', color: '#7C32FF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
-                    ✨ AI Question Generation Engine
+                    ✨ AI Question Generation Engine (Dedicated Workspace)
                   </h6>
                   
                   {generatedQuestions.length === 0 && !aiGenerating && (
                     <>
-                      <form onSubmit={handleAiGenerate}>
-                        <FormGroup label="Select Source Document / File (Simulated)">
-                          <select className="form-control" value={aiFile} onChange={e => setAiFile(e.target.value)} required>
-                            <option value="">-- Select Material to Read --</option>
-                            <option value="gravity_notes.txt">gravity_notes.txt (Physics Coursework)</option>
-                            <option value="bst_lecture.pdf">bst_lecture.pdf (Computer Science Slides)</option>
-                            <option value="general_math.docx">general_math.docx (Calculus Integrals)</option>
-                          </select>
+                      <div>
+                        <FormGroup label="Upload Source Document">
+                          <div style={{ position: 'relative' }}>
+                            <input
+                              type="file"
+                              id="ai-file-upload"
+                              accept=".pdf,.doc,.docx,.pptx,.ppt,.txt,.csv,.xlsx"
+                              style={{ display: 'none' }}
+                              onChange={(e) => {
+                                const file = e.target.files && e.target.files[0];
+                                if (file) {
+                                  setAiUploadedFile(file);
+                                  setAiUploadedFileName(file.name);
+                                  setAiFile(file.name);
+                                  // Auto-populate topic from filename (strip extension & underscores/dashes)
+                                  const namePart = file.name.replace(/\.[^.]+$/, '').replace(/[_\-]+/g, ' ');
+                                  const capitalized = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+                                  setAiTopicInput(capitalized);
+                                }
+                              }}
+                            />
+                            <div
+                              onClick={() => document.getElementById('ai-file-upload').click()}
+                              style={{
+                                border: aiUploadedFileName ? '1.5px solid #7C32FF' : '2px dashed #c0b3ee',
+                                borderRadius: '6px',
+                                padding: '12px 16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                cursor: 'pointer',
+                                background: aiUploadedFileName ? '#f3eeff' : '#fafaff',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              <span style={{ fontSize: '22px' }}>{aiUploadedFileName ? '📄' : '📁'}</span>
+                              <div style={{ flex: 1 }}>
+                                {aiUploadedFileName ? (
+                                  <>
+                                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#7C32FF' }}>{aiUploadedFileName}</div>
+                                    <div style={{ fontSize: '10px', color: '#888' }}>Click to replace file</div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#555' }}>Click to upload a document</div>
+                                    <div style={{ fontSize: '10px', color: '#999' }}>Supports PDF, DOCX, PPTX, TXT, CSV, XLSX</div>
+                                  </>
+                                )}
+                              </div>
+                              {aiUploadedFileName && (
+                                <button
+                                  type="button"
+                                  onClick={(ev) => { ev.stopPropagation(); setAiUploadedFile(null); setAiUploadedFileName(''); setAiFile(''); setAiTopicInput(''); }}
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999', fontSize: '16px', lineHeight: 1 }}
+                                >✕</button>
+                              )}
+                            </div>
+                          </div>
                         </FormGroup>
-                        
+
                         <div className="row">
                           <div className="col-6">
+                            <FormGroup label="Topic Name">
+                              <input type="text" className="form-control" value={aiTopicInput} onChange={e => setAiTopicInput(e.target.value)} placeholder="e.g. Gravitational Laws" required />
+                            </FormGroup>
+                          </div>
+                          <div className="col-6">
+                            <FormGroup label="Bloom's Taxonomy Level">
+                              <select className="form-control" value={aiBloomLevelInput} onChange={e => setAiBloomLevelInput(e.target.value)}>
+                                <option value="Remember">Remember</option>
+                                <option value="Understand">Understand</option>
+                                <option value="Apply">Apply</option>
+                                <option value="Analyze">Analyze</option>
+                                <option value="Evaluate">Evaluate</option>
+                                <option value="Create">Create</option>
+                              </select>
+                            </FormGroup>
+                          </div>
+                        </div>
+
+                        <div className="row">
+                          <div className="col-4">
                             <FormGroup label="Questions Count">
                               <input type="number" className="form-control" min={1} max={10} value={aiCount} onChange={e => setAiCount(Number(e.target.value))} required />
                             </FormGroup>
                           </div>
-                          <div className="col-6">
+                          <div className="col-4">
                             <FormGroup label="Difficulty Level">
                               <select className="form-control" value={aiDifficulty} onChange={e => setAiDifficulty(e.target.value)}>
                                 <option value="easy">Easy</option>
@@ -1816,12 +2580,35 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
                               </select>
                             </FormGroup>
                           </div>
+                          <div className="col-4">
+                            <FormGroup label="Question Type">
+                              <select className="form-control" value={aiQTypeInput} onChange={e => setAiQTypeInput(e.target.value)}>
+                                <option value="mcq-single">Single MCQ</option>
+                                <option value="mcq-multi">Multiple MCQ</option>
+                                <option value="descriptive">Descriptive</option>
+                                <option value="true-false">True / False</option>
+                                <option value="fill-blank">Fill in the Blank</option>
+                              </select>
+                            </FormGroup>
+                          </div>
                         </div>
                         
-                        <button type="submit" className="primary_btn btn_sm" style={{ background: 'linear-gradient(90deg, #7C32FF, #C738D8)', border: 'none', width: '100%', justifyContent: 'center' }}>
+                        <button type="button" onClick={handleAiGenerate} className="primary_btn btn_sm" style={{ background: 'linear-gradient(90deg, #7C32FF, #C738D8)', border: 'none', width: '100%', justifyContent: 'center' }}>
                           Generate AI Questions
                         </button>
-                      </form>
+                      </div>
+
+                      {/* AI History Logs view */}
+                      <div style={{ marginTop: '14px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+                        <span style={{ fontSize: '11px', color: '#666', fontWeight: 'bold' }}>AI Generation Log History:</span>
+                        <div style={{ maxHeight: '110px', overflowY: 'auto', marginTop: '6px' }}>
+                          {aiHistoryLogs.map((logItem, idx) => (
+                            <div key={idx} style={{ fontSize: '10.5px', borderBottom: '1px solid #f0f0f0', paddingBottom: '4px', marginBottom: '4px', color: '#555' }}>
+                              🗓️ {new Date(logItem.createdAt).toLocaleDateString()} - <strong>{logItem.topic}</strong> (Count: {logItem.count}, Bloom: {logItem.bloomLevel}, Diff: {logItem.difficulty})
+                            </div>
+                          ))}
+                        </div>
+                      </div>
 
                       {/* DOCX Parsing Option */}
                       <div style={{ borderTop: '1px solid #eee', paddingTop: '12px', marginTop: '12px' }}>
@@ -1877,18 +2664,57 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
                       <h6 style={{ fontSize: '11.5px', fontWeight: 600, marginBottom: '10px' }}>AI Generated Questions Preview:</h6>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '200px', overflowY: 'auto', background: '#fff', padding: '10px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '12px' }}>
                         {generatedQuestions.map((q, idx) => (
-                          <div key={q.id} style={{ display: 'flex', gap: '8px', fontSize: '12px', borderBottom: idx < generatedQuestions.length - 1 ? '1px solid #eee' : 'none', paddingBottom: '8px' }}>
-                            <input 
-                              type="checkbox" 
-                              checked={q.selected} 
-                              onChange={() => {
-                                setGeneratedQuestions(generatedQuestions.map(x => x.id === q.id ? { ...x, selected: !x.selected } : x));
-                              }} 
-                              style={{ marginTop: '3px' }}
-                            />
-                            <div>
-                              <div><strong>Q{idx + 1}:</strong> {q.text}</div>
-                              <span style={{ fontSize: '10px', color: 'var(--primary-color)', fontWeight: 600 }}>({q.type.toUpperCase()})</span>
+                          <div key={q.id} style={{ fontSize: '12px', borderBottom: idx < generatedQuestions.length - 1 ? '1px solid #eee' : 'none', paddingBottom: '10px', marginBottom: idx < generatedQuestions.length - 1 ? '6px' : '0' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                              <input 
+                                type="checkbox" 
+                                checked={q.selected} 
+                                onChange={() => {
+                                  setGeneratedQuestions(generatedQuestions.map(x => x.id === q.id ? { ...x, selected: !x.selected } : x));
+                                }} 
+                                style={{ marginTop: '3px', flexShrink: 0 }}
+                              />
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 600, marginBottom: '4px' }}>Q{idx + 1}: {q.text}</div>
+                                <span style={{ fontSize: '10px', color: 'var(--primary-color)', fontWeight: 600, display: 'inline-block', marginBottom: '6px' }}>
+                                  {q.type.toUpperCase()} | {q.difficulty?.toUpperCase()} | {q.bloomLevel}
+                                </span>
+                                {/* Show answer choices for mcq/true-false/fill-blank */}
+                                {Array.isArray(q.options) && q.options.length > 0 && (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                    {q.options.map((opt, oi) => {
+                                      const isCorrect = q.type === 'mcq-multi'
+                                        ? Array.isArray(q.correct) && q.correct.includes(oi)
+                                        : q.correct === oi;
+                                      return (
+                                        <div key={oi} style={{
+                                          display: 'flex', alignItems: 'center', gap: '6px',
+                                          padding: '3px 8px', borderRadius: '3px',
+                                          background: isCorrect ? '#e8f8e8' : '#f9f9f9',
+                                          border: `1px solid ${isCorrect ? '#4caf50' : '#e0e0e0'}`,
+                                          fontSize: '11px'
+                                        }}>
+                                          <span style={{
+                                            width: '18px', height: '18px', borderRadius: q.type === 'mcq-multi' ? '3px' : '50%',
+                                            border: `2px solid ${isCorrect ? '#4caf50' : '#aaa'}`,
+                                            background: isCorrect ? '#4caf50' : 'transparent',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            flexShrink: 0
+                                          }}>
+                                            {isCorrect && <span style={{ color: '#fff', fontSize: '9px', lineHeight: 1 }}>✓</span>}
+                                          </span>
+                                          <span style={{ color: isCorrect ? '#2e7d32' : '#555', fontWeight: isCorrect ? 600 : 400 }}>{opt}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                                {q.explanation && (
+                                  <div style={{ marginTop: '5px', fontSize: '10.5px', color: '#777', fontStyle: 'italic' }}>
+                                    💡 {q.explanation}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -2224,7 +3050,7 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
       {/* Forum Interface Layout */}
       <div className="row" style={{ minHeight: '400px' }}>
         {/* Left Side: Groups List */}
-        <div className="col-12 col-md-4" style={{ borderRight: '1px solid var(--border-color)', paddingRight: '15px' }}>
+        <div className="col-4" style={{ borderRight: '1px solid var(--border-color)', paddingRight: '15px' }}>
           {/* Notifications feed [RBAC] */}
           {isTeacher && notifications.length > 0 && (
             <div style={{ background: '#fffbeb', border: '1px solid #fef3c7', padding: '10px', borderRadius: '4px', marginBottom: '14px' }}>
@@ -2275,7 +3101,7 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
         </div>
 
         {/* Right Side: Chat Box */}
-        <div className="col-12 col-md-8" style={{ display: 'flex', flexDirection: 'column', height: '400px' }}>
+        <div className="col-8" style={{ display: 'flex', flexDirection: 'column', height: '400px' }}>
           {selectedGroup ? (
             <>
               {/* Chat Header */}
@@ -2385,6 +3211,29 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
                 </div>
               )}
 
+              {/* Pinned Messages Header Area */}
+              {(() => {
+                const groupMsgs = messages[selectedGroup] || [];
+                const pinnedMsgs = groupMsgs.filter(m => m.pinned);
+                if (pinnedMsgs.length === 0) return null;
+                return (
+                  <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '10px', borderRadius: '6px', marginBottom: '12px' }}>
+                    <h6 style={{ fontSize: '11px', color: '#dc2626', fontWeight: 'bold', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>📌 Pinned Announcements:</h6>
+                    {pinnedMsgs.map((pm, idx) => (
+                      <div key={idx} style={{ fontSize: '12.5px', color: '#991b1b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '6px 10px', borderRadius: '4px', marginBottom: '4px' }}>
+                        <span><strong>{pm.sender}:</strong> {pm.text}</span>
+                        {isTeacher && (
+                          <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 6px', fontSize: '9px' }} onClick={() => {
+                            const updated = groupMsgs.map(m => m.text === pm.text ? { ...m, pinned: false } : m);
+                            setMessages({ ...messages, [selectedGroup]: updated });
+                          }}>Unpin</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
               {/* Message List */}
               <div style={{ flex: 1, overflowY: 'auto', paddingRight: '6px', marginBottom: '14px' }}>
                 {(messages[selectedGroup] || []).map((m, idx) => {
@@ -2399,9 +3248,23 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
                         marginBottom: '12px'
                       }}
                     >
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '2px' }}>
-                        {m.sender} ({m.senderRole.toUpperCase()})
-                      </span>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '2px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          {m.sender} ({m.senderRole.toUpperCase()}) {m.pinned && '📌'}
+                        </span>
+                        {isTeacher && (
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <button type="button" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '10px', color: 'var(--primary-color)', padding: 0 }} onClick={() => {
+                              const updated = (messages[selectedGroup] || []).map((msg, i) => i === idx ? { ...msg, pinned: !msg.pinned } : msg);
+                              setMessages({ ...messages, [selectedGroup]: updated });
+                            }}>{m.pinned ? 'Unpin' : 'Pin'}</button>
+                            <button type="button" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '10px', color: 'var(--danger)', padding: 0 }} onClick={() => {
+                              const updated = (messages[selectedGroup] || []).filter((_, i) => i !== idx);
+                              setMessages({ ...messages, [selectedGroup]: updated });
+                            }}>Delete</button>
+                          </div>
+                        )}
+                      </div>
                       <div 
                         style={{
                           padding: '10px 14px',
@@ -2480,9 +3343,37 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
 // ==========================================
 function ProgressTrackingTab({ role }) {
   const [selectedStudent, setSelectedStudent] = useState('Rahul Student');
+  const [metricView, setMetricView] = useState('Monthly'); // 'Monthly' or 'Semester'
 
   const isTeacher = role === 'teacher' || role === 'admin';
   const isParent = role === 'parent';
+
+  // Toggle dynamic chart data array based on Monthly/Semester performance view selector
+  const attendanceData = metricView === 'Monthly' 
+    ? MOCK_ANALYTICS.attendance 
+    : [
+        { month: 'Semester 1 Avg', percent: 93 },
+        { month: 'Semester 2 Avg', percent: 97 }
+      ];
+
+  const behaviorData = metricView === 'Monthly' 
+    ? MOCK_ANALYTICS.behavior 
+    : [
+        { week: 'Sem 1 Avg', score: 4.4 },
+        { week: 'Sem 2 Avg', score: 4.8 }
+      ];
+
+  const submissionHistory = [
+    { assignment: 'Gravitational Laws Essay', date: '2026-07-02', status: 'Graded', marks: '88/100', onTime: true },
+    { assignment: 'Redox Reactions Lab', date: '2026-06-25', status: 'Graded', marks: '45/50', onTime: true },
+    { assignment: 'Thermodynamics Worksheet', date: '2026-06-18', status: 'Late Submitted', marks: '32/50', onTime: false },
+    { assignment: 'Calculus Derivatives Mock', date: '2026-06-10', status: 'Graded', marks: '96/100', onTime: true }
+  ];
+
+  const strengths = ['Mathematical Formulation', 'Problem Solving Speed', 'Conceptual Clarity in Physics'];
+  const weakAreas = ['Detailed Essay Structuring', 'Scribble notes readability', 'Organic Chemistry formulas'];
+  const participationIndex = '8.8 / 10 (Very Active)';
+  const facultyRemarks = 'Rahul displays outstanding logical and reasoning skills in sciences. He responds frequently to discussion questions and completes peer evaluations early. Recommend focus on writing structured proofs and formatting code comments.';
 
   return (
     <WhiteCard title={isParent ? "Eriberto's Progress Tracker" : "Class Progress Analytics"}>
@@ -2497,23 +3388,47 @@ function ProgressTrackingTab({ role }) {
           </div>
         </div>
       )}
-      {/* Student Selector for Faculty */}
-      {isTeacher && (
-        <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span>Viewing analytics for student:</span>
-          <select className="form-control" style={{ width: '180px' }} value={selectedStudent} onChange={e => setSelectedStudent(e.target.value)}>
-            <option value="Rahul Student">Rahul Student (Roll 1)</option>
-            <option value="Sneha Rao">Sneha Rao (Roll 4)</option>
-            <option value="Arjun Singh">Arjun Singh (Roll 12)</option>
-          </select>
+
+      {/* Top Filter and Selectors */}
+      <div style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', background: '#fcfcfc', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+        {isTeacher && (
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '13.5px' }}>
+            <strong>Viewing Student:</strong>
+            <select className="form-control" style={{ width: '180px', padding: '4px 8px' }} value={selectedStudent} onChange={e => setSelectedStudent(e.target.value)}>
+              <option value="Rahul Student">Rahul Student (Roll 1)</option>
+              <option value="Sneha Rao">Sneha Rao (Roll 4)</option>
+              <option value="Arjun Singh">Arjun Singh (Roll 12)</option>
+            </select>
+          </div>
+        )}
+        {!isTeacher && <div style={{ fontSize: '13.5px' }}>Logged in as: <strong>{isParent ? 'Kieran (Parent)' : 'Rahul Student'}</strong></div>}
+
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontSize: '12.5px', color: '#666' }}>Performance View:</span>
+          <div className="btn-group" style={{ display: 'flex', border: '1px solid #7C32FF', borderRadius: '4px', overflow: 'hidden' }}>
+            <button 
+              type="button" 
+              style={{ padding: '4px 12px', fontSize: '12px', cursor: 'pointer', border: 'none', background: metricView === 'Monthly' ? '#7C32FF' : '#fff', color: metricView === 'Monthly' ? '#fff' : '#7C32FF' }}
+              onClick={() => setMetricView('Monthly')}
+            >
+              Monthly
+            </button>
+            <button 
+              type="button" 
+              style={{ padding: '4px 12px', fontSize: '12px', cursor: 'pointer', border: 'none', background: metricView === 'Semester' ? '#7C32FF' : '#fff', color: metricView === 'Semester' ? '#fff' : '#7C32FF' }}
+              onClick={() => setMetricView('Semester')}
+            >
+              Semester-wise
+            </button>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Grid of analytics charts */}
       <div className="row">
         {/* Quiz Scores Over Time */}
         <div className="col-12 col-lg-6 mb-4">
-          <div style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '4px' }}>
+          <div style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '4px', background: '#fff' }}>
             <h6 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '12px' }}>Quiz Performance Trend</h6>
             <div style={{ width: '100%' }}>
               <ResponsiveContainer width="100%" height={200}>
@@ -2539,7 +3454,7 @@ function ProgressTrackingTab({ role }) {
 
         {/* Exams Results */}
         <div className="col-12 col-lg-6 mb-4">
-          <div style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '4px' }}>
+          <div style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '4px', background: '#fff' }}>
             <h6 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '12px' }}>Major Exams Performance</h6>
             <div style={{ width: '100%' }}>
               <ResponsiveContainer width="100%" height={200}>
@@ -2559,11 +3474,11 @@ function ProgressTrackingTab({ role }) {
 
         {/* Attendance */}
         <div className="col-12 col-lg-6 mb-4">
-          <div style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '4px' }}>
-            <h6 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '12px' }}>Attendance Analytics</h6>
+          <div style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '4px', background: '#fff' }}>
+            <h6 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '12px' }}>Attendance Analytics ({metricView} aggregation)</h6>
             <div style={{ width: '100%' }}>
               <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={MOCK_ANALYTICS.attendance}>
+                <LineChart data={attendanceData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis domain={[80, 100]} />
@@ -2578,11 +3493,11 @@ function ProgressTrackingTab({ role }) {
 
         {/* Behavior Scores */}
         <div className="col-12 col-lg-6 mb-4">
-          <div style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '4px' }}>
-            <h6 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '12px' }}>Behavior Index (Weekly)</h6>
+          <div style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '4px', background: '#fff' }}>
+            <h6 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '12px' }}>Behavior Index ({metricView} aggregation)</h6>
             <div style={{ width: '100%' }}>
               <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={MOCK_ANALYTICS.behavior}>
+                <AreaChart data={behaviorData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="week" />
                   <YAxis domain={[0, 5]} />
@@ -2590,6 +3505,74 @@ function ProgressTrackingTab({ role }) {
                   <Area type="monotone" dataKey="score" name="Behavior Index" stroke="#ffba00" fill="#fff5d6" />
                 </AreaChart>
               </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Extra Tracking Details (Participation, Strengths, Remarks, Submission History) */}
+      <div className="row" style={{ marginTop: '16px' }}>
+        {/* Participation and Strengths Cards */}
+        <div className="col-12 col-lg-6 mb-4">
+          <div style={{ border: '1px solid var(--border-color)', padding: '16px', borderRadius: '4px', background: '#fbfbff', height: '100%' }}>
+            <h6 style={{ fontWeight: 700, fontSize: '13px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              🎯 Personal Competencies
+              <span className="badge badge-purple" style={{ fontSize: '11px' }}>Participation: {participationIndex}</span>
+            </h6>
+
+            <div style={{ marginBottom: '14px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 'bold', textTransform: 'uppercase' }}>👍 Strong Subjects & Areas:</span>
+              <ul style={{ fontSize: '12px', color: '#333', paddingLeft: '20px', margin: '4px 0 0 0' }}>
+                {strengths.map((str, idx) => <li key={idx} style={{ marginBottom: '2px' }}>{str}</li>)}
+              </ul>
+            </div>
+
+            <div style={{ marginBottom: '14px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: 'bold', textTransform: 'uppercase' }}>⚠️ Weak Subjects & Focus Areas:</span>
+              <ul style={{ fontSize: '12px', color: '#333', paddingLeft: '20px', margin: '4px 0 0 0' }}>
+                {weakAreas.map((w, idx) => <li key={idx} style={{ marginBottom: '2px' }}>{w}</li>)}
+              </ul>
+            </div>
+
+            <div style={{ borderTop: '1px solid #eee', paddingTop: '10px', marginTop: '10px' }}>
+              <span style={{ fontSize: '11.5px', color: '#666', fontWeight: 'bold' }}>💬 Faculty Remarks:</span>
+              <p style={{ fontSize: '12px', color: '#444', fontStyle: 'italic', margin: '4px 0 0 0', lineHeight: '1.4' }}>
+                "{facultyRemarks}"
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Detailed Submission History */}
+        <div className="col-12 col-lg-6 mb-4">
+          <div style={{ border: '1px solid var(--border-color)', padding: '16px', borderRadius: '4px', background: '#fff', height: '100%' }}>
+            <h6 style={{ fontWeight: 700, fontSize: '13px', marginBottom: '12px' }}>📁 Detailed Homework Submission History</h6>
+            
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #eee', background: '#fafafa', textAlign: 'left' }}>
+                    <th style={{ padding: '6px' }}>Assignment</th>
+                    <th style={{ padding: '6px' }}>Date</th>
+                    <th style={{ padding: '6px' }}>Status</th>
+                    <th style={{ padding: '6px' }}>Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {submissionHistory.map((sub, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                      <td style={{ padding: '6px', fontWeight: 600 }}>{sub.assignment}</td>
+                      <td style={{ padding: '6px', color: '#666' }}>{sub.date}</td>
+                      <td style={{ padding: '6px' }}>
+                        <span style={{ color: sub.onTime ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>
+                          {sub.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '6px', fontWeight: 700 }}>{sub.marks}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

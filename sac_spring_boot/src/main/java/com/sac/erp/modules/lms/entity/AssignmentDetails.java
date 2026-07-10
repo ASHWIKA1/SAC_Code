@@ -44,4 +44,26 @@ public class AssignmentDetails {
 
     @Column(name = "is_deleted")
     private Integer isDeleted = 0;
+
+    private String batch;
+
+    private String semester;
+
+    @Column(name = "total_marks")
+    private Integer totalMarks;
+
+    @Column(name = "passing_marks")
+    private Integer passingMarks;
+
+    @Column(name = "assignment_type")
+    private String assignmentType;
+
+    @Column(name = "allowed_file_types")
+    private String allowedFileTypes;
+
+    @Column(name = "max_file_size")
+    private Integer maxFileSize;
+
+    @Column(name = "allow_late_submission")
+    private Integer allowLateSubmission = 1;
 }

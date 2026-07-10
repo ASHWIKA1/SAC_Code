@@ -89,4 +89,33 @@ public class LmsController {
         log.info("REST request faculty {} reviews submission {}", facultyId, studentAssignmentId);
         return ResponseEntity.ok(lmsService.reviewSubmission(studentAssignmentId, remarks, facultyId));
     }
+
+    @PostMapping("/assignments/evaluate")
+    public ResponseEntity<AssignmentEvaluation> evaluateAssignment(
+            @RequestParam Long studentAssignmentId,
+            @RequestParam Integer score,
+            @RequestParam String remarks,
+            @RequestParam Integer needsResubmission) {
+        log.info("REST request to evaluate submission {} with score {} and remarks '{}', needsResubmission={}", 
+                studentAssignmentId, score, remarks, needsResubmission);
+        return ResponseEntity.ok(lmsService.evaluateAssignment(studentAssignmentId, score, remarks, needsResubmission));
+    }
+
+    @PostMapping("/ai/generate")
+    public ResponseEntity<AiQuestionHistory> saveAiGenerationRequest(
+            @RequestParam String subject,
+            @RequestParam String topic,
+            @RequestParam String difficulty,
+            @RequestParam String bloomLevel,
+            @RequestParam String questionType,
+            @RequestBody List<GeneratedQuestion> questions) {
+        log.info("REST request to save AI generation history log for topic: {}", topic);
+        return ResponseEntity.ok(lmsService.saveAiGenerationRequest(subject, topic, difficulty, bloomLevel, questionType, questions));
+    }
+
+    @GetMapping("/ai/history")
+    public ResponseEntity<List<AiQuestionHistory>> getAiGenerationHistory() {
+        log.info("REST request to get all AI generation history request records");
+        return ResponseEntity.ok(lmsService.getAiGenerationHistory());
+    }
 }

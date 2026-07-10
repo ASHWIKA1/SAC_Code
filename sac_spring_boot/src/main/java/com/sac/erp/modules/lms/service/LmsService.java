@@ -19,4 +19,9 @@ public interface LmsService {
     StudentAssignment submitAssignment(Long assignmentId, Long studentId);
     List<StudentAssignment> getSubmissionsByAssignment(Long assignmentId);
     StudentAssignmentReview reviewSubmission(Long studentAssignmentId, String remarks, Long facultyId);
+
+    // Enhanced operations
+    AssignmentEvaluation evaluateAssignment(Long studentAssignmentId, Integer score, String remarks, Integer needsResubmission);
+    AiQuestionHistory saveAiGenerationRequest(String subject, String topic, String difficulty, String bloomLevel, String questionType, List<GeneratedQuestion> questions);
+    List<AiQuestionHistory> getAiGenerationHistory();
 }

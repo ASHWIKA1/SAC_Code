@@ -20,6 +20,9 @@ public class LmsServiceImpl implements LmsService {
     private final AssignmentDetailsRepository assignmentDetailsRepository;
     private final StudentAssignmentRepository studentAssignmentRepository;
     private final StudentAssignmentReviewRepository studentAssignmentReviewRepository;
+    private final AssignmentEvaluationRepository assignmentEvaluationRepository;
+    private final AiQuestionHistoryRepository aiQuestionHistoryRepository;
+    private final GeneratedQuestionRepository generatedQuestionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -159,5 +162,58 @@ public class LmsServiceImpl implements LmsService {
         studentAssignmentRepository.save(sub);
 
         return studentAssignmentReviewRepository.save(review);
+    }
+
+    @Override
+    @Transactional
+    public AssignmentEvaluation evaluateAssignment(Long studentAssignmentId, Integer score, String remarks, Integer needsResubmission) {
+        StudentAssignment sub = studentAssignmentRepository.findById(studentAssignmentId)
+                .orElseThrow(() -> new RuntimeException("Student assignment submission not found"));
+
+        AssignmentEvaluation eval = assignmentEvaluationRepository.findByStudentAssignmentId(studentAssignmentId)
+                .orElse(new AssignmentEvaluation());
+
+        eval.setStudentAssignment(sub);
+        eval.setScore(score);
+        eval.setRemarks(remarks);
+        eval.setNeedsResubmission(needsResubmission);
+
+        String statusName = (needsResubmission == 1) ? "Resubmit" : "Evaluated";
+        AssignmentStatus status = assignmentStatusRepository.findByStatusNameIgnoreCase(statusName)
+                .orElseGet(() -> {
+                    AssignmentStatus defaultStatus = new AssignmentStatus();
+                    defaultStatus.setStatusName(statusName);
+                    defaultStatus.setIsDeleted(0);
+                    return assignmentStatusRepository.save(defaultStatus);
+                });
+        sub.setStatus(status);
+        studentAssignmentRepository.save(sub);
+
+        return assignmentEvaluationRepository.save(eval);
+    }
+
+    @Override
+    @Transactional
+    public AiQuestionHistory saveAiGenerationRequest(String subject, String topic, String difficulty, String bloomLevel, String questionType, List<GeneratedQuestion> questions) {
+        AiQuestionHistory history = new AiQuestionHistory();
+        history.setSubject(subject);
+        history.setTopic(topic);
+        history.setDifficulty(difficulty);
+        history.setBloomLevel(bloomLevel);
+        history.setQuestionType(questionType);
+        AiQuestionHistory savedHistory = aiQuestionHistoryRepository.save(history);
+
+        for (GeneratedQuestion q : questions) {
+            q.setHistory(savedHistory);
+            generatedQuestionRepository.save(q);
+        }
+
+        return savedHistory;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AiQuestionHistory> getAiGenerationHistory() {
+        return aiQuestionHistoryRepository.findAll();
     }
 }

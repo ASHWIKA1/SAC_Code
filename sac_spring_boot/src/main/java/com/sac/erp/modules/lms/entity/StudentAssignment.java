@@ -40,4 +40,10 @@ public class StudentAssignment {
 
     @Column(name = "is_deleted")
     private Integer isDeleted = 0;
+
+    @Column(name = "file_url")
+    private String fileUrl;
+
+    @Column(name = "submission_text", columnDefinition = "TEXT")
+    private String submissionText;
 }
