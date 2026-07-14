@@ -4,7 +4,10 @@ CREATE TABLE IF NOT EXISTS student_attendance (
     student_id INT NOT NULL,
     academic_date DATE NOT NULL,
     status ENUM('Present', 'Absent', 'Late', 'Excused') NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0,
     
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE KEY idx_student_date (student_id, academic_date)
@@ -18,7 +21,10 @@ CREATE TABLE IF NOT EXISTS student_behavior_logs (
     behavior_score TINYINT NOT NULL COMMENT 'Scale from 1 to 5 as shown on UI chart',
     faculty_remarks VARCHAR(255) DEFAULT NULL,
     logged_by_faculty INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0,
     
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (logged_by_faculty) REFERENCES users(id) ON DELETE RESTRICT
@@ -29,7 +35,10 @@ CREATE TABLE IF NOT EXISTS parent_student_relations (
     parent_id INT NOT NULL,
     student_id INT NOT NULL,
     relationship_type VARCHAR(30) DEFAULT 'Parent' COMMENT 'Father, Mother, Guardian, etc.',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0,
     
     PRIMARY KEY (parent_id, student_id),
     FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE CASCADE,

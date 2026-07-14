@@ -3,8 +3,10 @@ CREATE TABLE IF NOT EXISTS discussion_groups (
     id INT AUTO_INCREMENT PRIMARY KEY,
     group_name VARCHAR(100) NOT NULL,
     created_by_faculty INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_deleted TINYINT(1) DEFAULT 0 COMMENT '1 = Trashed from UI list',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0 COMMENT '1 = Trashed from UI list',
     
     FOREIGN KEY (created_by_faculty) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -17,8 +19,10 @@ CREATE TABLE IF NOT EXISTS forum_messages (
     message_text TEXT NOT NULL,
     attachment_url VARCHAR(500) DEFAULT NULL,
     attachment_type VARCHAR(50) DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_deleted TINYINT(1) DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0,
     
     FOREIGN KEY (group_id) REFERENCES discussion_groups(id) ON DELETE CASCADE,
     FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE

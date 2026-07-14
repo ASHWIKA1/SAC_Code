@@ -3,7 +3,10 @@ CREATE TABLE IF NOT EXISTS assignment_statuses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     status_name VARCHAR(50) NOT NULL UNIQUE, -- pending, completed, etc.
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_deleted TINYINT(1) DEFAULT 0
+    created_at DATETIME,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0
 );
 
 -- Assignment Details Table
@@ -18,11 +21,13 @@ CREATE TABLE IF NOT EXISTS assignments_details(
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     updated_by_user INT,
-    is_deleted TINYINT(1) DEFAULT 0 COMMENT '0 = Alive, 1 = Soft Deleted',
+    created_at DATETIME,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0 COMMENT '0 = Alive, 1 = Soft Deleted',
 
     -- Foreign Keys
-    FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT,
-    FOREIGN KEY (updated_by_user) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS student_assignment (
@@ -34,13 +39,15 @@ CREATE TABLE IF NOT EXISTS student_assignment (
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     updated_by_user INT,
-    is_deleted TINYINT(1) DEFAULT 0 COMMENT '0 = Alive, 1 = Soft Deleted',
+    created_at DATETIME,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0 COMMENT '0 = Alive, 1 = Soft Deleted',
 
     -- Foreign Keys (Notice there is NO comma after the last constraint here)
     FOREIGN KEY (assignment_id) REFERENCES assignments_details(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT,
-    FOREIGN KEY (updated_by_user) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT
 );
 -- Student Assignment Review / Grading Table
 CREATE TABLE IF NOT EXISTS student_assignment_review (
@@ -49,7 +56,10 @@ CREATE TABLE IF NOT EXISTS student_assignment_review (
     remarks TEXT NOT NULL, 
     review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     faculty_id INT NOT NULL, 
-    is_deleted TINYINT(1) DEFAULT 0 COMMENT '0 = Alive, 1 = Soft Deleted',
+    created_at DATETIME,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0 COMMENT '0 = Alive, 1 = Soft Deleted',
 
     -- Foreign Keys
     FOREIGN KEY (student_assignment_id) REFERENCES student_assignment(id) ON DELETE CASCADE,

@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     faculty_remarks TEXT DEFAULT NULL,
     is_allowed_reattempt TINYINT(1) DEFAULT 0 COMMENT '1 = Technical Exception Allowed',
     reattempt_granted_by INT DEFAULT NULL,
+    created_at DATETIME,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0,
     
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -30,6 +34,10 @@ CREATE TABLE IF NOT EXISTS student_quiz_responses (
     is_skipped TINYINT(1) DEFAULT 0 COMMENT '1 = Student skipped question',
     time_spent_seconds INT DEFAULT 0 COMMENT 'Analytics tracking per question',
     is_correct TINYINT(1) DEFAULT NULL COMMENT 'Evaluated score result',
+    created_at DATETIME,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0,
     
     FOREIGN KEY (quiz_attempt_id) REFERENCES quiz_attempts(id) ON DELETE CASCADE,
     FOREIGN KEY (question_id) REFERENCES question_bank(id) ON DELETE CASCADE,
