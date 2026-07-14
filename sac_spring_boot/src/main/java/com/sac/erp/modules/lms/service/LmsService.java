@@ -24,4 +24,27 @@ public interface LmsService {
     AssignmentEvaluation evaluateAssignment(Long studentAssignmentId, Integer score, String remarks, Integer needsResubmission);
     AiQuestionHistory saveAiGenerationRequest(String subject, String topic, String difficulty, String bloomLevel, String questionType, List<GeneratedQuestion> questions);
     List<AiQuestionHistory> getAiGenerationHistory();
+
+    // Quiz operations
+    List<LmsQuiz> getAllQuizzes();
+    LmsQuiz getQuizById(Long id);
+    LmsQuiz createQuiz(LmsQuiz quiz);
+    LmsQuiz updateQuiz(Long id, LmsQuiz quiz);
+    void deleteQuiz(Long id);
+    List<LmsQuizQuestion> getQuestionsForQuiz(Long quizId);
+    LmsQuizQuestion addQuestionToQuiz(Long quizId, LmsQuizQuestion question);
+    LmsQuizAttempt submitQuizAttempt(LmsQuizAttempt attempt);
+    List<LmsQuizAttempt> getAttemptsForQuiz(Long quizId);
+    List<LmsQuizAttempt> getAttemptsForStudent(Long studentId);
+
+    // Forum operations
+    List<LmsForum> getAllForums();
+    LmsForum createForum(LmsForum forum);
+    List<LmsForumPost> getPostsForForum(Long forumId);
+    LmsForumPost createForumPost(LmsForumPost post);
+
+    // Live Class operations
+    List<LmsLiveClass> getAllLiveClasses();
+    LmsLiveClass createLiveClass(LmsLiveClass liveClass);
+    LmsLiveClass updateLiveClass(Long id, LmsLiveClass liveClass);
 }

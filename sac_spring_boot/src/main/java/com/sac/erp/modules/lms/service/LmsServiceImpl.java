@@ -23,6 +23,12 @@ public class LmsServiceImpl implements LmsService {
     private final AssignmentEvaluationRepository assignmentEvaluationRepository;
     private final AiQuestionHistoryRepository aiQuestionHistoryRepository;
     private final GeneratedQuestionRepository generatedQuestionRepository;
+    private final LmsQuizRepository lmsQuizRepository;
+    private final LmsQuizQuestionRepository lmsQuizQuestionRepository;
+    private final LmsQuizAttemptRepository lmsQuizAttemptRepository;
+    private final LmsForumRepository lmsForumRepository;
+    private final LmsForumPostRepository lmsForumPostRepository;
+    private final LmsLiveClassRepository lmsLiveClassRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -215,5 +221,142 @@ public class LmsServiceImpl implements LmsService {
     @Transactional(readOnly = true)
     public List<AiQuestionHistory> getAiGenerationHistory() {
         return aiQuestionHistoryRepository.findAll();
+    }
+
+    // Quiz operations implementation
+    @Override
+    @Transactional(readOnly = true)
+    public List<LmsQuiz> getAllQuizzes() {
+        return lmsQuizRepository.findByIsDeleted(0);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LmsQuiz getQuizById(Long id) {
+        return lmsQuizRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Quiz not found with id: " + id));
+    }
+
+    @Override
+    @Transactional
+    public LmsQuiz createQuiz(LmsQuiz quiz) {
+        quiz.setIsDeleted(0);
+        return lmsQuizRepository.save(quiz);
+    }
+
+    @Override
+    @Transactional
+    public LmsQuiz updateQuiz(Long id, LmsQuiz quizDetails) {
+        LmsQuiz quiz = getQuizById(id);
+        quiz.setTitle(quizDetails.getTitle());
+        quiz.setStartDate(quizDetails.getStartDate());
+        quiz.setEndDate(quizDetails.getEndDate());
+        quiz.setDuration(quizDetails.getDuration());
+        quiz.setStatus(quizDetails.getStatus());
+        quiz.setAssignedClass(quizDetails.getAssignedClass());
+        quiz.setAssignedSection(quizDetails.getAssignedSection());
+        return lmsQuizRepository.save(quiz);
+    }
+
+    @Override
+    @Transactional
+    public void deleteQuiz(Long id) {
+        LmsQuiz quiz = getQuizById(id);
+        quiz.setIsDeleted(1);
+        lmsQuizRepository.save(quiz);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LmsQuizQuestion> getQuestionsForQuiz(Long quizId) {
+        return lmsQuizQuestionRepository.findByQuizId(quizId);
+    }
+
+    @Override
+    @Transactional
+    public LmsQuizQuestion addQuestionToQuiz(Long quizId, LmsQuizQuestion question) {
+        LmsQuiz quiz = getQuizById(quizId);
+        question.setQuiz(quiz);
+        return lmsQuizQuestionRepository.save(question);
+    }
+
+    @Override
+    @Transactional
+    public LmsQuizAttempt submitQuizAttempt(LmsQuizAttempt attempt) {
+        if (attempt.getQuiz() != null && attempt.getQuiz().getId() != null) {
+            LmsQuiz quiz = getQuizById(attempt.getQuiz().getId());
+            attempt.setQuiz(quiz);
+        }
+        attempt.setSubmittedDate(LocalDateTime.now());
+        return lmsQuizAttemptRepository.save(attempt);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LmsQuizAttempt> getAttemptsForQuiz(Long quizId) {
+        return lmsQuizAttemptRepository.findByQuizId(quizId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LmsQuizAttempt> getAttemptsForStudent(Long studentId) {
+        return lmsQuizAttemptRepository.findByStudentId(studentId);
+    }
+
+    // Forum operations implementation
+    @Override
+    @Transactional(readOnly = true)
+    public List<LmsForum> getAllForums() {
+        return lmsForumRepository.findAll();
+    }
+
+    @Override
+    @Transactional
+    public LmsForum createForum(LmsForum forum) {
+        return lmsForumRepository.save(forum);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LmsForumPost> getPostsForForum(Long forumId) {
+        return lmsForumPostRepository.findByForumId(forumId);
+    }
+
+    @Override
+    @Transactional
+    public LmsForumPost createForumPost(LmsForumPost post) {
+        if (post.getForum() != null && post.getForum().getId() != null) {
+            LmsForum forum = lmsForumRepository.findById(post.getForum().getId())
+                    .orElseThrow(() -> new RuntimeException("Forum not found"));
+            post.setForum(forum);
+        }
+        return lmsForumPostRepository.save(post);
+    }
+
+    // Live Class operations implementation
+    @Override
+    @Transactional(readOnly = true)
+    public List<LmsLiveClass> getAllLiveClasses() {
+        return lmsLiveClassRepository.findAll();
+    }
+
+    @Override
+    @Transactional
+    public LmsLiveClass createLiveClass(LmsLiveClass liveClass) {
+        return lmsLiveClassRepository.save(liveClass);
+    }
+
+    @Override
+    @Transactional
+    public LmsLiveClass updateLiveClass(Long id, LmsLiveClass liveClassDetails) {
+        LmsLiveClass liveClass = lmsLiveClassRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Live Class not found with id: " + id));
+        liveClass.setTitle(liveClassDetails.getTitle());
+        liveClass.setDateTime(liveClassDetails.getDateTime());
+        liveClass.setDuration(liveClassDetails.getDuration());
+        liveClass.setStatus(liveClassDetails.getStatus());
+        liveClass.setMeetingUrl(liveClassDetails.getMeetingUrl());
+        liveClass.setRecordingUrl(liveClassDetails.getRecordingUrl());
+        return lmsLiveClassRepository.save(liveClass);
     }
 }

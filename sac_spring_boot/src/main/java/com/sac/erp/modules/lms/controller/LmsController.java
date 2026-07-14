@@ -118,4 +118,121 @@ public class LmsController {
         log.info("REST request to get all AI generation history request records");
         return ResponseEntity.ok(lmsService.getAiGenerationHistory());
     }
+
+    // --- Quiz Endpoints ---
+
+    @GetMapping("/quizzes")
+    public ResponseEntity<List<LmsQuiz>> getAllQuizzes() {
+        log.info("REST request to get all LMS quizzes");
+        return ResponseEntity.ok(lmsService.getAllQuizzes());
+    }
+
+    @GetMapping("/quizzes/{id}")
+    public ResponseEntity<LmsQuiz> getQuizById(@PathVariable Long id) {
+        log.info("REST request to get LMS quiz : {}", id);
+        return ResponseEntity.ok(lmsService.getQuizById(id));
+    }
+
+    @PostMapping("/quizzes")
+    public ResponseEntity<LmsQuiz> createQuiz(@RequestBody LmsQuiz quiz) {
+        log.info("REST request to create LMS quiz : {}", quiz.getTitle());
+        return ResponseEntity.ok(lmsService.createQuiz(quiz));
+    }
+
+    @PutMapping("/quizzes/{id}")
+    public ResponseEntity<LmsQuiz> updateQuiz(@PathVariable Long id, @RequestBody LmsQuiz quiz) {
+        log.info("REST request to update LMS quiz : {}", id);
+        return ResponseEntity.ok(lmsService.updateQuiz(id, quiz));
+    }
+
+    @DeleteMapping("/quizzes/{id}")
+    public ResponseEntity<Void> deleteQuiz(@PathVariable Long id) {
+        log.info("REST request to delete LMS quiz : {}", id);
+        lmsService.deleteQuiz(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/quizzes/{quizId}/questions")
+    public ResponseEntity<List<LmsQuizQuestion>> getQuestionsForQuiz(@PathVariable Long quizId) {
+        log.info("REST request to get questions for quiz : {}", quizId);
+        return ResponseEntity.ok(lmsService.getQuestionsForQuiz(quizId));
+    }
+
+    @PostMapping("/quizzes/{quizId}/questions")
+    public ResponseEntity<LmsQuizQuestion> addQuestionToQuiz(@PathVariable Long quizId, @RequestBody LmsQuizQuestion question) {
+        log.info("REST request to add question to quiz : {}", quizId);
+        return ResponseEntity.ok(lmsService.addQuestionToQuiz(quizId, question));
+    }
+
+    @PostMapping("/quizzes/attempts")
+    public ResponseEntity<LmsQuizAttempt> submitQuizAttempt(@RequestBody LmsQuizAttempt attempt) {
+        log.info("REST request student {} submits attempt for quiz", attempt.getStudentId());
+        return ResponseEntity.ok(lmsService.submitQuizAttempt(attempt));
+    }
+
+    @GetMapping("/quizzes/{quizId}/attempts")
+    public ResponseEntity<List<LmsQuizAttempt>> getAttemptsForQuiz(@PathVariable Long quizId) {
+        log.info("REST request to get attempts list for quiz : {}", quizId);
+        return ResponseEntity.ok(lmsService.getAttemptsForQuiz(quizId));
+    }
+
+    @GetMapping("/quizzes/attempts/student/{studentId}")
+    public ResponseEntity<List<LmsQuizAttempt>> getAttemptsForStudent(@PathVariable Long studentId) {
+        log.info("REST request to get quiz attempts for student : {}", studentId);
+        return ResponseEntity.ok(lmsService.getAttemptsForStudent(studentId));
+    }
+
+    // --- Discussion Forum Endpoints ---
+
+    @GetMapping("/forums")
+    public ResponseEntity<List<LmsForum>> getAllForums() {
+        log.info("REST request to get all discussion forums");
+        return ResponseEntity.ok(lmsService.getAllForums());
+    }
+
+    @PostMapping("/forums")
+    public ResponseEntity<LmsForum> createForum(@RequestBody LmsForum forum) {
+        log.info("REST request to create discussion forum : {}", forum.getName());
+        return ResponseEntity.ok(lmsService.createForum(forum));
+    }
+
+    @GetMapping("/forums/{forumId}/posts")
+    public ResponseEntity<List<LmsForumPost>> getPostsForForum(@PathVariable Long forumId) {
+        log.info("REST request to get posts/messages for forum : {}", forumId);
+        return ResponseEntity.ok(lmsService.getPostsForForum(forumId));
+    }
+
+    @PostMapping("/forums/{forumId}/posts")
+    public ResponseEntity<LmsForumPost> createForumPost(@PathVariable Long forumId, @RequestBody LmsForumPost post) {
+        log.info("REST request to post message in forum : {}", forumId);
+        // Ensure forum association is set appropriately
+        if (post.getForum() == null) {
+            LmsForum forum = new LmsForum();
+            forum.setId(forumId);
+            post.setForum(forum);
+        } else {
+            post.getForum().setId(forumId);
+        }
+        return ResponseEntity.ok(lmsService.createForumPost(post));
+    }
+
+    // --- Live Class Endpoints ---
+
+    @GetMapping("/live-classes")
+    public ResponseEntity<List<LmsLiveClass>> getAllLiveClasses() {
+        log.info("REST request to get all live classes");
+        return ResponseEntity.ok(lmsService.getAllLiveClasses());
+    }
+
+    @PostMapping("/live-classes")
+    public ResponseEntity<LmsLiveClass> createLiveClass(@RequestBody LmsLiveClass liveClass) {
+        log.info("REST request to create live class : {}", liveClass.getTitle());
+        return ResponseEntity.ok(lmsService.createLiveClass(liveClass));
+    }
+
+    @PutMapping("/live-classes/{id}")
+    public ResponseEntity<LmsLiveClass> updateLiveClass(@PathVariable Long id, @RequestBody LmsLiveClass liveClass) {
+        log.info("REST request to update live class : {}", id);
+        return ResponseEntity.ok(lmsService.updateLiveClass(id, liveClass));
+    }
 }
