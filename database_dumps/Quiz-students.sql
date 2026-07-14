@@ -46,9 +46,25 @@ CREATE TABLE IF NOT EXISTS student_quiz_responses (
 
 -- View Upcoming Quizzes
 SELECT * FROM quizzes 
-WHERE start_date_time > NOW() AND status_id = 2; 
+WHERE start_date_time > NOW() AND status = 'Scheduled'; 
 
 -- Analytics: Find out which questions took students the longest time to process
 SELECT question_id, AVG(time_spent_seconds) as avg_time 
 FROM student_quiz_responses 
 GROUP BY question_id;
+
+-- Analytics: Find how many students accessed (attempted) a quiz and get their details
+SELECT 
+    qa.quiz_id,
+    q.title AS quiz_title,
+    COUNT(DISTINCT qa.student_id) AS total_students_accessed,
+    u.id AS student_id,
+    u.name AS student_name,
+    u.email AS student_email,
+    qa.started_at,
+    qa.submitted_at,
+    qa.score_achieved
+FROM quiz_attempts qa
+JOIN quizzes q ON qa.quiz_id = q.id
+JOIN users u ON qa.student_id = u.id
+GROUP BY qa.quiz_id, qa.student_id;

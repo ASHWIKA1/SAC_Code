@@ -1,16 +1,3 @@
--- Quiz Statuses
-CREATE TABLE IF NOT EXISTS quiz_statuses (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    status_name VARCHAR(30) NOT NULL UNIQUE,
-    created_at DATETIME,
-    updated_at DATETIME,
-    updated_by BIGINT,
-    is_deleted INT DEFAULT 0
-);
-
-INSERT IGNORE INTO quiz_statuses (id, status_name) VALUES 
-(1, 'Pending'), (2, 'Published'), (3, 'Completed'), (4, 'Withdrawn');
-
 -- Main Quizzes Table (Matches your schedule view data fields)
 CREATE TABLE IF NOT EXISTS quizzes (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -18,14 +5,13 @@ CREATE TABLE IF NOT EXISTS quizzes (
     start_date_time DATETIME NOT NULL,
     end_date_time DATETIME NOT NULL,
     duration_minutes INT NOT NULL,
-    status_id INT DEFAULT 1,
+    status ENUM('Draft', 'Scheduled', 'Published', 'Completed', 'Withdrawn') DEFAULT 'Draft',
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_at DATETIME,
     updated_at DATETIME,
     updated_by BIGINT,
-    is_deleted INT DEFAULT 0,
-    FOREIGN KEY (status_id) REFERENCES quiz_statuses(id)
+    is_deleted INT DEFAULT 0
 );
 
 -- Question Bank Master Table (Tracks the custom Import Methods from your UI)
