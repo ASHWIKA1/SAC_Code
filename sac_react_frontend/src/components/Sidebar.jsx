@@ -50,7 +50,7 @@ const ADMIN_MENU = [
     section: 'lms_navigation', label: 'LMS Navigation',
     items: [
       { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
-      { label: 'Online Quizzes', icon: 'ti-medal', path: '/lms/quizzes' },
+      { label: 'Online Quizzes', icon: 'ti-trophy', path: '/lms/quizzes' },
       { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
       { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
@@ -409,7 +409,7 @@ const TEACHER_MENU = [
     section: 'lms_navigation', label: 'LMS Navigation',
     items: [
       { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
-      { label: 'Online Quizzes', icon: 'ti-medal', path: '/lms/quizzes' },
+      { label: 'Online Quizzes', icon: 'ti-trophy', path: '/lms/quizzes' },
       { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
       { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
@@ -438,7 +438,7 @@ const STUDENT_MENU = [
     section: 'lms_navigation', label: 'LMS Navigation',
     items: [
       { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
-      { label: 'Online Quizzes', icon: 'ti-medal', path: '/lms/quizzes' },
+      { label: 'Online Quizzes', icon: 'ti-trophy', path: '/lms/quizzes' },
       { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
       { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
@@ -462,7 +462,7 @@ const PARENT_MENU = [
     section: 'lms_navigation', label: 'LMS Navigation',
     items: [
       { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
-      { label: 'Online Quizzes', icon: 'ti-medal', path: '/lms/quizzes' },
+      { label: 'Online Quizzes', icon: 'ti-trophy', path: '/lms/quizzes' },
       { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
       { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
