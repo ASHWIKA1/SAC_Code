@@ -23,10 +23,10 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     updated_by BIGINT,
     is_deleted INT DEFAULT 0,
     
-    FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (reattempt_granted_by) REFERENCES users(id) ON DELETE SET NULL,
-    UNIQUE KEY idx_student_attempt (quiz_id, user_id, attempt_number)
+    CONSTRAINT fk_quiz_attempts_quiz_id FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
+    CONSTRAINT fk_quiz_attempts_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_quiz_attempts_reattempt_granted_by FOREIGN KEY (reattempt_granted_by) REFERENCES users(id) ON DELETE SET NULL,
+    UNIQUE KEY idx_quiz_attempts_quiz_user_attempt (quiz_id, user_id, attempt_number)
 );
 
 -- 2. Student Question Interactions Table (The Analytics Core)
@@ -48,14 +48,14 @@ CREATE TABLE IF NOT EXISTS student_quiz_responses (
     updated_by BIGINT,
     is_deleted INT DEFAULT 0,
     
-    FOREIGN KEY (quiz_attempt_id) REFERENCES quiz_attempts(id) ON DELETE CASCADE,
-    FOREIGN KEY (quiz_question_mapping_id) REFERENCES quiz_questions_mapping(id) ON DELETE CASCADE,
-    UNIQUE KEY idx_attempt_question (quiz_attempt_id, quiz_question_mapping_id)
+    CONSTRAINT fk_student_quiz_responses_quiz_attempt_id FOREIGN KEY (quiz_attempt_id) REFERENCES quiz_attempts(id) ON DELETE CASCADE,
+    CONSTRAINT fk_student_quiz_responses_quiz_question_mapping_id FOREIGN KEY (quiz_question_mapping_id) REFERENCES quiz_questions_mapping(id) ON DELETE CASCADE,
+    UNIQUE KEY idx_student_quiz_responses_attempt_question (quiz_attempt_id, quiz_question_mapping_id)
 );
 
 -- View Upcoming Quizzes
 SELECT * FROM quizzes 
-WHERE start_date_time > NOW() AND status = 'Scheduled'; 
+WHERE start_date_time > NOW() AND status = 'scheduled'; 
 
 -- Analytics: Find out which questions took students the longest time to process
 SELECT quiz_question_mapping_id, AVG(time_spent_seconds) as avg_time 

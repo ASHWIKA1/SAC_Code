@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('Faculty', 'Student') NOT NULL,
+    role ENUM('faculty', 'student') NOT NULL,
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_at DATETIME,
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS student_media_content (
     updated_at DATETIME,
     updated_by BIGINT,
     is_deleted INT DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_student_media_content_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     
 );
 
@@ -56,5 +56,5 @@ CREATE TABLE IF NOT EXISTS media_content (
     is_deleted INT DEFAULT 0 COMMENT '0 = Alive, 1 = Soft Deleted',
     
     -- Foreign Key constraints
-    FOREIGN KEY (media_type_id) REFERENCES media_types(id) ON DELETE RESTRICT
+    CONSTRAINT fk_media_content_media_type_id FOREIGN KEY (media_type_id) REFERENCES media_types(id) ON DELETE RESTRICT
 );

@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS discussion_groups (
     updated_by BIGINT,
     is_deleted INT DEFAULT 0 COMMENT '1 = Trashed from UI list',
     
-    FOREIGN KEY (created_by_faculty) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_discussion_groups_created_by_faculty FOREIGN KEY (created_by_faculty) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Refined Messages Table (Maintains logs even if group is hidden from sidebar)
@@ -24,8 +24,8 @@ CREATE TABLE IF NOT EXISTS forum_messages (
     updated_by BIGINT,
     is_deleted INT DEFAULT 0,
     
-    FOREIGN KEY (group_id) REFERENCES discussion_groups(id) ON DELETE CASCADE,
-    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_forum_messages_group_id FOREIGN KEY (group_id) REFERENCES discussion_groups(id) ON DELETE CASCADE,
+    CONSTRAINT fk_forum_messages_sender_id FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 SELECT * FROM discussion_groups WHERE is_deleted = 0;

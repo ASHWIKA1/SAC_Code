@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS assignments_details(
     is_deleted INT DEFAULT 0 COMMENT '0 = Alive, 1 = Soft Deleted',
 
     -- Foreign Keys
-    FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT
+    CONSTRAINT fk_assignments_details_status_id FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS student_assignment (
@@ -45,9 +45,9 @@ CREATE TABLE IF NOT EXISTS student_assignment (
     is_deleted INT DEFAULT 0 COMMENT '0 = Alive, 1 = Soft Deleted',
 
     -- Foreign Keys (Notice there is NO comma after the last constraint here)
-    FOREIGN KEY (assignment_id) REFERENCES assignments_details(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT
+    CONSTRAINT fk_student_assignment_assignment_id FOREIGN KEY (assignment_id) REFERENCES assignments_details(id) ON DELETE CASCADE,
+    CONSTRAINT fk_student_assignment_student_id FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_student_assignment_status_id FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT
 );
 -- Student Assignment Review / Grading Table
 CREATE TABLE IF NOT EXISTS student_assignment_review (
@@ -62,6 +62,6 @@ CREATE TABLE IF NOT EXISTS student_assignment_review (
     is_deleted INT DEFAULT 0 COMMENT '0 = Alive, 1 = Soft Deleted',
 
     -- Foreign Keys
-    FOREIGN KEY (student_assignment_id) REFERENCES student_assignment(id) ON DELETE CASCADE,
-    FOREIGN KEY (faculty_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_student_assignment_review_student_assignment_id FOREIGN KEY (student_assignment_id) REFERENCES student_assignment(id) ON DELETE CASCADE,
+    CONSTRAINT fk_student_assignment_review_faculty_id FOREIGN KEY (faculty_id) REFERENCES users(id) ON DELETE CASCADE
 );

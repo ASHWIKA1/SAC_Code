@@ -3,14 +3,14 @@ CREATE TABLE IF NOT EXISTS student_attendance (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,
     academic_date DATE NOT NULL,
-    status ENUM('Present', 'Absent', 'Late', 'Excused') NOT NULL,
+    status ENUM('present', 'absent', 'late', 'excused') NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME,
     updated_by BIGINT,
     is_deleted INT DEFAULT 0,
     
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY idx_student_date (student_id, academic_date)
+    CONSTRAINT fk_student_attendance_student_id FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY idx_student_attendance_student_date (student_id, academic_date)
 );
 
 -- Behavioral Index Tracking Table 
@@ -26,8 +26,8 @@ CREATE TABLE IF NOT EXISTS student_behavior_logs (
     updated_by BIGINT,
     is_deleted INT DEFAULT 0,
     
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (logged_by_faculty) REFERENCES users(id) ON DELETE RESTRICT
+    CONSTRAINT fk_student_behavior_logs_student_id FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_student_behavior_logs_logged_by_faculty FOREIGN KEY (logged_by_faculty) REFERENCES users(id) ON DELETE RESTRICT
 );
 
 -- Parent-Student Mapping Relationship Table
@@ -41,13 +41,13 @@ CREATE TABLE IF NOT EXISTS parent_student_relations (
     is_deleted INT DEFAULT 0,
     
     PRIMARY KEY (parent_id, student_id),
-    FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_parent_student_relations_parent_id FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_parent_student_relations_student_id FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 SELECT 
     MONTHNAME(academic_date) AS month_name,
-    (COUNT(CASE WHEN status = 'Present' THEN 1 END) / COUNT(*)) * 100 AS attendance_percentage
+    (COUNT(CASE WHEN status = 'present' THEN 1 END) / COUNT(*)) * 100 AS attendance_percentage
 FROM student_attendance
 WHERE student_id = 5 
 GROUP BY MONTHNAME(academic_date), MONTH(academic_date)
