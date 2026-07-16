@@ -1,19 +1,3 @@
--- Users 
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY, 
-    institute_id INT NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role ENUM('faculty', 'student') NOT NULL,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_at DATETIME,
-    updated_at DATETIME,
-    updated_by BIGINT,
-    is_deleted INT DEFAULT 0
-);
-
 -- Media Types 
 CREATE TABLE IF NOT EXISTS media_types (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -38,7 +22,7 @@ CREATE TABLE IF NOT EXISTS student_media_content (
     updated_at DATETIME,
     updated_by BIGINT,
     is_deleted INT DEFAULT 0,
-    CONSTRAINT fk_student_media_content_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    KEY idx_student_media_content_user_id (user_id)
 );
 
 

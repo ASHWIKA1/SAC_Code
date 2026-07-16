@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS student_attendance (
     updated_by BIGINT,
     is_deleted INT DEFAULT 0,
     
-    CONSTRAINT fk_student_attendance_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY idx_student_attendance_user_date (user_id, academic_date)
+    UNIQUE KEY idx_student_attendance_user_date (user_id, academic_date),
+    KEY idx_student_attendance_user_id (user_id)
 );
 
 -- Behavioral Index Tracking Table 
@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS student_behavior_logs (
     updated_by BIGINT,
     is_deleted INT DEFAULT 0,
     
-    CONSTRAINT fk_student_behavior_logs_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_student_behavior_logs_logged_by_faculty FOREIGN KEY (logged_by_faculty) REFERENCES users(id) ON DELETE RESTRICT
+    KEY idx_student_behavior_logs_user_id (user_id),
+    KEY idx_student_behavior_logs_logged_by_faculty (logged_by_faculty)
 );
 
 -- Parent-Student Mapping Relationship Table
@@ -44,8 +44,8 @@ CREATE TABLE IF NOT EXISTS parent_student_relations (
     is_deleted INT DEFAULT 0,
     
     PRIMARY KEY (parent_id, user_id),
-    CONSTRAINT fk_parent_student_relations_parent_id FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_parent_student_relations_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    KEY idx_parent_student_relations_parent_id (parent_id),
+    KEY idx_parent_student_relations_user_id (user_id)
 );
 
 SELECT 

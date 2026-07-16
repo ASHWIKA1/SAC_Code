@@ -24,9 +24,9 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     is_deleted INT DEFAULT 0,
     
     CONSTRAINT fk_quiz_attempts_quiz_id FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
-    CONSTRAINT fk_quiz_attempts_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_quiz_attempts_reattempt_granted_by FOREIGN KEY (reattempt_granted_by) REFERENCES users(id) ON DELETE SET NULL,
-    UNIQUE KEY idx_quiz_attempts_quiz_user_attempt (quiz_id, user_id, attempt_number)
+    UNIQUE KEY idx_quiz_attempts_quiz_user_attempt (quiz_id, user_id, attempt_number),
+    KEY idx_quiz_attempts_user_id (user_id),
+    KEY idx_quiz_attempts_reattempt_granted_by (reattempt_granted_by)
 );
 
 -- 2. Student Question Interactions Table (The Analytics Core)

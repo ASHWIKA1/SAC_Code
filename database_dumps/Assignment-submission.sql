@@ -49,8 +49,8 @@ CREATE TABLE IF NOT EXISTS student_assignment (
 
     -- Foreign Keys (Notice there is NO comma after the last constraint here)
     CONSTRAINT fk_student_assignment_assignment_id FOREIGN KEY (assignment_id) REFERENCES assignments_details(id) ON DELETE CASCADE,
-    CONSTRAINT fk_student_assignment_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_student_assignment_status_id FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT
+    CONSTRAINT fk_student_assignment_status_id FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT,
+    KEY idx_student_assignment_user_id (user_id)
 );
 -- Student Assignment Review / Grading Table
 CREATE TABLE IF NOT EXISTS student_assignment_review (
@@ -67,5 +67,5 @@ CREATE TABLE IF NOT EXISTS student_assignment_review (
 
     -- Foreign Keys
     CONSTRAINT fk_student_assignment_review_student_assignment_id FOREIGN KEY (student_assignment_id) REFERENCES student_assignment(id) ON DELETE CASCADE,
-    CONSTRAINT fk_student_assignment_review_faculty_id FOREIGN KEY (faculty_id) REFERENCES users(id) ON DELETE CASCADE
+    KEY idx_student_assignment_review_faculty_id (faculty_id)
 );
