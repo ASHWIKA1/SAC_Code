@@ -39,8 +39,6 @@ CREATE TABLE IF NOT EXISTS student_assignment (
     user_id INT NOT NULL,
     status_id INT DEFAULT NULL,
     submitted_date DATETIME DEFAULT NULL,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     updated_by_user INT,
     created_at DATETIME,
     updated_at DATETIME,

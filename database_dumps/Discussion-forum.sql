@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS discussion_groups (
     institute_id INT NOT NULL,
     group_name VARCHAR(100) NOT NULL,
     created_by_faculty INT NOT NULL,
+    active_status TINYINT DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME,
     updated_by BIGINT,
