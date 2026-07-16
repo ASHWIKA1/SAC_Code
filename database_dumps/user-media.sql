@@ -1,6 +1,7 @@
 -- Users 
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY, 
+    institute_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -16,10 +17,10 @@ CREATE TABLE IF NOT EXISTS users (
 -- Media Types 
 CREATE TABLE IF NOT EXISTS media_types (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    institute_id INT NOT NULL,
     name VARCHAR(50) NOT NULL UNIQUE,
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    updated_by_user INT,
     created_at DATETIME,
     updated_at DATETIME,
     updated_by BIGINT,
@@ -29,6 +30,7 @@ CREATE TABLE IF NOT EXISTS media_types (
 -- Student Media Tracking
 CREATE TABLE IF NOT EXISTS student_media_content (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    institute_id INT NOT NULL,
     user_id INT NOT NULL,
     media_content_id INT NOT NULL,
     accessed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
@@ -37,19 +39,17 @@ CREATE TABLE IF NOT EXISTS student_media_content (
     updated_by BIGINT,
     is_deleted INT DEFAULT 0,
     CONSTRAINT fk_student_media_content_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    
 );
 
 
 -- Media Content Table
 CREATE TABLE IF NOT EXISTS media_content (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    institute_id INT NOT NULL,
     title VARCHAR(150) NOT NULL,
     media_type_id INT NOT NULL,
-    status TINYINT(1) DEFAULT 1 COMMENT '1 = Active, 0 = Inactive',
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    updated_by_user INT, -- Fixed: Changed from BIGINT UNSIGNED to INT
     created_at DATETIME,
     updated_at DATETIME,
     updated_by BIGINT,

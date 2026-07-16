@@ -67,9 +67,9 @@ SELECT
     qa.quiz_id,
     q.title AS quiz_title,
     COUNT(DISTINCT qa.user_id) AS total_students_accessed,
-    u.id AS student_id,
-    u.name AS student_name,
-    u.email AS student_email,
+    u.id AS user_id,
+    u.name AS user_name,
+    u.email AS user_email,
     qa.started_at,
     qa.submitted_at,
     qa.score_achieved

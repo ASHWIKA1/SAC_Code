@@ -1,6 +1,7 @@
 -- Refined Groups Master Table
 CREATE TABLE IF NOT EXISTS discussion_groups (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    institute_id INT NOT NULL,
     group_name VARCHAR(100) NOT NULL,
     created_by_faculty INT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -14,6 +15,7 @@ CREATE TABLE IF NOT EXISTS discussion_groups (
 -- Refined Messages Table (Maintains logs even if group is hidden from sidebar)
 CREATE TABLE IF NOT EXISTS forum_messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    institute_id INT NOT NULL,
     group_id INT NOT NULL,
     sender_id INT NOT NULL,
     message_text TEXT NOT NULL,
