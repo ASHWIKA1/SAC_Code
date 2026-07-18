@@ -84,7 +84,12 @@ const styles = {
 const INITIAL_COURSES = [
   { id: 'c1', name: 'Physics Class XI - Mechanics' },
   { id: 'c2', name: 'Computer Science - Data Structures' },
-  { id: 'c3', name: 'Advanced Calculus (MATH-302)' }
+  { id: 'c3', name: 'Advanced Calculus (MATH-302)' },
+  { id: 'c4', name: 'Chemistry Class XII - Organic Chemistry' },
+  { id: 'c5', name: 'Biology Class X - Genetics & Evolution' },
+  { id: 'c6', name: 'English Class IX - Grammar & Literature' },
+  { id: 'c7', name: 'History Class X - Modern World History' },
+  { id: 'c8', name: 'Geography Class IX - Physical Geography' }
 ];
 
 const INITIAL_ASSIGNMENTS = [
@@ -601,7 +606,7 @@ function CourseManagementTab({
   // Assignment Form State
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
-  const [selectedCourse, setSelectedCourse] = useState('c1');
+  const [selectedCourse, setSelectedCourse] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [maxMarks, setMaxMarks] = useState(100);
 
@@ -609,7 +614,7 @@ function CourseManagementTab({
   const [editingAssignmentId, setEditingAssignmentId] = useState(null);
   
   // Enhanced Form Fields
-  const [newSubject, setNewSubject] = useState('Physics');
+  const [newSubject, setNewSubject] = useState('');
   const [newBatch, setNewBatch] = useState('2026 Batch');
   const [newSemester, setNewSemester] = useState('Semester 1');
   const [portalMode, setPortalMode] = useState('College'); // 'College' or 'School'
@@ -726,7 +731,8 @@ function CourseManagementTab({
     setShowAddForm(false);
     setNewTitle('');
     setNewDesc('');
-    setNewSubject('Physics');
+    setSelectedCourse('');
+    setNewSubject('');
     setNewBatch('2026 Batch');
     setNewSemester('Semester 1');
     setStartDate('');
@@ -943,6 +949,7 @@ function CourseManagementTab({
                       <div className="col-4">
                         <FormGroup label="Course" required={true}>
                           <select className="form-control" value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)}>
+                            <option value="">-- Choose Course --</option>
                             {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                           </select>
                         </FormGroup>
@@ -950,9 +957,15 @@ function CourseManagementTab({
                       <div className="col-4">
                         <FormGroup label="Subject" required={true}>
                           <select className="form-control" value={newSubject} onChange={e => setNewSubject(e.target.value)}>
+                            <option value="">-- Choose Subject --</option>
                             <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Biology">Biology</option>
                             <option value="Computer Science">Computer Science</option>
                             <option value="Mathematics">Mathematics</option>
+                            <option value="English">English</option>
+                            <option value="History">History</option>
+                            <option value="Geography">Geography</option>
                           </select>
                         </FormGroup>
                       </div>
@@ -1015,9 +1028,15 @@ function CourseManagementTab({
                       <div className="col-4">
                         <FormGroup label="Subject" required={true}>
                           <select className="form-control" value={newSubject} onChange={e => setNewSubject(e.target.value)}>
+                            <option value="">-- Choose Subject --</option>
                             <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Biology">Biology</option>
                             <option value="Computer Science">Computer Science</option>
                             <option value="Mathematics">Mathematics</option>
+                            <option value="English">English</option>
+                            <option value="History">History</option>
+                            <option value="Geography">Geography</option>
                           </select>
                         </FormGroup>
                       </div>
