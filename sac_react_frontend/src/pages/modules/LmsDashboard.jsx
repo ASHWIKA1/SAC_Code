@@ -501,7 +501,18 @@ export default function LmsDashboard() {
         }
       `}</style>
       <PageHeader 
-        title={pageTitle} 
+        title={
+          activeTab === 'quizzes' ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <img 
+                src="/src/assets/online_quiz_logo.png" 
+                alt="Online Quizzes Logo" 
+                style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid rgba(124, 50, 255, 0.15)' }} 
+              />
+              <span>Online Quizzes</span>
+            </div>
+          ) : pageTitle
+        } 
         breadcrumbs={[{ label: 'LMS' }, { label: breadcrumbLabel }]} 
       />
 
@@ -2156,7 +2167,16 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
 
   return (
     <WhiteCard 
-      title="Online Quizzes & Assessments"
+      title={
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img 
+            src="/src/assets/online_quiz_logo.png" 
+            alt="Online Quizzes Logo" 
+            style={{ width: '40px', height: '40px', borderRadius: '8px', border: '1px solid rgba(124, 50, 255, 0.2)', boxShadow: '0 4px 10px rgba(124, 50, 255, 0.15)' }} 
+          />
+          <span style={{ fontSize: '18px', fontWeight: 700 }}>Online Quizzes & Assessments</span>
+        </div>
+      }
       actions={isTeacher && (
         <button className="primary_btn btn_sm" onClick={() => setActiveQuizBuilder(true)}>
           <Plus size={14} /> Create Quiz
