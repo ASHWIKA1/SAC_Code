@@ -84,7 +84,7 @@ export default function AdminDashboard() {
 
       {/* Stats Row 1 */}
       <div className="dashboard_stats_row">
-        <StatCard value={stats.totalStudents.toLocaleString()} label="Total Students" icon="ti-user" colorClass="purple" />
+        <StatCard value={(stats.totalStudents || 0).toLocaleString()} label="Total Students" icon="ti-user" colorClass="purple" />
         <StatCard value={stats.totalTeachers} label="Total Teachers" icon="ti-blackboard" colorClass="blue" />
         <StatCard value={stats.totalParents} label="Total Parents" icon="ti-id-badge" colorClass="green" />
         <StatCard value={stats.totalClasses} label="Total Classes" icon="ti-book" colorClass="orange" />
