@@ -76,4 +76,4 @@ SELECT
 FROM quiz_attempts qa
 JOIN quizzes q ON qa.quiz_id = q.id
 JOIN users u ON qa.user_id = u.id
-GROUP BY qa.quiz_id, qa.user_id;
+GROUP BY qa.quiz_id, qa.user_id, q.title, u.id, u.name, u.email, qa.started_at, qa.submitted_at, qa.score_achieved;
