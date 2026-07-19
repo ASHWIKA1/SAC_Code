@@ -501,7 +501,18 @@ export default function LmsDashboard() {
         }
       `}</style>
       <PageHeader 
-        title={pageTitle} 
+        title={
+          activeTab === 'quizzes' ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <img 
+                src="/src/assets/online_quiz_logo.png" 
+                alt="Online Quizzes Logo" 
+                style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid rgba(124, 50, 255, 0.15)' }} 
+              />
+              <span>Online Quizzes</span>
+            </div>
+          ) : pageTitle
+        } 
         breadcrumbs={[{ label: 'LMS' }, { label: breadcrumbLabel }]} 
       />
 
@@ -1832,9 +1843,10 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
   const [quizTitle, setQuizTitle] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [duration, setDuration] = useState(30);
-  const [quizClass, setQuizClass] = useState('Class 10');
-  const [quizSection, setQuizSection] = useState('Section A');
+  const [durationHours, setDurationHours] = useState(0);
+  const [durationMinutes, setDurationMinutes] = useState(30);
+  const [quizClass, setQuizClass] = useState('');
+  const [quizSection, setQuizSection] = useState('');
   const [questions, setQuestions] = useState([]);
   
   // Question Builder states
@@ -2096,24 +2108,41 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
   const handleSaveQuiz = (e) => {
     e.preventDefault();
     if (!quizTitle.trim()) return;
+    if (!quizClass) {
+      alert("Please select a class for the quiz.");
+      return;
+    }
+    if (!quizSection) {
+      alert("Please select a section for the quiz.");
+      return;
+    }
+    const totalDuration = (Number(durationHours) * 60) + Number(durationMinutes);
+    if (totalDuration <= 0) {
+      alert("Please specify a quiz duration greater than 0 minutes.");
+      return;
+    }
 
     const newQuiz = {
       id: 'q' + (quizzes.length + 1),
       title: quizTitle.trim(),
       start: startDate || '2026-07-10T09:00',
       end: endDate || '2026-07-10T10:00',
-      duration: Number(duration),
+      duration: totalDuration,
       status: 'Pending',
       questions,
-      assignedClass: quizClass || 'Class 10',
-      assignedSection: quizSection || 'Section A'
+      assignedClass: quizClass,
+      assignedSection: quizSection
     };
 
     setQuizzes([...quizzes, newQuiz]);
     setActiveQuizBuilder(false);
     setQuizTitle('');
-    setQuizClass('Class 10');
-    setQuizSection('Section A');
+    setStartDate('');
+    setEndDate('');
+    setDurationHours(0);
+    setDurationMinutes(30);
+    setQuizClass('');
+    setQuizSection('');
     setQuestions([]);
   };
 
@@ -2138,7 +2167,16 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
 
   return (
     <WhiteCard 
-      title="Online Quizzes & Assessments"
+      title={
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img 
+            src="/src/assets/online_quiz_logo.png" 
+            alt="Online Quizzes Logo" 
+            style={{ width: '40px', height: '40px', borderRadius: '8px', border: '1px solid rgba(124, 50, 255, 0.2)', boxShadow: '0 4px 10px rgba(124, 50, 255, 0.15)' }} 
+          />
+          <span style={{ fontSize: '18px', fontWeight: 700 }}>Online Quizzes & Assessments</span>
+        </div>
+      }
       actions={isTeacher && (
         <button className="primary_btn btn_sm" onClick={() => setActiveQuizBuilder(true)}>
           <Plus size={14} /> Create Quiz
@@ -2323,19 +2361,29 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
                 </FormGroup>
               </div>
             </div>
-            <FormGroup label="Duration (Minutes)" required={true}>
-              <input type="number" className="form-control" value={duration} onChange={e => setDuration(e.target.value)} required min={1} />
-              {duration && (
-                <div style={{ fontSize: '11px', color: '#7C32FF', marginTop: '4px', fontWeight: 600 }}>
-                  ⏱️ {formatDurationToHours(duration)}
-                </div>
-              )}
-            </FormGroup>
+            <div className="row">
+              <div className="col-6">
+                <FormGroup label="Duration (Hours)" required={true}>
+                  <input type="number" className="form-control" value={durationHours} onChange={e => setDurationHours(e.target.value)} required min={0} />
+                </FormGroup>
+              </div>
+              <div className="col-6">
+                <FormGroup label="Duration (Minutes)" required={true}>
+                  <input type="number" className="form-control" value={durationMinutes} onChange={e => setDurationMinutes(e.target.value)} required min={0} max={59} />
+                </FormGroup>
+              </div>
+            </div>
+            {((Number(durationHours) * 60) + Number(durationMinutes)) > 0 && (
+              <div style={{ fontSize: '11px', color: '#7C32FF', marginTop: '-10px', marginBottom: '16px', fontWeight: 600, textAlign: 'left' }}>
+                ⏱️ Total Duration: {((Number(durationHours) * 60) + Number(durationMinutes))} mins ({durationHours} hr {durationMinutes} min)
+              </div>
+            )}
 
             <div className="row">
               <div className="col-6">
                 <FormGroup label="Assign to Class" required={true}>
                   <select className="form-control" value={quizClass} onChange={e => setQuizClass(e.target.value)} required>
+                    <option value="">-- Choose Class --</option>
                     <option value="Class 10">Class 10 (High School)</option>
                     <option value="Class 11">Class 11 (Junior Year)</option>
                     <option value="Class 12">Class 12 (Senior Year)</option>
@@ -2346,6 +2394,7 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
               <div className="col-6">
                 <FormGroup label="Assign to Section" required={true}>
                   <select className="form-control" value={quizSection} onChange={e => setQuizSection(e.target.value)} required>
+                    <option value="">-- Choose Section --</option>
                     <option value="Section A">Section A (Advanced)</option>
                     <option value="Section B">Section B (General)</option>
                     <option value="Section C">Section C (Standard)</option>
