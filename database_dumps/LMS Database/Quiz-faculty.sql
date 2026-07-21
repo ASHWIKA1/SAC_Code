@@ -10,12 +10,12 @@ CREATE TABLE IF NOT EXISTS quizzes (
     end_date_time DATETIME NOT NULL,
     duration_minutes INT NOT NULL,
     status ENUM('draft', 'scheduled', 'published', 'completed', 'withdrawn') DEFAULT 'draft',
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    status_id INT DEFAULT 1,
     created_at DATETIME,
     updated_at DATETIME,
     updated_by BIGINT,
-    is_deleted INT DEFAULT 0
+    is_deleted INT DEFAULT 0,
+    CONSTRAINT fk_quizzes_status_id FOREIGN KEY (status_id) REFERENCES quiz_statuses(id)
 );
 
 -- Question Bank Table (Stores MCQ/True-False options as JSON for query speed and efficiency)
@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS question_bank (
     marks DOUBLE NOT NULL DEFAULT 1.0,
     question_options_json JSON DEFAULT NULL COMMENT 'MCQ/True-False options stored as JSON for high data handling speed',
     correct_answer TEXT DEFAULT NULL,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME,
     updated_at DATETIME,
     updated_by BIGINT,

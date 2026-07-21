@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS assignment_statuses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     institute_id INT NOT NULL,
     status_name VARCHAR(50) NOT NULL UNIQUE, -- pending, completed, etc.
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME,
     updated_at DATETIME,
     updated_by BIGINT,
@@ -20,8 +19,6 @@ CREATE TABLE IF NOT EXISTS assignments_details(
     instructions TEXT,
     submit_date DATETIME NOT NULL, -- The deadline for the assignment
     status_id INT DEFAULT 1,       -- Points to assignment_statuses(id)
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     updated_by_user INT,
     created_at DATETIME,
     updated_at DATETIME,
