@@ -638,7 +638,7 @@ function CourseManagementTab({
   const [newSemester, setNewSemester] = useState('Semester 1');
   const [portalMode, setPortalMode] = useState('College'); // 'College' or 'School'
   const [schoolClass, setSchoolClass] = useState('Class 10');
-  const [schoolSection, setSchoolSection] = useState('Computer Science');
+  const [schoolSection, setSchoolSection] = useState('');
   const [customGroupName, setCustomGroupName] = useState('');
   const [schoolTerm, setSchoolTerm] = useState('Term I');
   const [schoolGradingScale, setSchoolGradingScale] = useState('Marks');
@@ -779,7 +779,7 @@ function CourseManagementTab({
     setAttachmentsList([]);
     setPortalMode('College');
     setSchoolClass('Class 10');
-    setSchoolSection('Computer Science');
+    setSchoolSection('');
     setCustomGroupName('');
     setSchoolTerm('Term I');
     setSchoolGradingScale('Marks');
@@ -1084,14 +1084,7 @@ function CourseManagementTab({
                           <select className="form-control" value={schoolSection} onChange={e => {
                             const newGrp = e.target.value;
                             setSchoolSection(newGrp);
-                            if (newGrp !== 'custom' && newGrp !== '') {
-                              const subjects = GROUP_SUBJECTS[newGrp] || [];
-                              if (subjects.length > 0) {
-                                setNewSubject(subjects[0]);
-                              } else {
-                                setNewSubject('');
-                              }
-                            }
+                            setNewSubject('');
                           }}>
                             <option value="">-- Choose Group --</option>
                             <option value="Computer Science">Computer Science</option>
@@ -1377,7 +1370,7 @@ function CourseManagementTab({
                               setNewSubject('custom');
                               setCustomSubjectName(a.subject);
                             } else {
-                              setNewSubject(a.subject || 'Physics');
+                              setNewSubject(a.subject || '');
                               setCustomSubjectName('');
                             }
 
