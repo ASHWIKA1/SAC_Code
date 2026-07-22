@@ -958,10 +958,19 @@ function CourseManagementTab({
                 {/* School vs College Portal Mode Toggle Selector */}
                 <div style={{ marginBottom: '16px', background: 'rgba(124,50,255,0.04)', padding: '10px 14px', borderRadius: '6px', border: '1px solid rgba(124,50,255,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-dark)' }}>Portal Mode Configuration:</span>
-                  <div className="btn-group" style={{ display: 'flex', border: '1px solid #7C32FF', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div className="btn-group" style={{ display: 'flex', border: '1px solid #7C32FF', borderRadius: '6px', overflow: 'hidden' }}>
                     <button 
                       type="button" 
-                      style={{ padding: '3px 12px', fontSize: '11px', cursor: 'pointer', border: 'none', background: portalMode === 'College' ? '#7C32FF' : '#fff', color: portalMode === 'College' ? '#fff' : '#7C32FF' }}
+                      style={{ 
+                        padding: '9px 20px', 
+                        fontSize: '13px', 
+                        fontWeight: 500,
+                        cursor: 'pointer', 
+                        border: 'none', 
+                        background: portalMode === 'College' ? '#7C32FF' : '#fff', 
+                        color: portalMode === 'College' ? '#fff' : '#7C32FF',
+                        transition: 'all 0.2s'
+                      }}
                       onClick={() => {
                         setPortalMode('College');
                         setNewSubject('');
@@ -971,7 +980,16 @@ function CourseManagementTab({
                     </button>
                     <button 
                       type="button" 
-                      style={{ padding: '3px 12px', fontSize: '11px', cursor: 'pointer', border: 'none', background: portalMode === 'School' ? '#7C32FF' : '#fff', color: portalMode === 'School' ? '#fff' : '#7C32FF' }}
+                      style={{ 
+                        padding: '9px 20px', 
+                        fontSize: '13px', 
+                        fontWeight: 500,
+                        cursor: 'pointer', 
+                        border: 'none', 
+                        background: portalMode === 'School' ? '#7C32FF' : '#fff', 
+                        color: portalMode === 'School' ? '#fff' : '#7C32FF',
+                        transition: 'all 0.2s'
+                      }}
                       onClick={() => {
                         setPortalMode('School');
                         setSchoolSection('');
@@ -1272,10 +1290,66 @@ function CourseManagementTab({
                 {/* Upload attachments simulator */}
                 <div style={{ background: '#fff', border: '1px solid #e1e1f5', borderRadius: '4px', padding: '14px', marginBottom: '16px' }}>
                   <h6 style={{ fontWeight: 600, fontSize: '12px', marginBottom: '8px' }}>Upload Reference Attachments:</h6>
+                  
+                  {/* Hidden Real File Input */}
+                  <input 
+                    type="file" 
+                    id="real-attachment-file" 
+                    style={{ display: 'none' }} 
+                    multiple
+                    onChange={e => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length > 0) {
+                        const newNames = files.map(f => f.name);
+                        setAttachmentsList([...attachmentsList, ...newNames]);
+                      }
+                      e.target.value = '';
+                    }}
+                  />
+
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                    <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setAttachmentsList([...attachmentsList, 'syllabus_ref.pdf'])}>📎 Attach PDF</button>
-                    <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setAttachmentsList([...attachmentsList, 'setup_guide.zip'])}>📦 Attach ZIP</button>
-                    <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setAttachmentsList([...attachmentsList, 'https://youtube.com/lecture'])}>🔗 Attach URL</button>
+                    <button 
+                      type="button" 
+                      className="btn-secondary-outline btn_sm" 
+                      onClick={() => {
+                        const fileInput = document.getElementById('real-attachment-file');
+                        if (fileInput) {
+                          fileInput.setAttribute('accept', '.pdf');
+                          fileInput.click();
+                        }
+                      }}
+                    >
+                      📎 Attach PDF
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn-secondary-outline btn_sm" 
+                      onClick={() => {
+                        const fileInput = document.getElementById('real-attachment-file');
+                        if (fileInput) {
+                          fileInput.setAttribute('accept', '.zip');
+                          fileInput.click();
+                        }
+                      }}
+                    >
+                      📦 Attach ZIP
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn-secondary-outline btn_sm" 
+                      onClick={() => {
+                        const url = window.prompt("Enter Reference URL:");
+                        if (url && url.trim() !== '') {
+                          let formattedUrl = url.trim();
+                          if (!/^https?:\/\//i.test(formattedUrl)) {
+                            formattedUrl = 'https://' + formattedUrl;
+                          }
+                          setAttachmentsList([...attachmentsList, formattedUrl]);
+                        }
+                      }}
+                    >
+                      🔗 Attach URL
+                    </button>
                   </div>
                   {attachmentsList.length > 0 && (
                     <div style={{ fontSize: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
