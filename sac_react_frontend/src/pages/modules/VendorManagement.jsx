@@ -20,6 +20,7 @@ export default function VendorManagement() {
 
   // --- STATE FOR MOCK DATA / BACKEND FALLBACKS ---
   const [loading, setLoading] = useState(false);
+  const [useMocks, setUseMocks] = useState(false);
   const [alert, setAlert] = useState(null);
   const [vendors, setVendors] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -47,45 +48,61 @@ export default function VendorManagement() {
     setLoading(true);
     try {
       const [vRes, dRes, nRes, mRes, aRes, cRes, prRes, poRes, delRes, grnRes, payRes, audRes, perfRes, dashRes] = await Promise.all([
-        api.get('/api/v1/vendors').catch(() => ({ data: { content: [] } })),
-        api.get('/api/v1/vendors/documents/expired').catch(() => ({ data: [] })),
-        api.get('/api/v1/vendors/ndas/active').catch(() => ({ data: [] })),
-        api.get('/api/v1/vendors/mous/active').catch(() => ({ data: [] })), // Fallback to list
-        api.get('/api/v1/vendors/agreements/active').catch(() => ({ data: [] })), // Fallback
-        api.get('/api/v1/vendors/consultants').catch(() => ({ data: { content: [] } })),
-        api.get('/api/v1/vendors/procurement/requests').catch(() => ({ data: { content: [] } })),
-        api.get('/api/v1/vendors/procurement/orders').catch(() => ({ data: { content: [] } })),
-        api.get('/api/v1/vendors/procurement/deliveries').catch(() => ({ data: [] })),
-        api.get('/api/v1/vendors/procurement/grns').catch(() => ({ data: [] })),
-        api.get('/api/v1/vendors/payments').catch(() => ({ data: { content: [] } })),
-        api.get('/api/v1/vendors/audit-logs').catch(() => ({ data: { content: [] } })), // Fallback
-        api.get('/api/v1/vendors/performance/all').catch(() => ({ data: [] })),
-        api.get('/api/v1/vendors/dashboard').catch(() => ({ data: null })),
+        api.get('/api/v1/vendors'),
+        api.get('/api/v1/vendors/documents/expired'),
+        api.get('/api/v1/vendors/ndas/active'),
+        api.get('/api/v1/vendors/mous/active'),
+        api.get('/api/v1/vendors/agreements/active'),
+        api.get('/api/v1/vendors/consultants'),
+        api.get('/api/v1/vendors/procurement/requests'),
+        api.get('/api/v1/vendors/procurement/orders'),
+        api.get('/api/v1/vendors/procurement/deliveries'),
+        api.get('/api/v1/vendors/procurement/grns'),
+        api.get('/api/v1/vendors/payments'),
+        api.get('/api/v1/vendors/audit-logs'),
+        api.get('/api/v1/vendors/performance/all'),
+        api.get('/api/v1/vendors/dashboard')
       ]);
 
-      const getOrFallback = (data, fallback) => {
-        if (!data) return fallback;
-        if (Array.isArray(data) && data.length > 0) return data;
-        if (data.content && Array.isArray(data.content) && data.content.length > 0) return data.content;
-        return fallback;
+      setUseMocks(false);
+
+      const extract = (res) => {
+        if (!res || !res.data) return [];
+        return res.data.content || res.data;
       };
 
-      setVendors(getOrFallback(vRes.data, MOCK_VENDORS));
-      setDocuments(getOrFallback(dRes.data, MOCK_DOCUMENTS));
-      setNdas(getOrFallback(nRes.data, MOCK_NDAS));
-      setMous(getOrFallback(mRes.data, MOCK_MOUS));
-      setAgreements(getOrFallback(aRes.data, MOCK_AGREEMENTS));
-      setConsultants(getOrFallback(cRes.data, MOCK_CONSULTANTS));
-      setPurchaseRequests(getOrFallback(prRes.data, MOCK_PR));
-      setPurchaseOrders(getOrFallback(poRes.data, MOCK_PO));
-      setDeliveries(getOrFallback(delRes.data, MOCK_DELIVERIES));
-      setGrns(getOrFallback(grnRes.data, MOCK_GRNS));
-      setPayments(getOrFallback(payRes.data, MOCK_PAYMENTS));
-      setAuditLogs(getOrFallback(audRes.data, MOCK_AUDITS));
-      setPerformances(getOrFallback(perfRes.data, MOCK_PERFORMANCES));
-      setDashboardData(dashRes.data || MOCK_DASHBOARD);
+      setVendors(extract(vRes));
+      setDocuments(extract(dRes));
+      setNdas(extract(nRes));
+      setMous(extract(mRes));
+      setAgreements(extract(aRes));
+      setConsultants(extract(cRes));
+      setPurchaseRequests(extract(prRes));
+      setPurchaseOrders(extract(poRes));
+      setDeliveries(extract(delRes));
+      setGrns(extract(grnRes));
+      setPayments(extract(payRes));
+      setAuditLogs(extract(audRes));
+      setPerformances(extract(perfRes));
+      setDashboardData(dashRes.data);
     } catch (e) {
       console.warn("Failed fetching backend APIs. Using high-fidelity mock datasets.", e);
+      setUseMocks(true);
+
+      setVendors(MOCK_VENDORS);
+      setDocuments(MOCK_DOCUMENTS);
+      setNdas(MOCK_NDAS);
+      setMous(MOCK_MOUS);
+      setAgreements(MOCK_AGREEMENTS);
+      setConsultants(MOCK_CONSULTANTS);
+      setPurchaseRequests(MOCK_PR);
+      setPurchaseOrders(MOCK_PO);
+      setDeliveries(MOCK_DELIVERIES);
+      setGrns(MOCK_GRNS);
+      setPayments(MOCK_PAYMENTS);
+      setAuditLogs(MOCK_AUDITS);
+      setPerformances(MOCK_PERFORMANCES);
+      setDashboardData(MOCK_DASHBOARD);
     } finally {
       setLoading(false);
     }
@@ -1112,6 +1129,19 @@ export default function VendorManagement() {
           <Alert type={alert.type} msg={alert.msg} onClose={() => setAlert(null)} />
         </div>
       )}
+
+      {/* Connection Mode Indicator */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+        {useMocks ? (
+          <span style={{ fontSize: 11, padding: '4px 10px', background: '#fff7ed', color: '#c2410c', borderRadius: 12, border: '1px solid #ffedd5', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            ⚠️ Sandbox Mode (Offline Mock Database)
+          </span>
+        ) : (
+          <span style={{ fontSize: 11, padding: '4px 10px', background: '#f0fdf4', color: '#15803d', borderRadius: 12, border: '1px solid #dcfce7', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            🟢 Connected: Live MySQL Database
+          </span>
+        )}
+      </div>
 
       {/* Tabs area */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 24, borderBottom: '1px solid #ddd', paddingBottom: 10 }}>

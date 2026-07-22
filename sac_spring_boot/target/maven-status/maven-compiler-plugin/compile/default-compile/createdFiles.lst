@@ -2,7 +2,10 @@ com\sac\erp\modules\cms\repository\NewsCategoryRepository.class
 com\sac\erp\modules\hr\entity\LeaveType.class
 com\sac\erp\config\GlobalExceptionHandler.class
 com\sac\erp\modules\student\controller\StudentController.class
+com\sac\erp\modules\vendor\dto\MouAgreementDto.class
+com\sac\erp\modules\vendor\service\ProcurementService.class
 com\sac\erp\modules\chat\entity\ChatInvitationType$InvitationTypeConverter.class
+com\sac\erp\modules\vendor\entity\PurchaseAgreement.class
 com\sac\erp\modules\library\entity\BookCategory.class
 com\sac\erp\modules\exam\service\FrontExamRoutineService.class
 com\sac\erp\modules\inventory\service\ItemSellService.class
@@ -11,7 +14,9 @@ com\sac\erp\modules\academic\dto\SectionDto.class
 com\sac\erp\modules\fees\entity\FeesPayment.class
 com\sac\erp\modules\student\entity\StudentPlacementProfile.class
 com\sac\erp\modules\admin\repository\PhoneCallLogRepository.class
+com\sac\erp\modules\vendor\service\ConsultantService.class
 com\sac\erp\modules\notification\service\NotificationService.class
+com\sac\erp\modules\vendor\controller\ProcurementController.class
 com\sac\erp\modules\admin\controller\BaseGroupController.class
 com\sac\erp\modules\fees\service\FeesService.class
 com\sac\erp\modules\admin\controller\SetupAdminController.class
@@ -39,6 +44,7 @@ com\sac\erp\modules\student\repository\StudentRecordRepository.class
 com\sac\erp\modules\exam\service\ExamServiceImpl.class
 com\sac\erp\modules\admin\service\CalendarSettingService.class
 com\sac\erp\modules\library\entity\LibraryMember.class
+com\sac\erp\modules\vendor\dto\PurchaseRequestDto.class
 com\sac\erp\modules\academic\service\ClassService.class
 com\sac\erp\modules\academic\entity\AssignSubject.class
 com\sac\erp\modules\homework\repository\HomeworkStudentRepository.class
@@ -53,9 +59,11 @@ com\sac\erp\modules\timetable\repository\FrontClassRoutineRepository.class
 com\sac\erp\modules\finance\repository\ChartOfAccountRepository.class
 com\sac\erp\modules\fees\entity\FeesType.class
 com\sac\erp\modules\finance\service\FinanceServiceImpl.class
+com\sac\erp\modules\vendor\entity\GoodsReceiptNote.class
 com\sac\erp\modules\chat\repository\ChatConversationRepository.class
 com\sac\erp\modules\wallet\entity\WalletSetting.class
 com\sac\erp\modules\cms\entity\NewsCategory.class
+com\sac\erp\modules\vendor\dto\VendorPaymentDto.class
 com\sac\erp\modules\academic\entity\Subject$SubjectType.class
 com\sac\erp\modules\attendance\repository\StaffAttendanceRepository.class
 com\sac\erp\modules\examplan\repository\SeatPlanRepository.class
@@ -114,10 +122,12 @@ com\sac\erp\modules\core\repository\PermissionRepository.class
 com\sac\erp\modules\academic\controller\StudentPromotionController.class
 com\sac\erp\modules\canteen\service\CanteenServiceImpl.class
 com\sac\erp\modules\student\entity\StudentRegistrationField.class
+com\sac\erp\modules\vendor\entity\PurchaseOrder.class
 com\sac\erp\modules\cms\service\NewsCommentService.class
 com\sac\erp\modules\library\repository\BookRepository.class
 com\sac\erp\modules\canteen\entity\CanteenDailySale.class
 com\sac\erp\modules\lms\repository\LmsForumRepository.class
+com\sac\erp\modules\vendor\service\ProcurementServiceImpl.class
 com\sac\erp\modules\inventory\service\InventoryService.class
 com\sac\erp\modules\exam\entity\ExamSetup.class
 com\sac\erp\modules\lesson\repository\SmLessonDetailRepository.class
@@ -129,9 +139,11 @@ com\sac\erp\modules\transport\service\TransportService.class
 com\sac\erp\modules\lesson\repository\SmLessonRepository.class
 com\sac\erp\modules\whatsapp\repository\WhatsappMessageRepository.class
 com\sac\erp\modules\library\entity\BookBank.class
+com\sac\erp\modules\vendor\controller\VendorController.class
 com\sac\erp\modules\transport\repository\VehicleRepository.class
 com\sac\erp\modules\dormitory\service\HostelServiceImpl.class
 com\sac\erp\modules\zoom\controller\ZoomController.class
+com\sac\erp\modules\vendor\dto\VendorDashboardDto.class
 com\sac\erp\modules\cms\service\CoursePageService.class
 com\sac\erp\modules\lms\entity\AssignmentStatus.class
 com\sac\erp\modules\academic\controller\AssignClassTeacherController.class
@@ -161,6 +173,7 @@ com\sac\erp\modules\student\service\StudentRegistrationFieldService.class
 com\sac\erp\modules\finance\entity\BankAccount.class
 com\sac\erp\modules\fees\service\FeesServiceImpl.class
 com\sac\erp\tenant\TenantIdentifierResolver.class
+com\sac\erp\modules\vendor\entity\PurchaseRequest.class
 com\sac\erp\modules\behavior\service\BehaviorSettingServiceImpl.class
 com\sac\erp\modules\cms\service\NewsCategoryService.class
 com\sac\erp\modules\library\repository\BookBankRepository.class
@@ -217,10 +230,13 @@ com\sac\erp\modules\chat\repository\ChatGroupMessageRemoveRepository.class
 com\sac\erp\modules\inventory\controller\ItemSellController.class
 com\sac\erp\modules\notification\entity\Notification.class
 com\sac\erp\modules\student\repository\StudentGroupRepository.class
+com\sac\erp\modules\vendor\service\VendorService.class
 com\sac\erp\modules\attendance\controller\StudentAttendanceController.class
 com\sac\erp\modules\lms\entity\LmsForumPost.class
+com\sac\erp\modules\vendor\repository\VendorPaymentRepository.class
 com\sac\erp\modules\lms\repository\MediaTypeRepository.class
 com\sac\erp\modules\lms\entity\MediaType.class
+com\sac\erp\modules\vendor\repository\PurchaseOrderRepository.class
 com\sac\erp\modules\academic\service\SectionService.class
 com\sac\erp\modules\dormitory\entity\DormitoryList.class
 com\sac\erp\modules\whatsapp\entity\WhatsappMessage.class
@@ -234,6 +250,7 @@ com\sac\erp\modules\admin\entity\Visitor.class
 com\sac\erp\modules\inventory\service\InventoryServiceImpl.class
 com\sac\erp\modules\chat\service\ChatService.class
 com\sac\erp\modules\permission\dto\MenuDto.class
+com\sac\erp\modules\vendor\repository\VendorAuditLogRepository.class
 com\sac\erp\modules\exam\service\QuestionGroupService.class
 com\sac\erp\modules\timetable\repository\TimetableRuleRepository.class
 com\sac\erp\modules\attendance\repository\StudentAttendanceRepository.class
@@ -247,6 +264,7 @@ com\sac\erp\modules\download\repository\DownloadContentRepository.class
 com\sac\erp\modules\finance\controller\BankPaymentSlipController.class
 com\sac\erp\modules\behavior\entity\StudentBehavior.class
 com\sac\erp\modules\exam\entity\QuestionBank.class
+com\sac\erp\modules\vendor\controller\ConsultantController.class
 com\sac\erp\modules\fees\controller\FeesCarryForwardController.class
 com\sac\erp\modules\ai\service\AiContentService.class
 com\sac\erp\modules\core\repository\UserRepository.class
@@ -258,6 +276,7 @@ com\sac\erp\modules\wallet\entity\WalletSetting$WalletSettingBuilder.class
 com\sac\erp\modules\admin\service\AdminService.class
 com\sac\erp\modules\finance\service\ExpenseHeadServiceImpl.class
 com\sac\erp\modules\student\repository\StudentIdCardRepository.class
+com\sac\erp\modules\vendor\repository\PurchaseRequestRepository.class
 com\sac\erp\modules\whatsapp\service\WhatsappService.class
 com\sac\erp\modules\library\entity\Book.class
 com\sac\erp\modules\permission\controller\MenuPermissionController.class
@@ -278,6 +297,7 @@ com\sac\erp\modules\examplan\repository\AdmitCardRepository.class
 com\sac\erp\modules\finance\repository\IncomeRepository.class
 com\sac\erp\modules\lms\service\LmsService.class
 com\sac\erp\modules\exam\repository\FrontExamRoutineRepository.class
+com\sac\erp\modules\vendor\repository\ConsultantRepository.class
 com\sac\erp\modules\fees\service\FeesCarryForwardServiceImpl.class
 com\sac\erp\modules\lesson\entity\SmLessonTopic.class
 com\sac\erp\modules\exam\service\QuestionBankMuOptionService.class
@@ -287,6 +307,7 @@ com\sac\erp\modules\exam\controller\QuestionGroupController.class
 com\sac\erp\modules\chat\repository\ChatGroupUserRepository.class
 com\sac\erp\modules\canteen\service\CanteenWalletServiceImpl.class
 com\sac\erp\modules\inventory\entity\ItemIssue.class
+com\sac\erp\modules\vendor\repository\VendorPerformanceRepository.class
 com\sac\erp\modules\wallet\entity\WalletTransaction$WalletTransactionBuilder.class
 com\sac\erp\modules\dormitory\service\HostelService.class
 com\sac\erp\modules\academic\service\AssignClassTeacherService.class
@@ -298,6 +319,7 @@ com\sac\erp\modules\cms\entity\NewsComment.class
 com\sac\erp\modules\ai\entity\AiTemplateContent.class
 com\sac\erp\modules\exam\repository\QuestionBankRepository.class
 com\sac\erp\modules\student\service\StudentPlacementProfileService.class
+com\sac\erp\modules\vendor\entity\DeliveryTracking.class
 com\sac\erp\modules\admin\entity\CalendarSetting.class
 com\sac\erp\modules\dormitory\service\DormitoryService.class
 com\sac\erp\modules\hr\service\HrServiceImpl.class
@@ -305,10 +327,13 @@ com\sac\erp\modules\academic\controller\ClassController.class
 com\sac\erp\modules\lms\repository\AssignmentEvaluationRepository.class
 com\sac\erp\modules\core\dto\AuthResponse.class
 com\sac\erp\modules\jitsi\repository\JitsiMeetingUserRepository.class
+com\sac\erp\modules\vendor\repository\VendorDocumentRepository.class
 com\sac\erp\modules\student\entity\Parent.class
 com\sac\erp\modules\videowatch\controller\VideoWatchController.class
+com\sac\erp\modules\vendor\entity\MouAgreement.class
 com\sac\erp\modules\ai\repository\AiGeneratedContentRepository.class
 com\sac\erp\modules\timetable\controller\FrontClassRoutineController.class
+com\sac\erp\modules\vendor\entity\Consultant.class
 com\sac\erp\modules\lms\repository\LmsLiveClassRepository.class
 com\sac\erp\config\GlobalExceptionHandler$ErrorResponse.class
 com\sac\erp\modules\cms\service\ContactPageServiceImpl.class
@@ -318,6 +343,7 @@ com\sac\erp\modules\canteen\entity\CanteenItem.class
 com\sac\erp\modules\fees\repository\FeesCarryForwardRepository.class
 com\sac\erp\modules\inventory\controller\ItemSellChildController.class
 com\sac\erp\modules\timetable\repository\ClassRoutineUpdateRepository.class
+com\sac\erp\modules\vendor\repository\NdaAgreementRepository.class
 com\sac\erp\modules\lms\service\LmsServiceImpl.class
 com\sac\erp\modules\behavior\controller\BehaviorController.class
 com\sac\erp\modules\download\entity\DownloadContent.class
@@ -350,12 +376,14 @@ com\sac\erp\modules\admin\service\PhoneCallLogService.class
 com\sac\erp\modules\cms\service\CoursePageServiceImpl.class
 com\sac\erp\modules\finance\service\AmountTransferService.class
 com\sac\erp\modules\cms\entity\ContactPage.class
+com\sac\erp\modules\vendor\service\VendorServiceImpl.class
 com\sac\erp\modules\canteen\entity\CanteenInventory.class
 com\sac\erp\modules\videowatch\repository\VideoWatchRepository.class
 com\sac\erp\modules\library\controller\LibraryController.class
 com\sac\erp\modules\student\entity\StudentGroup.class
 com\sac\erp\modules\cms\controller\NewsCategoryController.class
 com\sac\erp\modules\dormitory\controller\HostelController.class
+com\sac\erp\modules\vendor\entity\Vendor.class
 com\sac\erp\modules\cms\repository\EventRepository.class
 com\sac\erp\security\CustomUserDetails.class
 com\sac\erp\modules\lms\repository\MediaContentRepository.class
@@ -363,6 +391,7 @@ com\sac\erp\modules\core\dto\LoginRequest.class
 com\sac\erp\modules\student\service\StudentRegistrationFieldServiceImpl.class
 com\sac\erp\modules\ai\controller\AiContentController.class
 com\sac\erp\modules\examplan\entity\AdmitCard.class
+com\sac\erp\modules\vendor\dto\DeliveryTrackingDto.class
 com\sac\erp\modules\behavior\service\BehaviorService.class
 com\sac\erp\modules\exam\repository\QuestionBankMuOptionRepository.class
 com\sac\erp\modules\library\repository\BookCategoryRepository.class
@@ -371,6 +400,7 @@ com\sac\erp\modules\exam\entity\FrontExamRoutine.class
 com\sac\erp\modules\library\service\GeneralBookIssueService.class
 com\sac\erp\modules\canteen\service\CanteenService.class
 com\sac\erp\modules\zoom\entity\ZoomVirtualClassTeacher.class
+com\sac\erp\modules\vendor\repository\GoodsReceiptNoteRepository.class
 com\sac\erp\modules\cms\entity\NewsPage.class
 com\sac\erp\modules\admin\entity\BaseGroup.class
 com\sac\erp\modules\core\entity\Menu.class
@@ -378,15 +408,18 @@ com\sac\erp\modules\whatsapp\repository\WhatsappAgentRepository.class
 com\sac\erp\modules\ai\entity\AiGeneratedContent.class
 com\sac\erp\modules\lms\entity\AssignmentEvaluation.class
 com\sac\erp\modules\chat\repository\ChatBlockUserRepository.class
+com\sac\erp\modules\vendor\repository\DeliveryTrackingRepository.class
 com\sac\erp\modules\transport\service\TransportServiceImpl.class
 com\sac\erp\modules\academic\service\SubjectService.class
 com\sac\erp\modules\finance\service\BankPaymentSlipService.class
 com\sac\erp\modules\notification\controller\NotificationController.class
+com\sac\erp\modules\vendor\service\ConsultantServiceImpl.class
 com\sac\erp\config\FlywayConfig.class
 com\sac\erp\modules\cms\service\CmsService.class
 com\sac\erp\modules\core\controller\AuthController.class
 com\sac\erp\modules\lms\entity\GeneratedQuestion.class
 com\sac\erp\modules\admin\controller\PhoneCallLogController.class
+com\sac\erp\modules\vendor\service\VendorPaymentService.class
 com\sac\erp\modules\admin\controller\CalendarSettingController.class
 com\sac\erp\modules\academic\entity\ClassSection.class
 com\sac\erp\modules\timetable\service\FrontClassRoutineService.class
@@ -394,6 +427,7 @@ com\sac\erp\modules\library\repository\GeneralBookIssueRepository.class
 com\sac\erp\modules\dormitory\repository\RoomTypeRepository.class
 com\sac\erp\modules\fees\entity\FeesDiscount.class
 com\sac\erp\modules\homework\service\HomeworkService.class
+com\sac\erp\modules\vendor\entity\NdaAgreement.class
 com\sac\erp\modules\transport\entity\Vehicle.class
 com\sac\erp\modules\admin\repository\ComplaintRepository.class
 com\sac\erp\modules\finance\repository\IncomeHeadRepository.class
@@ -410,6 +444,8 @@ com\sac\erp\modules\cms\service\NewsCommentServiceImpl.class
 com\sac\erp\modules\core\entity\AssignPermission.class
 com\sac\erp\modules\homework\service\HomeworkServiceImpl.class
 com\sac\erp\modules\library\service\BookBankService.class
+com\sac\erp\modules\vendor\dto\PurchaseOrderDto.class
+com\sac\erp\modules\vendor\repository\PurchaseAgreementRepository.class
 com\sac\erp\modules\download\entity\DownloadContent$DownloadContentBuilder.class
 com\sac\erp\modules\lesson\service\LessonService.class
 com\sac\erp\modules\jitsi\service\JitsiServiceImpl.class
@@ -420,8 +456,10 @@ com\sac\erp\modules\notification\entity\Notification$NotificationBuilder.class
 com\sac\erp\modules\dormitory\service\HostelRoomServiceImpl.class
 com\sac\erp\modules\dormitory\controller\HostelRoomController.class
 com\sac\erp\modules\lms\repository\StudentAssignmentReviewRepository.class
+com\sac\erp\modules\vendor\repository\MouAgreementRepository.class
 com\sac\erp\modules\core\entity\Role.class
 com\sac\erp\modules\exam\entity\QuestionGroup.class
+com\sac\erp\modules\vendor\dto\GoodsReceiptNoteDto.class
 com\sac\erp\modules\student\repository\StudentPlacementProfileRepository.class
 com\sac\erp\modules\lms\repository\AiQuestionHistoryRepository.class
 com\sac\erp\modules\superadmin\repository\SuperAdminRepository.class
@@ -429,6 +467,7 @@ com\sac\erp\modules\inventory\service\ItemSellChildServiceImpl.class
 com\sac\erp\modules\hr\repository\StaffRepository.class
 com\sac\erp\modules\inventory\entity\ItemReceive.class
 com\sac\erp\modules\student\repository\StudentRepository.class
+com\sac\erp\modules\vendor\dto\VendorDto.class
 com\sac\erp\modules\academic\repository\StudentPromotionRepository.class
 com\sac\erp\modules\chat\repository\ChatInvitationTypeRepository.class
 com\sac\erp\modules\finance\entity\BankPaymentSlip.class
@@ -442,6 +481,7 @@ com\sac\erp\modules\hr\dto\LeaveRequestDto.class
 com\sac\erp\modules\permission\service\MenuPermissionServiceImpl.class
 com\sac\erp\modules\timetable\service\TimetableServiceImpl.class
 com\sac\erp\modules\core\repository\LanguageRepository.class
+com\sac\erp\modules\vendor\dto\VendorDocumentDto.class
 com\sac\erp\modules\fees\repository\AppliedCouponRepository.class
 com\sac\erp\modules\behavior\entity\BehaviorSetting.class
 com\sac\erp\modules\fees\repository\FeesTypeRepository.class
@@ -449,6 +489,7 @@ com\sac\erp\modules\lms\entity\MediaContent.class
 com\sac\erp\modules\examplan\entity\SeatPlanSetting.class
 com\sac\erp\modules\hr\service\HrService.class
 com\sac\erp\modules\inventory\service\ItemSellChildService.class
+com\sac\erp\modules\vendor\dto\ConsultantDto.class
 com\sac\erp\modules\attendance\service\AttendanceService.class
 com\sac\erp\modules\admin\entity\SetupAdmin.class
 com\sac\erp\modules\admin\repository\SetupAdminRepository.class
@@ -470,6 +511,7 @@ com\sac\erp\modules\student\entity\StudentCategory.class
 com\sac\erp\modules\behavior\entity\StudentBehavior$BehaviorType.class
 com\sac\erp\modules\cms\controller\NewsPageController.class
 com\sac\erp\modules\wallet\service\WalletService.class
+com\sac\erp\modules\vendor\controller\VendorDashboardController.class
 com\sac\erp\modules\lms\repository\GeneratedQuestionRepository.class
 com\sac\erp\modules\admin\service\CalendarSettingServiceImpl.class
 com\sac\erp\modules\student\service\StudentIdCardService.class
@@ -480,6 +522,7 @@ com\sac\erp\modules\zoom\entity\ZoomMeeting.class
 com\sac\erp\modules\academic\entity\StudentPromotion.class
 com\sac\erp\modules\attendance\entity\StaffAttendance.class
 com\sac\erp\modules\lms\repository\LmsQuizAttemptRepository.class
+com\sac\erp\modules\vendor\dto\NdaAgreementDto.class
 com\sac\erp\modules\canteen\repository\CanteenItemRepository.class
 com\sac\erp\modules\finance\controller\IncomeHeadController.class
 com\sac\erp\modules\exam\service\ExamService.class
@@ -520,12 +563,14 @@ com\sac\erp\modules\admin\service\PhoneCallLogServiceImpl.class
 com\sac\erp\modules\lesson\entity\SmLessonTopicDetail.class
 com\sac\erp\modules\transport\entity\AssignVehicle.class
 com\sac\erp\modules\dormitory\service\HostelRoomService.class
+com\sac\erp\modules\vendor\dto\PurchaseAgreementDto.class
 com\sac\erp\modules\inventory\service\ItemSellServiceImpl.class
 com\sac\erp\modules\examplan\entity\SeatPlan.class
 com\sac\erp\modules\inventory\repository\ItemIssueRepository.class
 com\sac\erp\modules\academic\repository\ClassRecordRepository.class
 com\sac\erp\modules\cms\entity\AboutPage.class
 com\sac\erp\modules\jitsi\repository\JitsiVirtualClassRepository.class
+com\sac\erp\modules\vendor\entity\VendorPerformance.class
 com\sac\erp\modules\canteen\entity\CanteenTransaction$TransactionType.class
 com\sac\erp\modules\cms\controller\CmsController.class
 com\sac\erp\modules\finance\repository\BankStatementRepository.class
@@ -545,6 +590,7 @@ com\sac\erp\modules\inventory\controller\ItemReceiveChildController.class
 com\sac\erp\modules\exam\service\QuestionBankServiceImpl.class
 com\sac\erp\modules\canteen\repository\CanteenTransactionRepository.class
 com\sac\erp\modules\zoom\entity\ZoomSetting.class
+com\sac\erp\modules\vendor\controller\VendorReportController.class
 com\sac\erp\modules\homework\service\StudentHomeworkService.class
 com\sac\erp\modules\chat\entity\ChatInvitationType$InvitationType.class
 com\sac\erp\modules\inventory\repository\ItemReceiveChildRepository.class
@@ -566,11 +612,13 @@ com\sac\erp\modules\zoom\repository\ZoomVirtualClassRepository.class
 com\sac\erp\modules\canteen\repository\CanteenDailySaleRepository.class
 com\sac\erp\config\OpenApiConfig.class
 com\sac\erp\modules\cms\service\NewsPageServiceImpl.class
+com\sac\erp\modules\vendor\entity\VendorAuditLog.class
 com\sac\erp\modules\academic\dto\SubjectDto.class
 com\sac\erp\modules\lms\entity\LmsForum.class
 com\sac\erp\modules\chat\entity\ChatStatus.class
 com\sac\erp\modules\hr\service\StaffServiceImpl.class
 com\sac\erp\modules\chat\entity\ChatConversation.class
+com\sac\erp\modules\vendor\repository\VendorRepository.class
 com\sac\erp\modules\inventory\repository\ItemCategoryRepository.class
 com\sac\erp\modules\timetable\entity\ClassRoutine.class
 com\sac\erp\modules\jitsi\entity\JitsiVirtualClass.class
@@ -581,6 +629,7 @@ com\sac\erp\modules\fees\controller\FeesController.class
 com\sac\erp\modules\videowatch\service\VideoWatchServiceImpl.class
 com\sac\erp\modules\attendance\dto\BulkStudentAttendanceDto.class
 com\sac\erp\modules\whatsapp\entity\WhatsappSetting.class
+com\sac\erp\modules\vendor\controller\VendorPaymentController.class
 com\sac\erp\modules\wallet\entity\WalletTransaction.class
 com\sac\erp\modules\canteen\entity\CanteenRestriction.class
 com\sac\erp\modules\student\repository\StudentRegistrationFieldRepository.class
@@ -590,6 +639,7 @@ com\sac\erp\modules\chat\entity\ChatGroupMessageRecipient.class
 com\sac\erp\modules\cms\repository\CoursePageRepository.class
 com\sac\erp\modules\fees\controller\FeesAssignController.class
 com\sac\erp\modules\timetable\repository\ClassRoutineRepository.class
+com\sac\erp\modules\vendor\entity\VendorDocument.class
 com\sac\erp\modules\exam\repository\QuestionGroupRepository.class
 com\sac\erp\modules\zoom\entity\ZoomVirtualClass.class
 com\sac\erp\modules\zoom\repository\ZoomMeetingRepository.class
@@ -605,11 +655,14 @@ com\sac\erp\modules\finance\entity\Transcation.class
 com\sac\erp\modules\inventory\entity\ItemCategory.class
 com\sac\erp\modules\cms\repository\PhotoGalleryRepository.class
 com\sac\erp\modules\hr\entity\Staff.class
+com\sac\erp\modules\vendor\dto\VendorPerformanceDto.class
+com\sac\erp\modules\vendor\service\VendorPaymentServiceImpl.class
 com\sac\erp\modules\videowatch\entity\VideoWatch$VideoWatchBuilder.class
 com\sac\erp\modules\notification\repository\NotificationRepository.class
 com\sac\erp\modules\student\entity\StudentIdCard.class
 com\sac\erp\modules\admin\entity\PhoneCallLog.class
 com\sac\erp\modules\hr\entity\Department.class
 com\sac\erp\modules\superadmin\entity\SuperAdmin.class
+com\sac\erp\modules\vendor\entity\VendorPayment.class
 com\sac\erp\modules\dormitory\repository\HostelRepository.class
 com\sac\erp\modules\academic\service\SectionServiceImpl.class
