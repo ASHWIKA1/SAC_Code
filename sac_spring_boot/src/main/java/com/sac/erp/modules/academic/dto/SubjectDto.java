@@ -14,6 +14,7 @@ public class SubjectDto {
     private String subjectName;
 
     private String subjectCode;
+    private String className;   // e.g. "Class 8", "Class 10"
     private Double passMark;
 
     @NotBlank(message = "Subject type (T/P) is required")
@@ -21,4 +22,6 @@ public class SubjectDto {
 
     private Integer activeStatus;
     private Long academicId;
+    private Long courseId;
+    private Long schoolId;      // school FK — defaults to 1 if not provided
 }

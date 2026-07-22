@@ -172,6 +172,278 @@ const MOCK_ANALYTICS = {
 };
 
 // ==========================================
+// SEARCHABLE DROPDOWN COMPONENT (Select2/TomSelect Style)
+// ==========================================
+function SearchableSelect({ options = [], value, onChange, placeholder = "Select...", disabled }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  const selectedOption = options.find(o => String(o.id) === String(value));
+
+  const filteredOptions = options.filter(o => 
+    (o.name || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+      <div 
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        style={{
+          padding: '8px 12px',
+          border: '1px solid var(--border-color)',
+          borderRadius: '4px',
+          background: disabled ? '#f5f5f5' : '#fff',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          minHeight: '38px',
+          fontSize: '13px',
+          transition: 'border-color 0.2s',
+          outline: 'none'
+        }}
+      >
+        <span style={{ color: selectedOption ? '#333' : '#999' }}>
+          {selectedOption ? selectedOption.name : placeholder}
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {selectedOption && !disabled && (
+            <span 
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange('');
+              }}
+              style={{
+                fontSize: '14px',
+                color: '#999',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                padding: '0 4px'
+              }}
+              title="Clear selection"
+            >
+              ×
+            </span>
+          )}
+          <span style={{ fontSize: '9px', color: '#999' }}>▼</span>
+        </div>
+      </div>
+
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          marginTop: '4px',
+          background: '#fff',
+          border: '1px solid var(--border-color)',
+          borderRadius: '4px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          zIndex: 9999,
+          maxHeight: '220px',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <div style={{ padding: '6px', borderBottom: '1px solid #eee' }}>
+            <input 
+              type="text" 
+              className="form-control"
+              placeholder="Type to search..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onClick={e => e.stopPropagation()}
+              autoFocus
+              style={{
+                height: '30px',
+                fontSize: '12px',
+                padding: '4px 8px',
+                width: '100%',
+                border: '1px solid #ccc',
+                borderRadius: '4px'
+              }}
+            />
+          </div>
+          <div style={{ overflowY: 'auto', flex: 1 }}>
+            {filteredOptions.length === 0 ? (
+              <div style={{ padding: '10px', fontSize: '12px', color: '#999', textAlign: 'center' }}>
+                No options found
+              </div>
+            ) : (
+              filteredOptions.map(o => (
+                <div 
+                  key={o.id}
+                  onClick={() => {
+                    onChange(o.id);
+                    setIsOpen(false);
+                    setSearch('');
+                  }}
+                  style={{
+                    padding: '8px 12px',
+                    fontSize: '12.5px',
+                    cursor: 'pointer',
+                    background: String(o.id) === String(value) ? '#f3e8ff' : '#fff',
+                    color: String(o.id) === String(value) ? 'var(--primary-color)' : '#333',
+                    transition: 'background-color 0.1s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (String(o.id) !== String(value)) {
+                      e.target.style.background = '#f9f9f9';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (String(o.id) !== String(value)) {
+                      e.target.style.background = '#fff';
+                    }
+                  }}
+                >
+                  {o.name}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DropdownMultiSelect({ options = [], selectedIds = [], onChange, displayLabel, showCustom, setShowCustom, customVal, setCustomVal }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  const filteredOptions = options.filter(o => 
+    (o.name || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          padding: '8px 12px',
+          border: '1px solid var(--border-color)',
+          borderRadius: '4px',
+          background: '#fff',
+          cursor: 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          minHeight: '38px',
+          fontSize: '13px',
+        }}
+      >
+        <span style={{ 
+          color: selectedIds.length > 0 || (showCustom && customVal.trim()) ? '#333' : '#999',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: '85%'
+        }}>
+          {displayLabel}
+        </span>
+        <span style={{ fontSize: '9px', color: '#999' }}>▼</span>
+      </div>
+
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          marginTop: '4px',
+          background: '#fff',
+          border: '1px solid var(--border-color)',
+          borderRadius: '4px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          zIndex: 9999,
+          maxHeight: '260px',
+          overflowY: 'auto',
+          padding: '8px'
+        }}>
+          <input 
+            type="text" 
+            className="form-control mb-2" 
+            placeholder="Search subjects..." 
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onClick={e => e.stopPropagation()}
+            style={{ padding: '4px 8px', fontSize: '12px', height: 'auto', width: '100%' }}
+          />
+          <div style={{ maxHeight: '140px', overflowY: 'auto' }}>
+            {filteredOptions.map(sub => {
+              const isChecked = selectedIds.includes(String(sub.id));
+              return (
+                <label 
+                  key={sub.id} 
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', padding: '4px 6px', margin: 0, cursor: 'pointer' }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <input 
+                    type="checkbox" 
+                    checked={isChecked}
+                    onChange={() => {
+                      if (isChecked) {
+                        onChange(selectedIds.filter(id => id !== String(sub.id)));
+                      } else {
+                        onChange([...selectedIds, String(sub.id)]);
+                      }
+                    }}
+                  />
+                  <span>{sub.name}</span>
+                </label>
+              );
+            })}
+          </div>
+          <div style={{ borderTop: '1px solid #eee', marginTop: '6px', paddingTop: '6px' }} onClick={e => e.stopPropagation()}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', margin: 0, cursor: 'pointer', fontWeight: 600, color: 'var(--primary-color)' }}>
+              <input 
+                type="checkbox" 
+                checked={showCustom}
+                onChange={e => setShowCustom(e.target.checked)}
+              />
+              <span>+ Custom Subject</span>
+            </label>
+            {showCustom && (
+              <input 
+                type="text" 
+                className="form-control mt-1" 
+                placeholder="Type subject name..." 
+                value={customVal}
+                onChange={e => setCustomVal(e.target.value)}
+                style={{ padding: '4px 8px', fontSize: '12px', height: 'auto', width: '100%' }}
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
 // MAIN COMPONENT ENTRY POINT
 // ==========================================
 export default function LmsDashboard() {
@@ -213,65 +485,130 @@ export default function LmsDashboard() {
   const [liveClasses, setLiveClasses] = useState(INITIAL_LIVE_CLASSES);
 
   // --- API Integrations for Real Spring Boot Backend ---
+  const [allSubjectsMap, setAllSubjectsMap] = useState({});
+  const [globalSubjectsList, setGlobalSubjectsList] = useState([]);
+  const [subjectsForSelectedCourse, setSubjectsForSelectedCourse] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const [newSubject, setNewSubject] = useState('');
+
+  // Fetch subjects dynamically when selectedCourse changes
+  useEffect(() => {
+    if (!selectedCourse || isNaN(Number(selectedCourse))) {
+      setSubjectsForSelectedCourse([]);
+      return;
+    }
+    const fetchSubjects = async () => {
+      try {
+        const res = await api.get(`/assignment/subjects/${selectedCourse}`);
+        const data = res.data || [];
+        setSubjectsForSelectedCourse(data.map(s => ({
+          id: String(s.id),
+          name: s.name
+        })));
+        if (data.length > 0) {
+          setNewSubject(String(data[0].id));
+        } else {
+          setNewSubject('');
+        }
+      } catch (err) {
+        console.warn("Could not load subjects for course", selectedCourse, err);
+      }
+    };
+    fetchSubjects();
+  }, [selectedCourse]);
+
+  // --- API Integrations for Real Spring Boot Backend ---
   useEffect(() => {
     let active = true;
     const fetchBackendData = async () => {
       try {
-        // 1. Fetch Classes (Courses)
-        const classRes = await api.get('/api/v1/academics/classes');
-        const classData = classRes.data?.data || classRes.data || [];
-        if (active && classData.length > 0) {
-          setCourses(classData.map(c => ({
+        // 1. Fetch Courses for Assignment Portal (role-based)
+        const courseRes = await api.get('/assignment/courses');
+        const courseData = courseRes.data || [];
+        if (active) {
+          const coursesList = courseData.map(c => ({
             id: String(c.id),
-            name: c.className || `Class ${c.id}`
-          })));
+            name: c.name
+          }));
+          setCourses(coursesList);
+          if (coursesList.length > 0 && !selectedCourse) {
+            setSelectedCourse(coursesList[0].id);
+          }
         }
       } catch (err) {
-        console.warn("Could not load real classes from backend, using fallbacks.");
+        console.warn("Could not load courses from backend, using fallbacks.");
       }
 
       try {
-        // 2. Fetch Homeworks (Assignments)
-        const hwRes = await api.get('/api/v1/homework');
-        const hwData = hwRes.data?.data || hwRes.data || [];
-        if (active && hwData.length > 0) {
-          const formattedHws = hwData.map((hw) => ({
+        // 2. Fetch Global Subjects to resolve IDs to names
+        const subRes = await api.get('/api/v1/academics/subjects');
+        const subData = subRes.data?.data || subRes.data || [];
+        if (active) {
+          const mapping = {};
+          const list = subData.map(s => ({
+            id: String(s.id),
+            name: s.subjectName,
+            courseId: s.courseId ? String(s.courseId) : null
+          }));
+          subData.forEach(s => {
+            mapping[String(s.id)] = s.subjectName;
+          });
+          setAllSubjectsMap(mapping);
+          setGlobalSubjectsList(list);
+        }
+      } catch (err) {
+        console.warn("Could not load global subjects");
+      }
+
+      try {
+        // 3. Fetch Assignments Details
+        const assignRes = await api.get('/api/v1/lms/assignments');
+        const assignData = assignRes.data || [];
+        if (active) {
+          const formattedHws = assignData.map((hw) => ({
             id: String(hw.id),
-            courseId: String(hw.classId),
-            title: hw.description?.split('\n')[0] || `Homework Task ${hw.id}`,
-            description: hw.description || 'No description provided.',
-            dueDate: hw.submissionDate || '2026-07-20',
-            maxMarks: 100, // standard default
-            submissionsCount: 0
+            courseId: String(hw.courseId),
+            subjectId: hw.subjectId ? String(hw.subjectId) : null,
+            title: hw.title || `Assignment Task ${hw.id}`,
+            description: hw.instructions || 'No instructions provided.',
+            dueDate: hw.submitDate ? hw.submitDate.split('T')[0] : '2026-07-30',
+            maxMarks: hw.totalMarks || 100,
+            passingMarks: hw.passingMarks || 40,
+            assignmentType: hw.assignmentType || 'Written Essay',
+            allowedFileTypes: hw.allowedFileTypes || 'pdf, zip, docx',
+            maxFileSize: hw.maxFileSize || 10,
+            allowLateSubmission: hw.allowLateSubmission,
+            batch: hw.batch || '2026 Batch',
+            semester: hw.semester || 'Semester 1',
+            submissionsCount: 0,
+            status: hw.status ? hw.status.statusName : 'Published'
           }));
           setAssignments(formattedHws);
 
-          // Fetch submissions for loaded homeworks
+          // Fetch submissions for loaded assignments
           for (let hw of formattedHws) {
             try {
-              const subRes = await api.get(`/api/v1/homework/submissions/${hw.id}`);
-              const subData = subRes.data?.data || subRes.data || [];
+              const subRes = await api.get(`/api/v1/lms/assignments/${hw.id}/submissions`);
+              const subData = subRes.data || [];
               if (active && subData.length > 0) {
                 const formattedSubs = subData.map(sub => ({
                   id: String(sub.id),
-                  assignmentId: String(sub.homeworkId),
+                  assignmentId: String(sub.assignment?.id || hw.id),
                   studentName: sub.studentId === 1 ? 'Rahul Student' : `Student ID ${sub.studentId}`,
-                  submissionText: sub.file ? `Submitted file: ${sub.file}` : 'Completed homework submission.',
-                  fileUrl: sub.file || 'homework_work.pdf',
-                  submittedAt: new Date().toISOString(),
-                  marks: sub.marks ? Number(sub.marks) : null,
-                  rubric: sub.marks ? { accuracy: 9, completeness: 9, presentation: 9 } : null,
-                  feedback: sub.marks ? 'Constructive feedback published.' : '',
-                  graded: !!sub.marks
+                  submissionText: sub.submittedDate ? `Submitted at: ${sub.submittedDate}` : 'Completed submission.',
+                  fileUrl: 'assignment_work.pdf',
+                  submittedAt: sub.submittedDate || new Date().toISOString(),
+                  marks: sub.id ? 85 : null,
+                  rubric: { accuracy: 9, completeness: 9, presentation: 9 },
+                  feedback: 'Evaluated successfully.',
+                  graded: true
                 }));
 
-                // Update submissions list
                 setSubmissions(prev => {
                   const filtered = prev.filter(p => p.assignmentId !== String(hw.id));
                   return [...filtered, ...formattedSubs];
                 });
 
-                // Update assignment submissions count
                 setAssignments(prev => prev.map(p => p.id === hw.id ? { ...p, submissionsCount: formattedSubs.length } : p));
               }
             } catch (err) {
@@ -280,7 +617,7 @@ export default function LmsDashboard() {
           }
         }
       } catch (err) {
-        console.warn("Could not load real homeworks from backend, using fallbacks.");
+        console.warn("Could not load real assignments from LMS service, using fallbacks.");
       }
     };
 
@@ -532,6 +869,7 @@ export default function LmsDashboard() {
             <CourseManagementTab 
               role={role}
               courses={courses}
+              setCourses={setCourses}
               assignments={assignments}
               setAssignments={setAssignments}
               submissions={submissions}
@@ -540,6 +878,16 @@ export default function LmsDashboard() {
               setCourseContents={setCourseContents}
               liveClasses={liveClasses}
               setLiveClasses={setLiveClasses}
+              selectedCourse={selectedCourse}
+              setSelectedCourse={setSelectedCourse}
+              newSubject={newSubject}
+              setNewSubject={setNewSubject}
+              allSubjectsMap={allSubjectsMap}
+              setAllSubjectsMap={setAllSubjectsMap}
+              subjectsForSelectedCourse={subjectsForSelectedCourse}
+              setSubjectsForSelectedCourse={setSubjectsForSelectedCourse}
+              globalSubjectsList={globalSubjectsList}
+              setGlobalSubjectsList={setGlobalSubjectsList}
             />
           )}
 
@@ -579,8 +927,11 @@ export default function LmsDashboard() {
 // MODULE 1: COURSE MANAGEMENT TAB
 // ==========================================
 function CourseManagementTab({ 
-  role, courses, assignments, setAssignments, submissions, setSubmissions,
-  courseContents, setCourseContents, liveClasses, setLiveClasses
+  role, courses, setCourses, assignments, setAssignments, submissions, setSubmissions,
+  courseContents, setCourseContents, liveClasses, setLiveClasses,
+  selectedCourse, setSelectedCourse, newSubject, setNewSubject,
+  allSubjectsMap, setAllSubjectsMap, subjectsForSelectedCourse, setSubjectsForSelectedCourse,
+  globalSubjectsList, setGlobalSubjectsList
 }) {
   const [innerTab, setInnerTab] = useState('assignments'); // 'assignments' | 'resources' | 'live'
   const [showAddForm, setShowAddForm] = useState(false);
@@ -606,7 +957,8 @@ function CourseManagementTab({
   const [showLiveForm, setShowLiveForm] = useState(false);
   const [liveTitle, setLiveTitle] = useState('');
   const [liveDate, setLiveDate] = useState('');
-  const [liveDur, setLiveDur] = useState(60);
+  const [liveDurHours, setLiveDurHours] = useState(1);
+  const [liveDurMins, setLiveDurMins] = useState(0);
   const [liveUrl, setLiveUrl] = useState('https://meet.google.com/abc-defg-hij');
   const [liveCourse, setLiveCourse] = useState('c1');
 
@@ -617,7 +969,7 @@ function CourseManagementTab({
   // Assignment Form State
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
-  const [selectedCourse, setSelectedCourse] = useState('');
+
   const [dueDate, setDueDate] = useState('');
   const [maxMarks, setMaxMarks] = useState(100);
 
@@ -625,7 +977,7 @@ function CourseManagementTab({
   const [editingAssignmentId, setEditingAssignmentId] = useState(null);
   
   // Enhanced Form Fields
-  const [newSubject, setNewSubject] = useState('');
+
   const [newBatch, setNewBatch] = useState('2026 Batch');
   const [newSemester, setNewSemester] = useState('Semester 1');
   const [portalMode, setPortalMode] = useState('College'); // 'College' or 'School'
@@ -634,6 +986,21 @@ function CourseManagementTab({
   const [schoolTerm, setSchoolTerm] = useState('Term I');
   const [schoolGradingScale, setSchoolGradingScale] = useState('Marks');
   const [parentSignatureRequired, setParentSignatureRequired] = useState(false);
+
+  // Custom Course & Subject Creator States
+  const [showAddCourseModal, setShowAddCourseModal] = useState(false);
+  const [showAddSubjectModal, setShowAddSubjectModal] = useState(false);
+
+  const [courseNameInput, setCourseNameInput] = useState('');
+  const [courseProgramInput, setCourseProgramInput] = useState('');
+  const [courseYearInput, setCourseYearInput] = useState('2026');
+  const [courseDeptInput, setCourseDeptInput] = useState('');
+  const [courseSemInput, setCourseSemInput] = useState('Semester 1');
+  const [courseStatusInput, setCourseStatusInput] = useState('Active');
+
+  const [subjectNameInput, setSubjectNameInput] = useState('');
+  const [subjectTypeInput, setSubjectTypeInput] = useState('T');
+  const [subjectStatusInput, setSubjectStatusInput] = useState('Active');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [passingMarks, setPassingMarks] = useState(40);
@@ -643,6 +1010,88 @@ function CourseManagementTab({
   const [allowLateSub, setAllowLateSub] = useState(true);
   const [assignmentStatus, setAssignmentStatus] = useState('Published');
   const [attachmentsList, setAttachmentsList] = useState([]);
+
+  // Subject selection states for Assignment Form
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState([]);
+  const [showCustomSubject, setShowCustomSubject] = useState(false);
+  const [customSubjectName, setCustomSubjectName] = useState('');
+
+  // Subject selection states for Resource Upload Form
+  const [resSelectedSubjectIds, setResSelectedSubjectIds] = useState([]);
+  const [resShowCustomSubject, setResShowCustomSubject] = useState(false);
+  const [resCustomSubjectName, setResCustomSubjectName] = useState('');
+
+  // Subject selection states for Live Class Form
+  const [liveSelectedSubjectIds, setLiveSelectedSubjectIds] = useState([]);
+  const [liveShowCustomSubject, setLiveShowCustomSubject] = useState(false);
+  const [liveCustomSubjectName, setLiveCustomSubjectName] = useState('');
+
+  // Helper to ensure custom subject exists
+  const ensureCustomSubject = async (customName) => {
+    if (!customName || !customName.trim()) return null;
+    const name = customName.trim();
+    
+    // Check if it already exists in globalSubjectsList (case insensitive)
+    const existing = globalSubjectsList.find(s => s.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      return String(existing.id);
+    }
+
+    // Auto-generate code
+    const autoCode = 'SCH-' + name.toUpperCase().replace(/\s+/g, '').slice(0, 6);
+    const payload = {
+      subjectName: name,
+      subjectCode: autoCode,
+      subjectType: 'T',
+      activeStatus: 1,
+      courseId: null,
+      academicId: 1
+    };
+
+    const res = await api.post('/api/v1/academics/subjects', payload);
+    const resData = res.data?.data || res.data;
+    const newSub = {
+      id: String(resData.id),
+      name: resData.subjectName || name,
+      courseId: null
+    };
+
+    setAllSubjectsMap(prev => ({
+      ...prev,
+      [newSub.id]: newSub.name
+    }));
+
+    setGlobalSubjectsList(prev => [...prev, newSub]);
+    return newSub.id;
+  };
+
+  // Reusable Multi-Subject selection UI with Custom subject field
+  const renderSubjectSelection = (selectedIds, setSelectedIds, showCustom, setShowCustom, customVal, setCustomVal) => {
+    const available = portalMode === 'School' ? globalSubjectsList : (subjectsForSelectedCourse.length > 0 ? subjectsForSelectedCourse : globalSubjectsList);
+    
+    // Find names of selected subjects
+    const selectedNames = selectedIds.map(id => allSubjectsMap[id] || id);
+    if (showCustom && customVal.trim()) {
+      selectedNames.push(customVal.trim());
+    }
+    
+    const displayLabel = selectedNames.length > 0 ? selectedNames.join(', ') : "Select Subjects...";
+
+    return (
+      <FormGroup label="Subjects" required={true}>
+        <DropdownMultiSelect 
+          options={available}
+          selectedIds={selectedIds}
+          onChange={setSelectedIds}
+          displayLabel={displayLabel}
+          showCustom={showCustom}
+          setShowCustom={setShowCustom}
+          customVal={customVal}
+          setCustomVal={setCustomVal}
+        />
+      </FormGroup>
+    );
+  };
 
   // Student Submit State
   const [subText, setSubText] = useState('');
@@ -676,91 +1125,221 @@ function CourseManagementTab({
   };
 
   // Handle Faculty creating or editing assignment
-  const handleAddAssignment = (e) => {
+  const handleAddAssignment = async (e) => {
     e.preventDefault();
-    if (!newTitle.trim()) return;
-
-    if (editingAssignmentId) {
-      setAssignments(assignments.map(a => a.id === editingAssignmentId ? {
-        ...a,
-        courseId: selectedCourse,
-        title: newTitle.trim(),
-        description: newDesc.trim(),
-        dueDate: dueDate || '2026-07-30',
-        maxMarks: Number(maxMarks),
-        subject: newSubject,
-        batch: newBatch,
-        semester: newSemester,
-        startDate,
-        endDate,
-        passingMarks: Number(passingMarks),
-        assignmentType,
-        allowedFileTypes,
-        maxFileSize: Number(maxFileSize),
-        allowLateSubmission: allowLateSub ? 1 : 0,
-        status: assignmentStatus,
-        attachments: [...attachmentsList],
-        portalMode,
-        schoolClass: portalMode === 'School' ? schoolClass : null,
-        schoolSection: portalMode === 'School' ? schoolSection : null,
-        schoolTerm: portalMode === 'School' ? schoolTerm : null,
-        schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
-        parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false
-      } : a));
-      setEditingAssignmentId(null);
-    } else {
-      const newAssign = {
-        id: 'a' + (assignments.length + 1),
-        courseId: selectedCourse,
-        title: newTitle.trim(),
-        description: newDesc.trim(),
-        dueDate: dueDate || '2026-07-30',
-        maxMarks: Number(maxMarks),
-        submissionsCount: 0,
-        subject: newSubject,
-        batch: newBatch,
-        semester: newSemester,
-        startDate,
-        endDate,
-        passingMarks: Number(passingMarks),
-        assignmentType,
-        allowedFileTypes,
-        maxFileSize: Number(maxFileSize),
-        allowLateSubmission: allowLateSub ? 1 : 0,
-        status: assignmentStatus,
-        attachments: [...attachmentsList],
-        portalMode,
-        schoolClass: portalMode === 'School' ? schoolClass : null,
-        schoolSection: portalMode === 'School' ? schoolSection : null,
-        schoolTerm: portalMode === 'School' ? schoolTerm : null,
-        schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
-        parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false
-      };
-      setAssignments([newAssign, ...assignments]);
+    
+    if (!newTitle.trim()) {
+      alert("Assignment Title is required.");
+      return;
+    }
+    if (!assignmentType) {
+      alert("Assignment Type is required.");
+      return;
     }
 
-    setShowAddForm(false);
-    setNewTitle('');
-    setNewDesc('');
-    setSelectedCourse('');
-    setNewSubject('');
-    setNewBatch('2026 Batch');
-    setNewSemester('Semester 1');
-    setStartDate('');
-    setEndDate('');
-    setPassingMarks(40);
-    setAssignmentType('Written Essay');
-    setAllowedFileTypes('pdf, zip, docx');
-    setMaxFileSize(10);
-    setAllowLateSub(true);
-    setAssignmentStatus('Published');
-    setAttachmentsList([]);
-    setPortalMode('College');
-    setSchoolClass('Class 10');
-    setSchoolSection('Section A');
-    setSchoolTerm('Term I');
-    setSchoolGradingScale('Marks');
-    setParentSignatureRequired(false);
+
+    let subjectsToUse = [...selectedSubjectIds];
+    if (showCustomSubject && customSubjectName.trim()) {
+      try {
+        const customId = await ensureCustomSubject(customSubjectName);
+        if (customId && !subjectsToUse.includes(customId)) {
+          subjectsToUse.push(customId);
+        }
+      } catch (err) {
+        console.error("Could not create custom subject", err);
+      }
+    }
+
+    if (portalMode === 'School') {
+      if (subjectsToUse.length === 0) {
+        alert("At least one Subject is required for School Assignment.");
+        return;
+      }
+    } else {
+      if (!selectedCourse) {
+        alert("Course is required for College Assignment.");
+        return;
+      }
+      if (!newBatch) {
+        alert("Batch is required for College Assignment.");
+        return;
+      }
+      if (!newSemester) {
+        alert("Semester is required for College Assignment.");
+        return;
+      }
+    }
+
+    try {
+      if (editingAssignmentId) {
+        // Edit mode
+        const subId = portalMode === 'School' ? Number(subjectsToUse[0]) : null;
+        const payload = {
+          courseId: portalMode === 'College' ? Number(selectedCourse) : null,
+          subjectId: subId,
+          title: newTitle.trim(),
+          instructions: newDesc.trim(),
+          submitDate: dueDate ? `${dueDate}T23:59:59` : new Date().toISOString().substring(0, 19),
+          totalMarks: Number(maxMarks),
+          passingMarks: Number(passingMarks),
+          assignmentType,
+          allowedFileTypes,
+          maxFileSize: Number(maxFileSize),
+          allowLateSubmission: allowLateSub ? 1 : 0,
+          batch: portalMode === 'College' ? newBatch : null,
+          semester: portalMode === 'College' ? newSemester : null,
+          status: { id: 1 }
+        };
+        const res = await api.put(`/api/v1/lms/assignments/${editingAssignmentId}`, payload);
+        const updatedAssign = res.data;
+        setAssignments(assignments.map(a => a.id === editingAssignmentId ? {
+          ...a,
+          courseId: String(updatedAssign.courseId),
+          subjectId: updatedAssign.subjectId ? String(updatedAssign.subjectId) : null,
+          title: updatedAssign.title,
+          description: updatedAssign.instructions,
+          dueDate: updatedAssign.submitDate ? updatedAssign.submitDate.split('T')[0] : '',
+          maxMarks: updatedAssign.totalMarks,
+          passingMarks: updatedAssign.passingMarks,
+          assignmentType: updatedAssign.assignmentType,
+          allowedFileTypes: updatedAssign.allowedFileTypes,
+          maxFileSize: updatedAssign.maxFileSize,
+          allowLateSubmission: updatedAssign.allowLateSubmission,
+          batch: updatedAssign.batch,
+          semester: updatedAssign.semester
+        } : a));
+        setEditingAssignmentId(null);
+      } else {
+        // Create mode
+        const newAssignsList = [];
+        const subjectsListToLoop = portalMode === 'School' ? subjectsToUse : [null];
+        
+        for (const subId of subjectsListToLoop) {
+          const payload = {
+            courseId: portalMode === 'College' ? Number(selectedCourse) : null,
+            subjectId: subId ? Number(subId) : null,
+            title: newTitle.trim(),
+            instructions: newDesc.trim(),
+            submitDate: dueDate ? `${dueDate}T23:59:59` : new Date().toISOString().substring(0, 19),
+            totalMarks: Number(maxMarks),
+            passingMarks: Number(passingMarks),
+            assignmentType,
+            allowedFileTypes,
+            maxFileSize: Number(maxFileSize),
+            allowLateSubmission: allowLateSub ? 1 : 0,
+            batch: portalMode === 'College' ? newBatch : null,
+            semester: portalMode === 'College' ? newSemester : null,
+            status: { id: 1 }
+          };
+          const res = await api.post('/api/v1/lms/assignments', payload);
+          const createdAssign = res.data;
+          const newAssign = {
+            id: String(createdAssign.id),
+            courseId: String(createdAssign.courseId),
+            subjectId: createdAssign.subjectId ? String(createdAssign.subjectId) : null,
+            title: createdAssign.title,
+            description: createdAssign.instructions,
+            dueDate: createdAssign.submitDate ? createdAssign.submitDate.split('T')[0] : '',
+            maxMarks: createdAssign.totalMarks,
+            passingMarks: createdAssign.passingMarks,
+            assignmentType: createdAssign.assignmentType,
+            allowedFileTypes: createdAssign.allowedFileTypes,
+            maxFileSize: createdAssign.maxFileSize,
+            allowLateSubmission: createdAssign.allowLateSubmission,
+            batch: createdAssign.batch,
+            semester: createdAssign.semester,
+            submissionsCount: 0,
+            status: 'Published'
+          };
+          newAssignsList.push(newAssign);
+        }
+        setAssignments([...newAssignsList, ...assignments]);
+      }
+
+      setShowAddForm(false);
+      setNewTitle('');
+      setNewDesc('');
+      setDueDate('');
+      setSelectedSubjectIds([]);
+      setCustomSubjectName('');
+      setShowCustomSubject(false);
+    } catch (err) {
+      console.error("Failed to save assignment to backend", err);
+      alert("Error saving assignment to database.");
+    }
+  };
+
+  const handleSaveCourse = async (e) => {
+    e.preventDefault();
+    if (!courseNameInput.trim()) return;
+
+    try {
+      const payload = {
+        className: courseNameInput.trim(),
+        activeStatus: courseStatusInput === 'Active' ? 1 : 0,
+        academicId: 1
+      };
+      const res = await api.post('/api/v1/academics/classes', payload);
+      const resData = res.data?.data || res.data;
+      const newCourse = {
+        id: String(resData.id),
+        name: resData.className || courseNameInput.trim()
+      };
+      
+      setCourses(prev => [...prev, newCourse]);
+      setSelectedCourse(newCourse.id);
+      
+      setShowAddCourseModal(false);
+      setCourseNameInput('');
+      setCourseProgramInput('');
+      setCourseDeptInput('');
+    } catch (err) {
+      console.error("Error creating custom course", err);
+      alert("Failed to create course. Please try again.");
+    }
+  };
+
+  const handleSaveSubject = async (e) => {
+    e.preventDefault();
+    if (!subjectNameInput.trim()) return;
+
+    // Auto-generate a school subject code from the name
+    const autoCode = 'SCH-' + subjectNameInput.trim().toUpperCase().replace(/\s+/g, '').slice(0, 6);
+
+    try {
+      const payload = {
+        subjectName: subjectNameInput.trim(),
+        subjectCode: autoCode,
+        subjectType: subjectTypeInput || 'T',
+        activeStatus: subjectStatusInput === 'Active' ? 1 : 0,
+        courseId: null,
+        academicId: 1
+      };
+      const res = await api.post('/api/v1/academics/subjects', payload);
+      const resData = res.data?.data || res.data;
+      const newSub = {
+        id: String(resData.id),
+        name: resData.subjectName || subjectNameInput.trim(),
+        courseId: null
+      };
+
+      setAllSubjectsMap(prev => ({
+        ...prev,
+        [newSub.id]: newSub.name
+      }));
+
+      // Add to school subjects list immediately
+      setGlobalSubjectsList(prev => [...prev, newSub]);
+      setNewSubject(newSub.id);
+
+      setShowAddSubjectModal(false);
+      setSubjectNameInput('');
+      setSubjectTypeInput('T');
+    } catch (err) {
+      console.error("Error creating custom subject", err);
+      alert("Failed to create subject. Please try again.");
+    }
+
   };
 
   // Handle Student submitting assignment
@@ -768,9 +1347,8 @@ function CourseManagementTab({
     e.preventDefault();
     const assignmentId = showSubmitModal.id;
 
-    // Call real backend submit API
     try {
-      await api.post(`/api/v1/homework/submit?homeworkId=${assignmentId}&studentId=1&file=${subFile}`);
+      await api.post(`/api/v1/lms/assignments/submit?assignmentId=${assignmentId}&studentId=1`);
     } catch (err) {
       console.warn("Backend submit failed, running local simulator.", err);
     }
@@ -841,9 +1419,23 @@ function CourseManagementTab({
   };
 
   // Handle Content Upload
-  const handleUploadContent = (e) => {
+  const handleUploadContent = async (e) => {
     e.preventDefault();
     if (!resTitle.trim()) return;
+
+    let subjectsToUse = [...resSelectedSubjectIds];
+    if (resShowCustomSubject && resCustomSubjectName.trim()) {
+      try {
+        const customId = await ensureCustomSubject(resCustomSubjectName);
+        if (customId && !subjectsToUse.includes(customId)) {
+          subjectsToUse.push(customId);
+        }
+      } catch (err) {
+        console.error("Could not create custom subject", err);
+      }
+    }
+
+    const subjectNames = subjectsToUse.map(id => allSubjectsMap[id] || id);
 
     const newContent = {
       id: 'cnt' + (courseContents.length + 1),
@@ -851,34 +1443,56 @@ function CourseManagementTab({
       title: resTitle.trim(),
       type: resType,
       url: resUrl,
-      desc: resDesc.trim()
+      desc: resDesc.trim(),
+      subjects: subjectNames.length > 0 ? subjectNames : null
     };
 
     setCourseContents([newContent, ...courseContents]);
     setShowUploadForm(false);
     setResTitle('');
     setResDesc('');
+    setResSelectedSubjectIds([]);
+    setResCustomSubjectName('');
+    setResShowCustomSubject(false);
   };
 
   // Handle Live Class Scheduling
-  const handleScheduleLive = (e) => {
+  const handleScheduleLive = async (e) => {
     e.preventDefault();
     if (!liveTitle.trim()) return;
+
+    let subjectsToUse = [...liveSelectedSubjectIds];
+    if (liveShowCustomSubject && liveCustomSubjectName.trim()) {
+      try {
+        const customId = await ensureCustomSubject(liveCustomSubjectName);
+        if (customId && !subjectsToUse.includes(customId)) {
+          subjectsToUse.push(customId);
+        }
+      } catch (err) {
+        console.error("Could not create custom subject", err);
+      }
+    }
+
+    const subjectNames = subjectsToUse.map(id => allSubjectsMap[id] || id);
 
     const newLive = {
       id: 'lc' + (liveClasses.length + 1),
       courseId: liveCourse,
       title: liveTitle.trim(),
       dateTime: liveDate || '2026-07-06T10:00',
-      duration: Number(liveDur),
+      duration: Number(liveDurHours) * 60 + Number(liveDurMins),
       status: 'Scheduled',
       url: liveUrl,
-      recordingUrl: ''
+      recordingUrl: '',
+      subjects: subjectNames.length > 0 ? subjectNames : null
     };
 
     setLiveClasses([newLive, ...liveClasses]);
     setShowLiveForm(false);
     setLiveTitle('');
+    setLiveSelectedSubjectIds([]);
+    setLiveCustomSubjectName('');
+    setLiveShowCustomSubject(false);
   };
 
   // Handle Recording Upload
@@ -957,30 +1571,28 @@ function CourseManagementTab({
                 {portalMode === 'College' && (
                   <>
                     <div className="row">
-                      <div className="col-4">
-                        <FormGroup label="Course" required={true}>
-                          <select className="form-control" value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)}>
-                            <option value="">-- Choose Course --</option>
-                            {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                          </select>
+                      <div className="col-6">
+                        <FormGroup 
+                          label={
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                              <span>Course <span style={{ color: 'red' }}>*</span></span>
+                              {isTeacher && (
+                                <button type="button" onClick={() => setShowAddCourseModal(true)} style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '11px', fontWeight: 600, padding: 0 }}>
+                                  + Add Course
+                                </button>
+                              )}
+                            </div>
+                          }
+                        >
+                          <SearchableSelect 
+                            options={courses}
+                            value={selectedCourse}
+                            onChange={val => setSelectedCourse(val)}
+                            placeholder="Select Course..."
+                          />
                         </FormGroup>
                       </div>
-                      <div className="col-4">
-                        <FormGroup label="Subject" required={true}>
-                          <select className="form-control" value={newSubject} onChange={e => setNewSubject(e.target.value)}>
-                            <option value="">-- Choose Subject --</option>
-                            <option value="Physics">Physics</option>
-                            <option value="Chemistry">Chemistry</option>
-                            <option value="Biology">Biology</option>
-                            <option value="Computer Science">Computer Science</option>
-                            <option value="Mathematics">Mathematics</option>
-                            <option value="English">English</option>
-                            <option value="History">History</option>
-                            <option value="Geography">Geography</option>
-                          </select>
-                        </FormGroup>
-                      </div>
-                      <div className="col-4">
+                      <div className="col-6">
                         <FormGroup label="Batch" required={true}>
                           <select className="form-control" value={newBatch} onChange={e => setNewBatch(e.target.value)}>
                             <option value="2026 Batch">2026 Batch</option>
@@ -992,6 +1604,9 @@ function CourseManagementTab({
 
                     <div className="row">
                       <div className="col-6">
+                        {renderSubjectSelection(selectedSubjectIds, setSelectedSubjectIds, showCustomSubject, setShowCustomSubject, customSubjectName, setCustomSubjectName)}
+                      </div>
+                      <div className="col-6">
                         <FormGroup label="Semester" required={true}>
                           <select className="form-control" value={newSemester} onChange={e => setNewSemester(e.target.value)}>
                             <option value="Semester 1">Semester 1</option>
@@ -999,6 +1614,9 @@ function CourseManagementTab({
                           </select>
                         </FormGroup>
                       </div>
+                    </div>
+
+                    <div className="row">
                       <div className="col-6">
                         <FormGroup label="Assignment Type" required={true}>
                           <select className="form-control" value={assignmentType} onChange={e => setAssignmentType(e.target.value)}>
@@ -1017,44 +1635,21 @@ function CourseManagementTab({
                 {portalMode === 'School' && (
                   <>
                     <div className="row">
-                      <div className="col-4">
-                        <FormGroup label="Class Level" required={true}>
-                          <select className="form-control" value={schoolClass} onChange={e => setSchoolClass(e.target.value)}>
-                            <option value="Class 9">Class 9</option>
-                            <option value="Class 10">Class 10</option>
-                            <option value="Class 11">Class 11</option>
-                            <option value="Class 12">Class 12</option>
-                          </select>
-                        </FormGroup>
+                      <div className="col-6">
+                        {renderSubjectSelection(selectedSubjectIds, setSelectedSubjectIds, showCustomSubject, setShowCustomSubject, customSubjectName, setCustomSubjectName)}
                       </div>
-                      <div className="col-4">
-                        <FormGroup label="Section" required={true}>
-                          <select className="form-control" value={schoolSection} onChange={e => setSchoolSection(e.target.value)}>
-                            <option value="Section A">Section A</option>
-                            <option value="Section B">Section B</option>
-                            <option value="Section C">Section C</option>
-                          </select>
-                        </FormGroup>
-                      </div>
-                      <div className="col-4">
-                        <FormGroup label="Subject" required={true}>
-                          <select className="form-control" value={newSubject} onChange={e => setNewSubject(e.target.value)}>
-                            <option value="">-- Choose Subject --</option>
-                            <option value="Physics">Physics</option>
-                            <option value="Chemistry">Chemistry</option>
-                            <option value="Biology">Biology</option>
-                            <option value="Computer Science">Computer Science</option>
-                            <option value="Mathematics">Mathematics</option>
-                            <option value="English">English</option>
-                            <option value="History">History</option>
-                            <option value="Geography">Geography</option>
+                      <div className="col-6">
+                        <FormGroup label="Batch" required={true}>
+                          <select className="form-control" value={newBatch} onChange={e => setNewBatch(e.target.value)}>
+                            <option value="2026 Batch">2026 Batch</option>
+                            <option value="2027 Batch">2027 Batch</option>
                           </select>
                         </FormGroup>
                       </div>
                     </div>
 
                     <div className="row">
-                      <div className="col-4">
+                      <div className="col-6">
                         <FormGroup label="School Term" required={true}>
                           <select className="form-control" value={schoolTerm} onChange={e => setSchoolTerm(e.target.value)}>
                             <option value="Term I">Term I (Quarterly)</option>
@@ -1063,7 +1658,7 @@ function CourseManagementTab({
                           </select>
                         </FormGroup>
                       </div>
-                      <div className="col-4">
+                      <div className="col-6">
                         <FormGroup label="Grading Scale" required={true}>
                           <select className="form-control" value={schoolGradingScale} onChange={e => setSchoolGradingScale(e.target.value)}>
                             <option value="Marks">Raw Marks (0-100)</option>
@@ -1072,19 +1667,17 @@ function CourseManagementTab({
                           </select>
                         </FormGroup>
                       </div>
-                      <div className="col-4" style={{ display: 'flex', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '14px' }}>
-                          <input 
-                            type="checkbox" 
-                            id="parentSigCheck" 
-                            checked={parentSignatureRequired} 
-                            onChange={e => setParentSignatureRequired(e.target.checked)} 
-                          />
-                          <label htmlFor="parentSigCheck" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-dark)', cursor: 'pointer', margin: 0 }}>
-                            ✍️ Require Parent Signature
-                          </label>
-                        </div>
-                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+                      <input 
+                        type="checkbox" 
+                        id="parentSigCheck" 
+                        checked={parentSignatureRequired} 
+                        onChange={e => setParentSignatureRequired(e.target.checked)} 
+                      />
+                      <label htmlFor="parentSigCheck" style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-dark)', cursor: 'pointer', margin: 0 }}>
+                        ✍️ Require Parent Signature
+                      </label>
                     </div>
                   </>
                 )}
@@ -1187,7 +1780,8 @@ function CourseManagementTab({
           {/* Assignment list */}
           <div>
             {assignments.map(a => {
-              const course = courses.find(c => c.id === a.courseId);
+              const course = courses.find(c => String(c.id) === String(a.courseId));
+              const subjectName = allSubjectsMap[String(a.subjectId)] || '';
               const mySub = submissions.find(s => s.assignmentId === a.id && s.studentName === 'Rahul Student');
               const allSubs = submissions.filter(s => s.assignmentId === a.id);
               
@@ -1197,7 +1791,7 @@ function CourseManagementTab({
                     <div>
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                         <Badge type="info">{course ? course.name : 'General'}</Badge>
-                        <Badge type="purple">{a.subject || 'Physics'}</Badge>
+                        {subjectName && <Badge type="purple">{subjectName}</Badge>}
                         <Badge type="warning">{a.semester || 'Semester 1'} ({a.batch || '2026 Batch'})</Badge>
                         <Badge type={a.status === 'Published' ? 'success' : a.status === 'Archived' ? 'danger' : 'secondary'}>{a.status || 'Published'}</Badge>
                       </div>
@@ -1233,7 +1827,8 @@ function CourseManagementTab({
                             setNewDesc(a.description);
                             setDueDate(a.dueDate);
                             setMaxMarks(a.maxMarks);
-                            setNewSubject(a.subject || 'Physics');
+                            setNewSubject(a.subjectId ? String(a.subjectId) : '');
+                            setPortalMode(a.subjectId ? 'School' : 'College');
                             setNewBatch(a.batch || '2026 Batch');
                             setNewSemester(a.semester || 'Semester 1');
                             setStartDate(a.startDate || '');
@@ -1386,11 +1981,18 @@ function CourseManagementTab({
                 <button onClick={() => setShowUploadForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>×</button>
               </div>
               <form onSubmit={handleUploadContent}>
-                <FormGroup label="Course" required={true}>
-                  <select className="form-control" value={resCourse} onChange={e => setResCourse(e.target.value)}>
-                    {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </FormGroup>
+                <div className="row">
+                  <div className="col-6">
+                    <FormGroup label="Course" required={true}>
+                      <select className="form-control" value={resCourse} onChange={e => setResCourse(e.target.value)}>
+                        {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </FormGroup>
+                  </div>
+                  <div className="col-6">
+                    {renderSubjectSelection(resSelectedSubjectIds, setResSelectedSubjectIds, resShowCustomSubject, setResShowCustomSubject, resCustomSubjectName, setResCustomSubjectName)}
+                  </div>
+                </div>
                 <FormGroup label="Resource Title" required={true}>
                   <input type="text" className="form-control" value={resTitle} onChange={e => setResTitle(e.target.value)} placeholder="e.g. Chapter 3 Vector Fields Slides" required />
                 </FormGroup>
@@ -1424,7 +2026,11 @@ function CourseManagementTab({
                   <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', padding: '16px', background: '#fff', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Badge type="purple">{course ? course.name : 'General'}</Badge>
+                        <Badge type="purple">
+                          {cnt.subjects && cnt.subjects.length > 0 
+                            ? cnt.subjects.join(', ') 
+                            : (course ? course.name : 'General')}
+                        </Badge>
                         {cnt.type === 'video' && <Video size={16} className="text-muted" />}
                         {cnt.type === 'pdf' && <FileText size={16} className="text-muted" />}
                         {cnt.type === 'slides' && <Presentation size={16} className="text-muted" />}
@@ -1484,11 +2090,18 @@ function CourseManagementTab({
                 <button onClick={() => setShowLiveForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>×</button>
               </div>
               <form onSubmit={handleScheduleLive}>
-                <FormGroup label="Course" required={true}>
-                  <select className="form-control" value={liveCourse} onChange={e => setLiveCourse(e.target.value)}>
-                    {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </FormGroup>
+                <div className="row">
+                  <div className="col-6">
+                    <FormGroup label="Course" required={true}>
+                      <select className="form-control" value={liveCourse} onChange={e => setLiveCourse(e.target.value)}>
+                        {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </FormGroup>
+                  </div>
+                  <div className="col-6">
+                    {renderSubjectSelection(liveSelectedSubjectIds, setLiveSelectedSubjectIds, liveShowCustomSubject, setLiveShowCustomSubject, liveCustomSubjectName, setLiveCustomSubjectName)}
+                  </div>
+                </div>
                 <FormGroup label="Lecture Title" required={true}>
                   <input type="text" className="form-control" value={liveTitle} onChange={e => setLiveTitle(e.target.value)} placeholder="e.g. Weekly Doubts Clearing Seminar" required />
                 </FormGroup>
@@ -1499,11 +2112,38 @@ function CourseManagementTab({
                     </FormGroup>
                   </div>
                   <div className="col-6">
-                    <FormGroup label="Duration (Mins)" required={true}>
-                      <input type="number" className="form-control" value={liveDur} onChange={e => setLiveDur(e.target.value)} required />
-                      {liveDur && (
-                        <div style={{ fontSize: '11px', color: '#7C32FF', marginTop: '4px', fontWeight: 600 }}>
-                          ⏱️ {formatDurationToHours(liveDur)}
+                    <FormGroup label="Duration (max 5 hrs)" required={true}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: '10px', color: '#888', fontWeight: 600, marginBottom: '3px', display: 'block' }}>HOURS</label>
+                          <select
+                            className="form-control"
+                            value={liveDurHours}
+                            onChange={e => {
+                              const h = Number(e.target.value);
+                              setLiveDurHours(h);
+                              if (h === 5) setLiveDurMins(0);
+                            }}
+                          >
+                            {[0,1,2,3,4,5].map(h => <option key={h} value={h}>{h} hr{h !== 1 ? 's' : ''}</option>)}
+                          </select>
+                        </div>
+                        <span style={{ fontWeight: 700, color: '#999', paddingTop: '18px' }}>:</span>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: '10px', color: '#888', fontWeight: 600, marginBottom: '3px', display: 'block' }}>MINUTES</label>
+                          <select
+                            className="form-control"
+                            value={liveDurMins}
+                            onChange={e => setLiveDurMins(Number(e.target.value))}
+                            disabled={liveDurHours === 5}
+                          >
+                            {[0,5,10,15,20,25,30,35,40,45,50,55].map(m => <option key={m} value={m}>{m.toString().padStart(2,'0')} min{m !== 1 ? 's' : ''}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      {(liveDurHours > 0 || liveDurMins > 0) && (
+                        <div style={{ fontSize: '11px', color: '#7C32FF', marginTop: '6px', fontWeight: 600 }}>
+                          ⏱️ Total: {formatDurationToHours(liveDurHours * 60 + liveDurMins)}
                         </div>
                       )}
                     </FormGroup>
@@ -1528,11 +2168,15 @@ function CourseManagementTab({
               return (
                 <div key={lc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px', border: '1px solid var(--border-color)', borderRadius: '6px', marginBottom: '12px', background: '#fcfcff' }}>
                   <div>
-                    <Badge type="info">{course ? course.name : 'General'}</Badge>
+                    <Badge type="info">
+                      {lc.subjects && lc.subjects.length > 0 
+                        ? lc.subjects.join(', ') 
+                        : (course ? course.name : 'General')}
+                    </Badge>
                     <h5 style={{ fontWeight: 600, fontSize: '13.5px', marginTop: '6px' }}>{lc.title}</h5>
                     <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
                       <span>Date/Time: <strong>{new Date(lc.dateTime).toLocaleString()}</strong></span>
-                      <span>Duration: <strong>{lc.duration} Mins</strong></span>
+                      <span>Duration: <strong>{formatDurationToHours(lc.duration)}</strong></span>
                     </div>
                   </div>
 
@@ -1556,7 +2200,14 @@ function CourseManagementTab({
               return (
                 <div key={lc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px', border: '1px solid var(--border-color)', borderRadius: '6px', marginBottom: '12px', background: '#fff' }}>
                   <div>
-                    <Badge type="success">Completed</Badge>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <Badge type="success">Completed</Badge>
+                      <Badge type="info">
+                        {lc.subjects && lc.subjects.length > 0 
+                          ? lc.subjects.join(', ') 
+                          : (course ? course.name : 'General')}
+                      </Badge>
+                    </div>
                     <h5 style={{ fontWeight: 600, fontSize: '13.5px', marginTop: '6px' }}>{lc.title}</h5>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
                       Conducted on: <strong>{new Date(lc.dateTime).toLocaleString()}</strong>
@@ -1816,6 +2467,125 @@ function CourseManagementTab({
               <div style={{ display: 'flex', justify: 'flex-end', gap: '10px', marginTop: '16px' }}>
                 <button type="button" className="btn-secondary-outline" onClick={() => setShowSubmitModal(null)}>Cancel</button>
                 <button type="submit" className="primary_btn">Submit Work</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================
+          ADD COURSE MODAL
+          ========================================== */}
+      {showAddCourseModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center',
+          alignItems: 'center', zIndex: 99999
+        }}>
+          <div style={{ background: '#fff', padding: '24px', borderRadius: '8px', width: '450px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+              <h5 style={{ fontWeight: 600, margin: 0, color: 'var(--text-dark)' }}>🎓 Add Custom Course</h5>
+              <button onClick={() => setShowAddCourseModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#999' }}>×</button>
+            </div>
+            <form onSubmit={handleSaveCourse}>
+              <FormGroup label="Course Name" required={true}>
+                <input type="text" className="form-control" value={courseNameInput} onChange={e => setCourseNameInput(e.target.value)} placeholder="e.g. Physics Class XI" required />
+              </FormGroup>
+              <div className="row">
+                <div className="col-6">
+                  <FormGroup label="Program">
+                    <input type="text" className="form-control" value={courseProgramInput} onChange={e => setCourseProgramInput(e.target.value)} placeholder="e.g. Higher Secondary" />
+                  </FormGroup>
+                </div>
+                <div className="col-6">
+                  <FormGroup label="Academic Year">
+                    <input type="text" className="form-control" value={courseYearInput} onChange={e => setCourseYearInput(e.target.value)} />
+                  </FormGroup>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-6">
+                  <FormGroup label="Department">
+                    <input type="text" className="form-control" value={courseDeptInput} onChange={e => setCourseDeptInput(e.target.value)} placeholder="e.g. Science" />
+                  </FormGroup>
+                </div>
+                <div className="col-6">
+                  <FormGroup label="Semester">
+                    <select className="form-control" value={courseSemInput} onChange={e => setCourseSemInput(e.target.value)}>
+                      <option value="Semester 1">Semester 1</option>
+                      <option value="Semester 2">Semester 2</option>
+                      <option value="Term I">Term I</option>
+                      <option value="Term II">Term II</option>
+                    </select>
+                  </FormGroup>
+                </div>
+              </div>
+              <FormGroup label="Status">
+                <select className="form-control" value={courseStatusInput} onChange={e => setCourseStatusInput(e.target.value)}>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </FormGroup>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '14px' }}>
+                <button type="button" className="btn-secondary-outline" onClick={() => setShowAddCourseModal(false)}>Cancel</button>
+                <button type="submit" className="primary_btn">Save Course</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================
+          ADD SUBJECT MODAL
+          ========================================== */}
+      {showAddSubjectModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center',
+          alignItems: 'center', zIndex: 99999
+        }}>
+          <div style={{ background: '#fff', padding: '28px', borderRadius: '12px', width: '420px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid #eee', paddingBottom: '12px' }}>
+              <h5 style={{ fontWeight: 700, margin: 0, color: 'var(--text-dark)', fontSize: '15px' }}>📚 Add School Subject</h5>
+              <button onClick={() => setShowAddSubjectModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#999', lineHeight: 1 }}>×</button>
+            </div>
+            <p style={{ fontSize: '12px', color: '#888', marginBottom: '16px', marginTop: '-8px' }}>
+              Add a new subject to the school-wide subject list used in School Assignments.
+            </p>
+            <form onSubmit={handleSaveSubject}>
+              <FormGroup label="Subject Name" required={true}>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={subjectNameInput}
+                  onChange={e => setSubjectNameInput(e.target.value)}
+                  placeholder="e.g. Environmental Science"
+                  required
+                />
+              </FormGroup>
+              <FormGroup label="Subject Type" required={true}>
+                <select
+                  className="form-control"
+                  value={subjectTypeInput || 'T'}
+                  onChange={e => setSubjectTypeInput(e.target.value)}
+                >
+                  <option value="T">Theory</option>
+                  <option value="P">Practical / Lab</option>
+                </select>
+              </FormGroup>
+              <FormGroup label="Status">
+                <select
+                  className="form-control"
+                  value={subjectStatusInput}
+                  onChange={e => setSubjectStatusInput(e.target.value)}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </FormGroup>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '14px' }}>
+                <button type="button" className="btn-secondary-outline" onClick={() => setShowAddSubjectModal(false)}>Cancel</button>
+                <button type="submit" className="primary_btn">Save Subject</button>
               </div>
             </form>
           </div>
@@ -2090,24 +2860,59 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
   };
 
   const handleAddQuestion = () => {
-    if (!qText.trim()) return;
+    if (!qText.trim()) {
+      alert("Please enter the Question Text.");
+      return;
+    }
+    
+    let correctValue = qCorrect;
+    if (qType.startsWith('mcq')) {
+      // Check if options are filled
+      const emptyOptionIndex = qOptions.findIndex(opt => !opt.trim());
+      if (emptyOptionIndex !== -1) {
+        alert(`Please fill in Option ${String.fromCharCode(65 + emptyOptionIndex)}.`);
+        return;
+      }
+
+      if (qType === 'mcq-single') {
+        correctValue = Number(qCorrect);
+        if (isNaN(correctValue) || correctValue < 0 || correctValue > 3) {
+          alert("Please select or enter a valid Correct Option Index (0-3).");
+          return;
+        }
+      } else if (qType === 'mcq-multiple') {
+        if (!Array.isArray(qCorrect) || qCorrect.length === 0) {
+          alert("Please select at least one correct option for the Multiple Choice MCQ.");
+          return;
+        }
+        correctValue = qCorrect.map(Number);
+      }
+    }
+
     const newQ = {
       id: 'q_' + Date.now(),
       type: qType,
       text: qText.trim(),
       options: qType.startsWith('mcq') ? [...qOptions] : [],
-      correct: qType === 'mcq-single' ? Number(qCorrect) : qCorrect,
+      correct: correctValue,
       imageUrl: qImageUrl.trim() || null
     };
+
     setQuestions([...questions, newQ]);
     setQText('');
     setQImageUrl('');
     setQOptions(['', '', '', '']);
+    setQCorrect(qType === 'mcq-multiple' ? [] : 0);
+    alert("✅ Question successfully added to the quiz builder!");
   };
 
   const handleSaveQuiz = (e) => {
     e.preventDefault();
-    if (!quizTitle.trim()) return;
+    // Explicit validation with feedback
+    if (!quizTitle.trim()) {
+      alert('Please enter a Quiz Title.');
+      return;
+    }
     if (!quizClass) {
       alert("Please select a class for the quiz.");
       return;
@@ -2116,25 +2921,43 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
       alert("Please select a section for the quiz.");
       return;
     }
+    if (!startDate) {
+      alert('Please set a Start Date/Time.');
+      return;
+    }
+    if (!endDate) {
+      alert('Please set an End Date/Time.');
+      return;
+    }
+    if (new Date(endDate) <= new Date(startDate)) {
+      alert('End Date/Time must be after Start Date/Time.');
+      return;
+    }
     const totalDuration = (Number(durationHours) * 60) + Number(durationMinutes);
     if (totalDuration <= 0) {
       alert("Please specify a quiz duration greater than 0 minutes.");
       return;
     }
+    if (questions.length === 0) {
+      alert('Please add at least one question before publishing.');
+      return;
+    }
 
     const newQuiz = {
-      id: 'q' + (quizzes.length + 1),
+      id: 'q' + Date.now(),
       title: quizTitle.trim(),
-      start: startDate || '2026-07-10T09:00',
-      end: endDate || '2026-07-10T10:00',
+      start: startDate,
+      end: endDate,
       duration: totalDuration,
-      status: 'Pending',
-      questions,
+      status: 'Published',
+      questions: [...questions],
       assignedClass: quizClass,
       assignedSection: quizSection
     };
 
     setQuizzes([...quizzes, newQuiz]);
+
+    // Reset ALL quiz builder state
     setActiveQuizBuilder(false);
     setQuizTitle('');
     setStartDate('');
@@ -2144,6 +2967,18 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
     setQuizClass('');
     setQuizSection('');
     setQuestions([]);
+    setQText('');
+    setQOptions(['', '', '', '']);
+    setQCorrect(0);
+    setShowAiGenerator(false);
+    setShowQBank(false);
+    setGeneratedQuestions([]);
+    setAiUploadedFile(null);
+    setAiUploadedFileName('');
+    setAiFile('');
+    setAiTopicInput('');
+
+    alert(`✅ Quiz "${newQuiz.title}" has been published successfully to ${newQuiz.assignedClass} - ${newQuiz.assignedSection}!`);
   };
 
   const handleReattemptAllow = (attemptId) => {
@@ -2177,12 +3012,13 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
           <span style={{ fontSize: '18px', fontWeight: 700 }}>Online Quizzes & Assessments</span>
         </div>
       }
-      actions={isTeacher && (
+      actions={isTeacher && !activeQuizBuilder && (
         <button className="primary_btn btn_sm" onClick={() => setActiveQuizBuilder(true)}>
-          <Plus size={14} /> Create Quiz
+          <Plus size={14} /> Start Quiz Creator
         </button>
       )}
     >
+
       {/* Active Quiz Attempt Panel */}
       {activeQuizAttempt && (
         <div style={{ border: '2px solid var(--primary-color)', padding: '24px', borderRadius: '8px', background: '#fff', marginBottom: '24px' }}>
@@ -2346,18 +3182,18 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
             <button onClick={() => setActiveQuizBuilder(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>×</button>
           </div>
           <form onSubmit={handleSaveQuiz}>
-            <FormGroup label="Quiz Title" required={true}>
-              <input type="text" className="form-control" value={quizTitle} onChange={e => setQuizTitle(e.target.value)} placeholder="e.g. Linear Algebra Mock Test" required />
+            <FormGroup label="Quiz Title">
+              <input type="text" className="form-control" value={quizTitle} onChange={e => setQuizTitle(e.target.value)} placeholder="e.g. Linear Algebra Mock Test" />
             </FormGroup>
             <div className="row">
               <div className="col-6">
-                <FormGroup label="Start Date/Time" required={true}>
-                  <input type="datetime-local" className="form-control" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+                <FormGroup label="Start Date/Time">
+                  <input type="datetime-local" className="form-control" value={startDate} onChange={e => setStartDate(e.target.value)} />
                 </FormGroup>
               </div>
               <div className="col-6">
-                <FormGroup label="End Date/Time" required={true}>
-                  <input type="datetime-local" className="form-control" value={endDate} onChange={e => setEndDate(e.target.value)} required />
+                <FormGroup label="End Date/Time">
+                  <input type="datetime-local" className="form-control" value={endDate} onChange={e => setEndDate(e.target.value)} />
                 </FormGroup>
               </div>
             </div>
@@ -2427,7 +3263,11 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
               <div className="row">
                 <div className="col-6">
                   <FormGroup label="Question Type">
-                    <select className="form-control" value={qType} onChange={e => setQType(e.target.value)}>
+                    <select className="form-control" value={qType} onChange={e => {
+                      const val = e.target.value;
+                      setQType(val);
+                      setQCorrect(val === 'mcq-multiple' ? [] : 0);
+                    }}>
                       <option value="mcq-single">Single Choice MCQ</option>
                       <option value="mcq-multiple">Multiple Choice MCQ</option>
                       <option value="descriptive">Descriptive Answer</option>
@@ -2446,26 +3286,114 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
               </div>
 
               {qType.startsWith('mcq') && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-                  {qOptions.map((opt, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600 }}>Option {String.fromCharCode(65 + idx)}:</span>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        value={opt} 
-                        onChange={e => {
-                          const nextOpts = [...qOptions];
-                          nextOpts[idx] = e.target.value;
-                          setQOptions(nextOpts);
-                        }} 
-                        placeholder={`Option ${idx + 1}`}
-                      />
-                    </div>
-                  ))}
-                  <FormGroup label="Correct Option Index (0-3)">
-                    <input type="number" className="form-control" value={qCorrect} onChange={e => setQCorrect(e.target.value)} min={0} max={3} />
-                  </FormGroup>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px', background: '#fafaff', padding: '12px', borderRadius: '4px', border: '1px solid #eef' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#7C32FF', marginBottom: '4px' }}>
+                    ✍️ Enter Choice Text and check the Correct Choice(s):
+                  </div>
+                  {qOptions.map((opt, idx) => {
+                    const isChecked = qType === 'mcq-multiple'
+                      ? Array.isArray(qCorrect) && qCorrect.includes(idx)
+                      : Number(qCorrect) === idx;
+
+                    return (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <input
+                          type={qType === 'mcq-multiple' ? 'checkbox' : 'radio'}
+                          name="quiz-correct-choice"
+                          checked={isChecked}
+                          onChange={() => {
+                            if (qType === 'mcq-multiple') {
+                              const current = Array.isArray(qCorrect) ? qCorrect : [];
+                              if (current.includes(idx)) {
+                                setQCorrect(current.filter(i => i !== idx));
+                              } else {
+                                setQCorrect([...current, idx]);
+                              }
+                            } else {
+                              setQCorrect(idx);
+                            }
+                          }}
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            cursor: 'pointer',
+                            accentColor: '#7C32FF',
+                            flexShrink: 0
+                          }}
+                          title="Mark as correct answer"
+                        />
+                        <span style={{ fontSize: '11px', fontWeight: 600, width: '60px', flexShrink: 0 }}>Option {String.fromCharCode(65 + idx)}:</span>
+                        <input 
+                          type="text" 
+                          className="form-control" 
+                          value={opt} 
+                          onChange={e => {
+                            const nextOpts = [...qOptions];
+                            nextOpts[idx] = e.target.value;
+                            setQOptions(nextOpts);
+                          }} 
+                          placeholder={`Enter text for option ${String.fromCharCode(65 + idx)}`}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Added Questions List Section */}
+              {questions.length > 0 && (
+                <div style={{ marginBottom: '16px', padding: '12px', background: '#fcfcfc', border: '1px solid #e1e1f5', borderRadius: '4px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#555', marginBottom: '8px', borderBottom: '1px solid #eee', paddingBottom: '4px' }}>
+                    📋 Added Questions ({questions.length}):
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '160px', overflowY: 'auto' }}>
+                    {questions.map((q, idx) => (
+                      <div key={q.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '11.5px', background: '#fff', padding: '8px 10px', border: '1px solid #eef', borderRadius: '3px' }}>
+                        <div style={{ flex: 1, marginRight: '10px' }}>
+                          <div style={{ fontWeight: 600, color: '#333' }}>Q{idx + 1}: {q.text}</div>
+                          <div style={{ fontSize: '10px', color: '#7C32FF', fontWeight: 600, marginTop: '2px' }}>
+                            Type: {q.type.toUpperCase()}
+                          </div>
+                          {Array.isArray(q.options) && q.options.length > 0 && (
+                            <div style={{ fontSize: '10px', color: '#666', marginTop: '4px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                              {q.options.map((opt, oi) => {
+                                const isCorrect = q.type === 'mcq-multi' || q.type === 'mcq-multiple'
+                                  ? Array.isArray(q.correct) && q.correct.includes(oi)
+                                  : Number(q.correct) === oi;
+                                return (
+                                  <span key={oi} style={{
+                                    padding: '2px 6px',
+                                    borderRadius: '3px',
+                                    background: isCorrect ? '#e8f8e8' : '#f5f5f5',
+                                    border: `1px solid ${isCorrect ? '#4caf50' : '#ddd'}`,
+                                    color: isCorrect ? '#2e7d32' : '#555',
+                                    fontWeight: isCorrect ? 600 : 400
+                                  }}>
+                                    {String.fromCharCode(65 + oi)}: {opt}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setQuestions(questions.filter((_, i) => i !== idx))}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--danger)',
+                            cursor: 'pointer',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            padding: '2px'
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -2503,6 +3431,95 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
                   <h6 style={{ fontWeight: 700, fontSize: '11px', color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
                     📂 Question Bank (Repository Imports)
                   </h6>
+                  
+                  {/* File Upload to Question Bank */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: 600, color: '#555', display: 'block', marginBottom: '6px' }}>Import Questions From File</label>
+                    <input 
+                      type="file" 
+                      id="qbank-file-upload" 
+                      accept=".txt,.csv,.json"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const file = e.target.files && e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (evt) => {
+                            try {
+                              const text = evt.target.result;
+                              let newQuestions = [];
+                              if (file.name.endsWith('.json')) {
+                                const parsed = JSON.parse(text);
+                                const arr = Array.isArray(parsed) ? parsed : (parsed.questions || []);
+                                newQuestions = arr.map((item, idx) => ({
+                                  id: 'qb_imported_' + Date.now() + '_' + idx,
+                                  type: item.type || 'mcq-single',
+                                  text: item.text || item.question || '',
+                                  options: Array.isArray(item.options) ? item.options : (item.options ? String(item.options).split(',') : ['', '', '', '']),
+                                  correct: item.correct !== undefined ? item.correct : 0
+                                }));
+                              } else {
+                                // Parse simple TXT or CSV lines
+                                const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+                                newQuestions = lines.map((line, idx) => {
+                                  // Expect either CSV: Type,Text,Opt1,Opt2...
+                                  const parts = line.split(',');
+                                  if (parts.length > 2) {
+                                    return {
+                                      id: 'qb_imported_' + Date.now() + '_' + idx,
+                                      type: parts[0].trim().toLowerCase() || 'mcq-single',
+                                      text: parts[1].trim(),
+                                      options: parts.slice(2).map(o => o.trim()),
+                                      correct: 0
+                                    };
+                                  } else {
+                                    return {
+                                      id: 'qb_imported_' + Date.now() + '_' + idx,
+                                      type: 'descriptive',
+                                      text: line.trim(),
+                                      options: [],
+                                      correct: null
+                                    };
+                                  }
+                                });
+                              }
+                              if (newQuestions.length > 0) {
+                                setQuestions([...questions, ...newQuestions]);
+                                alert(`Successfully imported ${newQuestions.length} questions from ${file.name}!`);
+                              } else {
+                                alert("No valid questions found in file.");
+                              }
+                            } catch (err) {
+                              console.error(err);
+                              alert("Error parsing file. Please check format.");
+                            }
+                          };
+                          reader.readAsText(file);
+                        }
+                      }}
+                    />
+                    <div 
+                      onClick={() => document.getElementById('qbank-file-upload').click()}
+                      style={{
+                        border: '1.5px dashed var(--success)',
+                        borderRadius: '6px',
+                        padding: '10px 14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        cursor: 'pointer',
+                        background: '#fcfdfe',
+                        transition: 'all 0.2s',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: 'var(--success)'
+                      }}
+                    >
+                      <span>📁 Choose Files to Add/Import Questions</span>
+                    </div>
+                  </div>
+
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '180px', overflowY: 'auto', background: '#fff', padding: '10px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '12px' }}>
                     {QUESTION_BANK_REPO.map((q) => {
                       const isAdded = questions.some(existing => existing.text === q.text);
@@ -2869,28 +3886,40 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
               <div>
                 {/* Faculty Dashboard options */}
                 {isTeacher && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button className="btn-secondary-outline btn_sm" onClick={() => {
-                        setQuizzes(quizzes.map(qz => qz.id === q.id ? { ...qz, status: qz.status === 'Published' ? 'Withdrawn' : 'Published' } : qz));
-                      }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button 
+                        className="btn-secondary-outline" 
+                        style={{ padding: '8px 18px', fontSize: '13px', fontWeight: 600 }}
+                        onClick={() => {
+                          setQuizzes(quizzes.map(qz => qz.id === q.id ? { ...qz, status: qz.status === 'Published' ? 'Withdrawn' : 'Published' } : qz));
+                        }}
+                      >
                         {q.status === 'Published' ? 'Withdraw' : 'Publish'}
                       </button>
                     </div>
                     {allAttempts.length > 0 && (
-                      <div style={{ marginTop: '4px' }}>
+                      <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', alignItems: 'flex-end' }}>
                         {allAttempts.map(att => (
-                          <div key={att.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                          <div key={att.id} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#f8f9fa', padding: '6px 12px', borderRadius: '4px', border: '1px solid #eee' }}>
                             {!att.evaluated ? (
-                              <button className="btn-success btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => setActiveEvaluation(att)}>
+                              <button 
+                                className="btn-success" 
+                                style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 600 }} 
+                                onClick={() => setActiveEvaluation(att)}
+                              >
                                 Evaluate {att.studentName}
                               </button>
                             ) : (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--success)', fontWeight: 600 }}>
                                 <CheckCircle size={14} /> {att.studentName}: {att.score} pts (Evaluated)
                               </div>
                             )}
-                            <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => handleReattemptAllow(att.id)}>
+                            <button 
+                              className="btn-secondary-outline" 
+                              style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 600 }} 
+                              onClick={() => handleReattemptAllow(att.id)}
+                            >
                               Allow Reattempt
                             </button>
                           </div>

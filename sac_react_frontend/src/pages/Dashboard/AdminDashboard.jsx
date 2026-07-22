@@ -44,7 +44,13 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(MOCK_STATS);
 
   useEffect(() => {
-    api.get('/api/dashboard/stats').then(r => setStats(r.data)).catch(() => {});
+    api.get('/api/dashboard/stats')
+      .then(r => {
+        if (r.data && typeof r.data === 'object' && r.data.totalStudents !== undefined) {
+          setStats(r.data);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const studentCols = [
@@ -84,18 +90,18 @@ export default function AdminDashboard() {
 
       {/* Stats Row 1 */}
       <div className="dashboard_stats_row">
-        <StatCard value={(stats.totalStudents || 0).toLocaleString()} label="Total Students" icon="ti-user" colorClass="purple" />
-        <StatCard value={stats.totalTeachers} label="Total Teachers" icon="ti-blackboard" colorClass="blue" />
-        <StatCard value={stats.totalParents} label="Total Parents" icon="ti-id-badge" colorClass="green" />
-        <StatCard value={stats.totalClasses} label="Total Classes" icon="ti-book" colorClass="orange" />
+        <StatCard value={stats?.totalStudents?.toLocaleString() || '0'} label="Total Students" icon="ti-user" colorClass="purple" />
+        <StatCard value={stats?.totalTeachers || '0'} label="Total Teachers" icon="ti-blackboard" colorClass="blue" />
+        <StatCard value={stats?.totalParents || '0'} label="Total Parents" icon="ti-id-badge" colorClass="green" />
+        <StatCard value={stats?.totalClasses || '0'} label="Total Classes" icon="ti-book" colorClass="orange" />
       </div>
 
       {/* Stats Row 2 */}
       <div className="dashboard_stats_row">
-        <StatCard value={stats.feesCollected} label="Fees Collected (This Month)" icon="ti-money" colorClass="green" />
-        <StatCard value={stats.pendingFees} label="Pending Fees" icon="ti-alert" colorClass="red" />
-        <StatCard value={stats.totalIncome} label="Total Income" icon="ti-bar-chart" colorClass="blue" />
-        <StatCard value={stats.attendanceToday} label="Today's Attendance" icon="ti-check-box" colorClass="purple" />
+        <StatCard value={stats?.feesCollected || '0'} label="Fees Collected (This Month)" icon="ti-money" colorClass="green" />
+        <StatCard value={stats?.pendingFees || '0'} label="Pending Fees" icon="ti-alert" colorClass="red" />
+        <StatCard value={stats?.totalIncome || '0'} label="Total Income" icon="ti-bar-chart" colorClass="blue" />
+        <StatCard value={stats?.attendanceToday || '0%'} label="Today's Attendance" icon="ti-check-box" colorClass="purple" />
       </div>
 
       {/* Two-column: Recent Students + Notices */}

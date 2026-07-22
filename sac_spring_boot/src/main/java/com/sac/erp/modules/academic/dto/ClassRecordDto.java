@@ -15,4 +15,5 @@ public class ClassRecordDto {
     private Double passMark;
     private Integer activeStatus;
     private Long academicId;
+    private Long schoolId; // school FK - defaults to 1
 }

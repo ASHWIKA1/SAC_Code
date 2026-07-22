@@ -67,6 +67,12 @@ public class LmsController {
         return ResponseEntity.ok(lmsService.createAssignment(assignment));
     }
 
+    @PutMapping("/assignments/{id}")
+    public ResponseEntity<AssignmentDetails> updateAssignment(@PathVariable Long id, @RequestBody AssignmentDetails assignment) {
+        log.info("REST request to update LMS Assignment: {}", id);
+        return ResponseEntity.ok(lmsService.updateAssignment(id, assignment));
+    }
+
     @PostMapping("/assignments/submit")
     public ResponseEntity<StudentAssignment> submitAssignment(
             @RequestParam Long assignmentId,

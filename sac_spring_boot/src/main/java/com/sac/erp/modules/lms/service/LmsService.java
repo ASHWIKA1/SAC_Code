@@ -16,6 +16,7 @@ public interface LmsService {
     List<AssignmentDetails> getAllAssignments();
     List<AssignmentDetails> getAssignmentsByCourse(Long courseId);
     AssignmentDetails createAssignment(AssignmentDetails assignment);
+    AssignmentDetails updateAssignment(Long id, AssignmentDetails assignment);
     StudentAssignment submitAssignment(Long assignmentId, Long studentId);
     List<StudentAssignment> getSubmissionsByAssignment(Long assignmentId);
     StudentAssignmentReview reviewSubmission(Long studentAssignmentId, String remarks, Long facultyId);

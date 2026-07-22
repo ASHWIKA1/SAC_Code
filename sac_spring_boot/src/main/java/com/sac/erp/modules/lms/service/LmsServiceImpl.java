@@ -115,6 +115,27 @@ public class LmsServiceImpl implements LmsService {
 
     @Override
     @Transactional
+    public AssignmentDetails updateAssignment(Long id, AssignmentDetails assignmentDetails) {
+        AssignmentDetails assignment = assignmentDetailsRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Assignment not found"));
+        assignment.setCourseId(assignmentDetails.getCourseId());
+        assignment.setSubjectId(assignmentDetails.getSubjectId());
+        assignment.setTitle(assignmentDetails.getTitle());
+        assignment.setInstructions(assignmentDetails.getInstructions());
+        assignment.setSubmitDate(assignmentDetails.getSubmitDate());
+        assignment.setTotalMarks(assignmentDetails.getTotalMarks());
+        assignment.setPassingMarks(assignmentDetails.getPassingMarks());
+        assignment.setAssignmentType(assignmentDetails.getAssignmentType());
+        assignment.setAllowedFileTypes(assignmentDetails.getAllowedFileTypes());
+        assignment.setMaxFileSize(assignmentDetails.getMaxFileSize());
+        assignment.setAllowLateSubmission(assignmentDetails.getAllowLateSubmission());
+        assignment.setBatch(assignmentDetails.getBatch());
+        assignment.setSemester(assignmentDetails.getSemester());
+        return assignmentDetailsRepository.save(assignment);
+    }
+
+    @Override
+    @Transactional
     public StudentAssignment submitAssignment(Long assignmentId, Long studentId) {
         AssignmentDetails assignment = assignmentDetailsRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment details not found"));

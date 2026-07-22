@@ -4,7 +4,7 @@ const getBaseURL = () => {
   const { protocol, hostname, port } = window.location;
   // If running locally under Vite dev server, proxy/forward to Spring Boot local port 8085
   if (port === '5173') {
-    return 'http://localhost:8085';
+    return `${protocol}//${hostname}:8085`;
   }
   // In production, the React app is served by Spring Boot itself, so use the same origin
   return `${protocol}//${hostname}${port ? ':' + port : ''}`;
@@ -41,6 +41,11 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
+      const token = localStorage.getItem('sac_token');
+      if (token && token.startsWith('demo-token-')) {
+        console.warn("Unauthorized request under demo token session. Bypassing login redirect.");
+        return Promise.reject(err);
+      }
       localStorage.removeItem('sac_token');
       localStorage.removeItem('sac_user');
       window.location.href = getBasename() + '/login';

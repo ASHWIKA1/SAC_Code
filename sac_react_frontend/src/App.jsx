@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import AdminLayout from './layouts/AdminLayout';
 import AssignmentSubmission from './components/AssignmentSubmission';
 import LmsDashboard from './pages/modules/LmsDashboard';
+import VendorManagementPage from './pages/modules/VendorManagement';
 
 
 // Dashboards
@@ -286,6 +287,23 @@ export default function App() {
           <Route path="inventory/issue" element={<InventoryItemsPage />} />
           <Route path="inventory/sell" element={<InventoryItemsPage />} />
           <Route path="inventory/suppliers" element={<InventorySuppliersPage />} />
+
+          {/* Vendor Management */}
+          <Route path="vendor/registration" element={<VendorManagementPage />} />
+          <Route path="vendor/documents" element={<VendorManagementPage />} />
+          <Route path="vendor/nda" element={<VendorManagementPage />} />
+          <Route path="vendor/mou" element={<VendorManagementPage />} />
+          <Route path="vendor/agreements" element={<VendorManagementPage />} />
+          <Route path="vendor/consultants" element={<VendorManagementPage />} />
+          <Route path="vendor/purchase-request" element={<VendorManagementPage />} />
+          <Route path="vendor/purchase-order" element={<VendorManagementPage />} />
+          <Route path="vendor/delivery-tracking" element={<VendorManagementPage />} />
+          <Route path="vendor/grn" element={<VendorManagementPage />} />
+          <Route path="vendor/performance" element={<VendorManagementPage />} />
+          <Route path="vendor/payment" element={<VendorManagementPage />} />
+          <Route path="vendor/dashboard" element={<VendorManagementPage />} />
+          <Route path="vendor/reports" element={<VendorManagementPage />} />
+          <Route path="vendor/audit-logs" element={<VendorManagementPage />} />
 
           {/* Communicate */}
           <Route path="communicate/notice-board" element={<NoticeBoardPage />} />

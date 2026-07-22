@@ -38,10 +38,13 @@ public class SubjectServiceImpl implements SubjectService {
         Subject subject = new Subject();
         subject.setSubjectName(dto.getSubjectName());
         subject.setSubjectCode(dto.getSubjectCode());
+        subject.setClassName(dto.getClassName());
         subject.setPassMark(dto.getPassMark());
         subject.setSubjectType(Subject.SubjectType.valueOf(dto.getSubjectType().toUpperCase()));
         subject.setActiveStatus(dto.getActiveStatus() != null ? dto.getActiveStatus() : 1);
-        subject.setAcademicId(dto.getAcademicId());
+        subject.setAcademicId(dto.getAcademicId() != null ? dto.getAcademicId() : 1L);
+        subject.setCourseId(dto.getCourseId());
+        subject.setSchoolId(dto.getSchoolId() != null ? String.valueOf(dto.getSchoolId()) : "1");
 
         Subject saved = subjectRepository.save(subject);
         return convertToDto(saved);
@@ -55,12 +58,17 @@ public class SubjectServiceImpl implements SubjectService {
 
         subject.setSubjectName(dto.getSubjectName());
         subject.setSubjectCode(dto.getSubjectCode());
+        subject.setClassName(dto.getClassName());
         subject.setPassMark(dto.getPassMark());
         subject.setSubjectType(Subject.SubjectType.valueOf(dto.getSubjectType().toUpperCase()));
         if (dto.getActiveStatus() != null) {
             subject.setActiveStatus(dto.getActiveStatus());
         }
-        subject.setAcademicId(dto.getAcademicId());
+        subject.setAcademicId(dto.getAcademicId() != null ? dto.getAcademicId() : 1L);
+        subject.setCourseId(dto.getCourseId());
+        if (dto.getSchoolId() != null) {
+            subject.setSchoolId(String.valueOf(dto.getSchoolId()));
+        }
 
         Subject updated = subjectRepository.save(subject);
         return convertToDto(updated);
@@ -79,10 +87,19 @@ public class SubjectServiceImpl implements SubjectService {
         dto.setId(entity.getId());
         dto.setSubjectName(entity.getSubjectName());
         dto.setSubjectCode(entity.getSubjectCode());
+        dto.setClassName(entity.getClassName());
         dto.setPassMark(entity.getPassMark());
-        dto.setSubjectType(entity.getSubjectType().name());
+        dto.setSubjectType(entity.getSubjectType() != null ? entity.getSubjectType().name() : "T");
         dto.setActiveStatus(entity.getActiveStatus());
         dto.setAcademicId(entity.getAcademicId());
+        dto.setCourseId(entity.getCourseId());
+        if (entity.getSchoolId() != null) {
+            try {
+                dto.setSchoolId(Long.parseLong(entity.getSchoolId()));
+            } catch (NumberFormatException e) {
+                dto.setSchoolId(1L);
+            }
+        }
         return dto;
     }
 }
