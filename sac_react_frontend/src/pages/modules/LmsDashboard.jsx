@@ -351,6 +351,17 @@ export default function LmsDashboard() {
           box-sizing: border-box !important;
         }
 
+        .lms-dashboard-style-wrapper select {
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          -moz-appearance: none !important;
+          background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%23475569%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E') !important;
+          background-repeat: no-repeat !important;
+          background-position: right 14px center !important;
+          background-size: 16px !important;
+          padding-right: 40px !important;
+        }
+
         .lms-dashboard-style-wrapper textarea {
           border-radius: 4px !important;
           border: 1px solid #cbd5e1 !important;
@@ -501,18 +512,7 @@ export default function LmsDashboard() {
         }
       `}</style>
       <PageHeader 
-        title={
-          activeTab === 'quizzes' ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <img 
-                src="/src/assets/online_quiz_logo.png" 
-                alt="Online Quizzes Logo" 
-                style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid rgba(124, 50, 255, 0.15)' }} 
-              />
-              <span>Online Quizzes</span>
-            </div>
-          ) : pageTitle
-        } 
+        title={pageTitle} 
         breadcrumbs={[{ label: 'LMS' }, { label: breadcrumbLabel }]} 
       />
 
@@ -532,6 +532,7 @@ export default function LmsDashboard() {
             <CourseManagementTab 
               role={role}
               courses={courses}
+              setCourses={setCourses}
               assignments={assignments}
               setAssignments={setAssignments}
               submissions={submissions}
@@ -578,8 +579,15 @@ export default function LmsDashboard() {
 // ==========================================
 // MODULE 1: COURSE MANAGEMENT TAB
 // ==========================================
+const GROUP_SUBJECTS = {
+  'Computer Science': ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'],
+  'Bio-Maths': ['Physics', 'Chemistry', 'Biology', 'Mathematics'],
+  'Commerce': ['Accountancy', 'Business Studies', 'Economics', 'Mathematics'],
+  'Computer application': ['Accountancy', 'Business Studies', 'Economics', 'English', 'Computer Applications']
+};
+
 function CourseManagementTab({ 
-  role, courses, assignments, setAssignments, submissions, setSubmissions,
+  role, courses, setCourses, assignments, setAssignments, submissions, setSubmissions,
   courseContents, setCourseContents, liveClasses, setLiveClasses
 }) {
   const [innerTab, setInnerTab] = useState('assignments'); // 'assignments' | 'resources' | 'live'
@@ -630,7 +638,7 @@ function CourseManagementTab({
   const [newSemester, setNewSemester] = useState('Semester 1');
   const [portalMode, setPortalMode] = useState('College'); // 'College' or 'School'
   const [schoolClass, setSchoolClass] = useState('Class 10');
-  const [schoolSection, setSchoolSection] = useState('Section A');
+  const [schoolSection, setSchoolSection] = useState('Computer Science');
   const [schoolTerm, setSchoolTerm] = useState('Term I');
   const [schoolGradingScale, setSchoolGradingScale] = useState('Marks');
   const [parentSignatureRequired, setParentSignatureRequired] = useState(false);
@@ -643,6 +651,8 @@ function CourseManagementTab({
   const [allowLateSub, setAllowLateSub] = useState(true);
   const [assignmentStatus, setAssignmentStatus] = useState('Published');
   const [attachmentsList, setAttachmentsList] = useState([]);
+  const [customCourseName, setCustomCourseName] = useState('');
+  const [customSubjectName, setCustomSubjectName] = useState('');
 
   // Student Submit State
   const [subText, setSubText] = useState('');
@@ -680,15 +690,24 @@ function CourseManagementTab({
     e.preventDefault();
     if (!newTitle.trim()) return;
 
+    const courseVal = selectedCourse === 'custom' ? customCourseName.trim() : selectedCourse;
+    const subjectVal = newSubject === 'custom' ? customSubjectName.trim() : newSubject;
+
+    if (selectedCourse === 'custom' && courseVal && !courses.some(c => c.id === courseVal)) {
+      if (setCourses) {
+        setCourses(prev => [...prev, { id: courseVal, name: courseVal }]);
+      }
+    }
+
     if (editingAssignmentId) {
       setAssignments(assignments.map(a => a.id === editingAssignmentId ? {
         ...a,
-        courseId: selectedCourse,
+        courseId: courseVal,
         title: newTitle.trim(),
         description: newDesc.trim(),
         dueDate: dueDate || '2026-07-30',
         maxMarks: Number(maxMarks),
-        subject: newSubject,
+        subject: subjectVal,
         batch: newBatch,
         semester: newSemester,
         startDate,
@@ -711,13 +730,13 @@ function CourseManagementTab({
     } else {
       const newAssign = {
         id: 'a' + (assignments.length + 1),
-        courseId: selectedCourse,
+        courseId: courseVal,
         title: newTitle.trim(),
         description: newDesc.trim(),
         dueDate: dueDate || '2026-07-30',
         maxMarks: Number(maxMarks),
         submissionsCount: 0,
-        subject: newSubject,
+        subject: subjectVal,
         batch: newBatch,
         semester: newSemester,
         startDate,
@@ -743,7 +762,9 @@ function CourseManagementTab({
     setNewTitle('');
     setNewDesc('');
     setSelectedCourse('');
+    setCustomCourseName('');
     setNewSubject('');
+    setCustomSubjectName('');
     setNewBatch('2026 Batch');
     setNewSemester('Semester 1');
     setStartDate('');
@@ -939,14 +960,21 @@ function CourseManagementTab({
                     <button 
                       type="button" 
                       style={{ padding: '3px 12px', fontSize: '11px', cursor: 'pointer', border: 'none', background: portalMode === 'College' ? '#7C32FF' : '#fff', color: portalMode === 'College' ? '#fff' : '#7C32FF' }}
-                      onClick={() => setPortalMode('College')}
+                      onClick={() => {
+                        setPortalMode('College');
+                        setNewSubject('');
+                      }}
                     >
                       🎓 College Assignment
                     </button>
                     <button 
                       type="button" 
                       style={{ padding: '3px 12px', fontSize: '11px', cursor: 'pointer', border: 'none', background: portalMode === 'School' ? '#7C32FF' : '#fff', color: portalMode === 'School' ? '#fff' : '#7C32FF' }}
-                      onClick={() => setPortalMode('School')}
+                      onClick={() => {
+                        setPortalMode('School');
+                        setSchoolSection('Computer Science');
+                        setNewSubject('Physics');
+                      }}
                     >
                       🏫 School Assignment
                     </button>
@@ -962,7 +990,18 @@ function CourseManagementTab({
                           <select className="form-control" value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)}>
                             <option value="">-- Choose Course --</option>
                             {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            <option value="custom">-- Custom Course --</option>
                           </select>
+                          {selectedCourse === 'custom' && (
+                            <input 
+                              type="text" 
+                              className="form-control mt-2" 
+                              value={customCourseName} 
+                              onChange={e => setCustomCourseName(e.target.value)} 
+                              placeholder="Enter custom course..." 
+                              required 
+                            />
+                          )}
                         </FormGroup>
                       </div>
                       <div className="col-4">
@@ -977,7 +1016,18 @@ function CourseManagementTab({
                             <option value="English">English</option>
                             <option value="History">History</option>
                             <option value="Geography">Geography</option>
+                            <option value="custom">-- Custom Subject --</option>
                           </select>
+                          {newSubject === 'custom' && (
+                            <input 
+                              type="text" 
+                              className="form-control mt-2" 
+                              value={customSubjectName} 
+                              onChange={e => setCustomSubjectName(e.target.value)} 
+                              placeholder="Enter custom subject..." 
+                              required 
+                            />
+                          )}
                         </FormGroup>
                       </div>
                       <div className="col-4">
@@ -1028,11 +1078,21 @@ function CourseManagementTab({
                         </FormGroup>
                       </div>
                       <div className="col-4">
-                        <FormGroup label="Section" required={true}>
-                          <select className="form-control" value={schoolSection} onChange={e => setSchoolSection(e.target.value)}>
-                            <option value="Section A">Section A</option>
-                            <option value="Section B">Section B</option>
-                            <option value="Section C">Section C</option>
+                        <FormGroup label="Group" required={true}>
+                          <select className="form-control" value={schoolSection} onChange={e => {
+                            const newGrp = e.target.value;
+                            setSchoolSection(newGrp);
+                            const subjects = GROUP_SUBJECTS[newGrp] || [];
+                            if (subjects.length > 0) {
+                              setNewSubject(subjects[0]);
+                            } else {
+                              setNewSubject('');
+                            }
+                          }}>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Bio-Maths">Bio-Maths</option>
+                            <option value="Commerce">Commerce</option>
+                            <option value="Computer application">Computer application</option>
                           </select>
                         </FormGroup>
                       </div>
@@ -1040,15 +1100,21 @@ function CourseManagementTab({
                         <FormGroup label="Subject" required={true}>
                           <select className="form-control" value={newSubject} onChange={e => setNewSubject(e.target.value)}>
                             <option value="">-- Choose Subject --</option>
-                            <option value="Physics">Physics</option>
-                            <option value="Chemistry">Chemistry</option>
-                            <option value="Biology">Biology</option>
-                            <option value="Computer Science">Computer Science</option>
-                            <option value="Mathematics">Mathematics</option>
-                            <option value="English">English</option>
-                            <option value="History">History</option>
-                            <option value="Geography">Geography</option>
+                            {(GROUP_SUBJECTS[schoolSection] || []).map(sub => (
+                              <option key={sub} value={sub}>{sub}</option>
+                            ))}
+                            <option value="custom">-- Custom Subject --</option>
                           </select>
+                          {newSubject === 'custom' && (
+                            <input 
+                              type="text" 
+                              className="form-control mt-2" 
+                              value={customSubjectName} 
+                              onChange={e => setCustomSubjectName(e.target.value)} 
+                              placeholder="Enter custom subject..." 
+                              required 
+                            />
+                          )}
                         </FormGroup>
                       </div>
                     </div>
@@ -1196,9 +1262,19 @@ function CourseManagementTab({
                   <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
                     <div>
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        <Badge type="info">{course ? course.name : 'General'}</Badge>
-                        <Badge type="purple">{a.subject || 'Physics'}</Badge>
-                        <Badge type="warning">{a.semester || 'Semester 1'} ({a.batch || '2026 Batch'})</Badge>
+                        {a.portalMode === 'School' ? (
+                          <>
+                            <Badge type="info">{a.schoolClass || 'Class 10'}</Badge>
+                            <Badge type="purple">{a.subject || 'Physics'}</Badge>
+                            <Badge type="warning">{a.schoolSection || 'Computer Science'} ({a.schoolTerm || 'Term I'})</Badge>
+                          </>
+                        ) : (
+                          <>
+                            <Badge type="info">{course ? course.name : 'General'}</Badge>
+                            <Badge type="purple">{a.subject || 'Physics'}</Badge>
+                            <Badge type="warning">{a.semester || 'Semester 1'} ({a.batch || '2026 Batch'})</Badge>
+                          </>
+                        )}
                         <Badge type={a.status === 'Published' ? 'success' : a.status === 'Archived' ? 'danger' : 'secondary'}>{a.status || 'Published'}</Badge>
                       </div>
                       <h4 style={{ fontSize: '15px', fontWeight: 600, marginTop: '8px', color: 'var(--text-dark)' }}>{a.title}</h4>
@@ -1228,12 +1304,34 @@ function CourseManagementTab({
                         <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
                           <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => {
                             setEditingAssignmentId(a.id);
-                            setSelectedCourse(a.courseId);
+                            
+                            // Handle Custom Course
+                            const courseExists = courses.some(c => c.id === a.courseId);
+                            if (a.courseId && !courseExists) {
+                              setSelectedCourse('custom');
+                              setCustomCourseName(a.courseId);
+                            } else {
+                              setSelectedCourse(a.courseId || '');
+                              setCustomCourseName('');
+                            }
+                            
+                            // Handle Custom Subject
+                            const standardSubjects = [
+                              'Physics', 'Chemistry', 'Biology', 'Computer Science', 'Mathematics', 'English', 'History', 'Geography',
+                              'Accountancy', 'Business Studies', 'Economics', 'Computer Applications'
+                            ];
+                            if (a.subject && !standardSubjects.includes(a.subject)) {
+                              setNewSubject('custom');
+                              setCustomSubjectName(a.subject);
+                            } else {
+                              setNewSubject(a.subject || 'Physics');
+                              setCustomSubjectName('');
+                            }
+
                             setNewTitle(a.title);
                             setNewDesc(a.description);
                             setDueDate(a.dueDate);
                             setMaxMarks(a.maxMarks);
-                            setNewSubject(a.subject || 'Physics');
                             setNewBatch(a.batch || '2026 Batch');
                             setNewSemester(a.semester || 'Semester 1');
                             setStartDate(a.startDate || '');
@@ -1245,6 +1343,16 @@ function CourseManagementTab({
                             setAllowLateSub(a.allowLateSubmission !== 0);
                             setAssignmentStatus(a.status || 'Published');
                             setAttachmentsList(a.attachments || []);
+                            
+                            setPortalMode(a.portalMode || 'College');
+                            if (a.portalMode === 'School') {
+                              setSchoolClass(a.schoolClass || 'Class 10');
+                              setSchoolSection(a.schoolSection || 'Computer Science');
+                              setSchoolTerm(a.schoolTerm || 'Term I');
+                              setSchoolGradingScale(a.schoolGradingScale || 'Marks');
+                              setParentSignatureRequired(!!a.parentSignatureRequired);
+                            }
+                            
                             setShowAddForm(true);
                           }}>Edit</button>
                           <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', color: 'var(--danger)' }} onClick={() => {
@@ -2167,16 +2275,7 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
 
   return (
     <WhiteCard 
-      title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img 
-            src="/src/assets/online_quiz_logo.png" 
-            alt="Online Quizzes Logo" 
-            style={{ width: '40px', height: '40px', borderRadius: '8px', border: '1px solid rgba(124, 50, 255, 0.2)', boxShadow: '0 4px 10px rgba(124, 50, 255, 0.15)' }} 
-          />
-          <span style={{ fontSize: '18px', fontWeight: 700 }}>Online Quizzes & Assessments</span>
-        </div>
-      }
+      title="Online Quizzes & Assessments"
       actions={isTeacher && (
         <button className="primary_btn btn_sm" onClick={() => setActiveQuizBuilder(true)}>
           <Plus size={14} /> Create Quiz
