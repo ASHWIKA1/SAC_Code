@@ -47,62 +47,58 @@ export default function VendorManagement() {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [vRes, dRes, nRes, mRes, aRes, cRes, prRes, poRes, delRes, grnRes, payRes, audRes, perfRes, dashRes] = await Promise.all([
-        api.get('/api/v1/vendors'),
-        api.get('/api/v1/vendors/documents/expired'),
-        api.get('/api/v1/vendors/ndas/active'),
-        api.get('/api/v1/vendors/mous/active'),
-        api.get('/api/v1/vendors/agreements/active'),
-        api.get('/api/v1/vendors/consultants'),
-        api.get('/api/v1/vendors/procurement/requests'),
-        api.get('/api/v1/vendors/procurement/orders'),
-        api.get('/api/v1/vendors/procurement/deliveries'),
-        api.get('/api/v1/vendors/procurement/grns'),
-        api.get('/api/v1/vendors/payments'),
-        api.get('/api/v1/vendors/audit-logs'),
-        api.get('/api/v1/vendors/performance/all'),
-        api.get('/api/v1/vendors/dashboard')
-      ]);
-
-      setUseMocks(false);
-
-      const extract = (res) => {
-        if (!res || !res.data) return [];
-        return res.data.content || res.data;
+      const fetchOrMock = async (apiPromise, mockData) => {
+        try {
+          const res = await apiPromise;
+          if (res && res.data) {
+            const content = res.data.content !== undefined ? res.data.content : res.data;
+            if (content !== null && content !== undefined) {
+              return { data: content, failed: false };
+            }
+          }
+          return { data: mockData, failed: false };
+        } catch (err) {
+          console.warn("API request failed, falling back to mock dataset.", err);
+          return { data: mockData, failed: true };
+        }
       };
 
-      setVendors(extract(vRes));
-      setDocuments(extract(dRes));
-      setNdas(extract(nRes));
-      setMous(extract(mRes));
-      setAgreements(extract(aRes));
-      setConsultants(extract(cRes));
-      setPurchaseRequests(extract(prRes));
-      setPurchaseOrders(extract(poRes));
-      setDeliveries(extract(delRes));
-      setGrns(extract(grnRes));
-      setPayments(extract(payRes));
-      setAuditLogs(extract(audRes));
-      setPerformances(extract(perfRes));
-      setDashboardData(dashRes.data);
-    } catch (e) {
-      console.warn("Failed fetching backend APIs. Using high-fidelity mock datasets.", e);
-      setUseMocks(true);
+      const [vRes, dRes, nRes, mRes, aRes, cRes, prRes, poRes, delRes, grnRes, payRes, audRes, perfRes, dashRes] = await Promise.all([
+        fetchOrMock(api.get('/api/v1/vendors'), MOCK_VENDORS),
+        fetchOrMock(api.get('/api/v1/vendors/documents/expired'), MOCK_DOCUMENTS),
+        fetchOrMock(api.get('/api/v1/vendors/ndas/active'), MOCK_NDAS),
+        fetchOrMock(api.get('/api/v1/vendors/mous/active'), MOCK_MOUS),
+        fetchOrMock(api.get('/api/v1/vendors/agreements/active'), MOCK_AGREEMENTS),
+        fetchOrMock(api.get('/api/v1/vendors/consultants'), MOCK_CONSULTANTS),
+        fetchOrMock(api.get('/api/v1/vendors/procurement/requests'), MOCK_PR),
+        fetchOrMock(api.get('/api/v1/vendors/procurement/orders'), MOCK_PO),
+        fetchOrMock(api.get('/api/v1/vendors/procurement/deliveries'), MOCK_DELIVERIES),
+        fetchOrMock(api.get('/api/v1/vendors/procurement/grns'), MOCK_GRNS),
+        fetchOrMock(api.get('/api/v1/vendors/payments'), MOCK_PAYMENTS),
+        fetchOrMock(api.get('/api/v1/vendors/audit-logs'), MOCK_AUDITS),
+        fetchOrMock(api.get('/api/v1/vendors/performance/all'), MOCK_PERFORMANCES),
+        fetchOrMock(api.get('/api/v1/vendors/dashboard'), MOCK_DASHBOARD)
+      ]);
 
-      setVendors(MOCK_VENDORS);
-      setDocuments(MOCK_DOCUMENTS);
-      setNdas(MOCK_NDAS);
-      setMous(MOCK_MOUS);
-      setAgreements(MOCK_AGREEMENTS);
-      setConsultants(MOCK_CONSULTANTS);
-      setPurchaseRequests(MOCK_PR);
-      setPurchaseOrders(MOCK_PO);
-      setDeliveries(MOCK_DELIVERIES);
-      setGrns(MOCK_GRNS);
-      setPayments(MOCK_PAYMENTS);
-      setAuditLogs(MOCK_AUDITS);
-      setPerformances(MOCK_PERFORMANCES);
-      setDashboardData(MOCK_DASHBOARD);
+      setVendors(vRes.data);
+      setDocuments(dRes.data);
+      setNdas(nRes.data);
+      setMous(mRes.data);
+      setAgreements(aRes.data);
+      setConsultants(cRes.data);
+      setPurchaseRequests(prRes.data);
+      setPurchaseOrders(poRes.data);
+      setDeliveries(delRes.data);
+      setGrns(grnRes.data);
+      setPayments(payRes.data);
+      setAuditLogs(audRes.data);
+      setPerformances(perfRes.data);
+      setDashboardData(dashRes.data);
+
+      setUseMocks(vRes.failed);
+    } catch (e) {
+      console.error("Critical error in fetchAllData", e);
+      setUseMocks(true);
     } finally {
       setLoading(false);
     }
