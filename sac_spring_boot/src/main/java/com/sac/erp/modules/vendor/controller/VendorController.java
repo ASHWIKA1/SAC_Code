@@ -181,4 +181,16 @@ public class VendorController {
         String schoolId = TenantContext.getCurrentTenant();
         return ResponseEntity.ok(vendorService.getAllPerformances(schoolId));
     }
+
+    @GetMapping("/audit-logs")
+    public ResponseEntity<Page<VendorAuditLog>> getAuditLogs(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        String schoolId = TenantContext.getCurrentTenant();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        return ResponseEntity.ok(vendorService.getAuditLogs(search, PageRequest.of(page, size, sort), schoolId));
+    }
 }

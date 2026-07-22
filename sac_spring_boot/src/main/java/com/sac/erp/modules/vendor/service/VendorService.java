@@ -42,4 +42,7 @@ public interface VendorService {
     VendorPerformance savePerformance(VendorPerformanceDto dto, String schoolId, Long userId);
     VendorPerformance getPerformanceByVendor(Long vendorId, String schoolId);
     List<VendorPerformance> getAllPerformances(String schoolId);
+
+    // Audit Logs
+    Page<VendorAuditLog> getAuditLogs(String search, Pageable pageable, String schoolId);
 }

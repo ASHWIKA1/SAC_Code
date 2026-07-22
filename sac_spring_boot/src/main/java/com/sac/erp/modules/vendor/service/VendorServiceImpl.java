@@ -382,4 +382,9 @@ public class VendorServiceImpl implements VendorService {
     public List<PurchaseAgreement> getActiveAgreements(String schoolId) {
         return purchaseAgreementRepository.findBySchoolIdAndIsDeleted(schoolId, 0);
     }
+
+    @Override
+    public Page<VendorAuditLog> getAuditLogs(String search, Pageable pageable, String schoolId) {
+        return vendorAuditLogRepository.searchAuditLogs(schoolId, search, pageable);
+    }
 }
