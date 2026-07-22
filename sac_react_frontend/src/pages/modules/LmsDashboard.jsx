@@ -974,8 +974,8 @@ function CourseManagementTab({
                       style={{ padding: '3px 12px', fontSize: '11px', cursor: 'pointer', border: 'none', background: portalMode === 'School' ? '#7C32FF' : '#fff', color: portalMode === 'School' ? '#fff' : '#7C32FF' }}
                       onClick={() => {
                         setPortalMode('School');
-                        setSchoolSection('Computer Science');
-                        setNewSubject('Physics');
+                        setSchoolSection('');
+                        setNewSubject('');
                       }}
                     >
                       🏫 School Assignment
