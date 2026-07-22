@@ -639,6 +639,7 @@ function CourseManagementTab({
   const [portalMode, setPortalMode] = useState('College'); // 'College' or 'School'
   const [schoolClass, setSchoolClass] = useState('Class 10');
   const [schoolSection, setSchoolSection] = useState('Computer Science');
+  const [customGroupName, setCustomGroupName] = useState('');
   const [schoolTerm, setSchoolTerm] = useState('Term I');
   const [schoolGradingScale, setSchoolGradingScale] = useState('Marks');
   const [parentSignatureRequired, setParentSignatureRequired] = useState(false);
@@ -721,7 +722,7 @@ function CourseManagementTab({
         attachments: [...attachmentsList],
         portalMode,
         schoolClass: portalMode === 'School' ? schoolClass : null,
-        schoolSection: portalMode === 'School' ? schoolSection : null,
+        schoolSection: portalMode === 'School' ? (schoolSection === 'custom' ? customGroupName.trim() : schoolSection) : null,
         schoolTerm: portalMode === 'School' ? schoolTerm : null,
         schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
         parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false
@@ -750,7 +751,7 @@ function CourseManagementTab({
         attachments: [...attachmentsList],
         portalMode,
         schoolClass: portalMode === 'School' ? schoolClass : null,
-        schoolSection: portalMode === 'School' ? schoolSection : null,
+        schoolSection: portalMode === 'School' ? (schoolSection === 'custom' ? customGroupName.trim() : schoolSection) : null,
         schoolTerm: portalMode === 'School' ? schoolTerm : null,
         schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
         parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false
@@ -778,7 +779,8 @@ function CourseManagementTab({
     setAttachmentsList([]);
     setPortalMode('College');
     setSchoolClass('Class 10');
-    setSchoolSection('Section A');
+    setSchoolSection('Computer Science');
+    setCustomGroupName('');
     setSchoolTerm('Term I');
     setSchoolGradingScale('Marks');
     setParentSignatureRequired(false);
@@ -1082,18 +1084,32 @@ function CourseManagementTab({
                           <select className="form-control" value={schoolSection} onChange={e => {
                             const newGrp = e.target.value;
                             setSchoolSection(newGrp);
-                            const subjects = GROUP_SUBJECTS[newGrp] || [];
-                            if (subjects.length > 0) {
-                              setNewSubject(subjects[0]);
-                            } else {
-                              setNewSubject('');
+                            if (newGrp !== 'custom' && newGrp !== '') {
+                              const subjects = GROUP_SUBJECTS[newGrp] || [];
+                              if (subjects.length > 0) {
+                                setNewSubject(subjects[0]);
+                              } else {
+                                setNewSubject('');
+                              }
                             }
                           }}>
+                            <option value="">-- Choose Group --</option>
                             <option value="Computer Science">Computer Science</option>
                             <option value="Bio-Maths">Bio-Maths</option>
                             <option value="Commerce">Commerce</option>
                             <option value="Computer application">Computer application</option>
+                            <option value="custom">-- Custom Group --</option>
                           </select>
+                          {schoolSection === 'custom' && (
+                            <input 
+                              type="text" 
+                              className="form-control mt-2" 
+                              value={customGroupName} 
+                              onChange={e => setCustomGroupName(e.target.value)} 
+                              placeholder="Enter custom group..." 
+                              required 
+                            />
+                          )}
                         </FormGroup>
                       </div>
                       <div className="col-4">
@@ -1103,6 +1119,22 @@ function CourseManagementTab({
                             {(GROUP_SUBJECTS[schoolSection] || []).map(sub => (
                               <option key={sub} value={sub}>{sub}</option>
                             ))}
+                            {(schoolSection === '' || schoolSection === 'custom') && (
+                              <>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Biology">Biology</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="English">English</option>
+                                <option value="History">History</option>
+                                <option value="Geography">Geography</option>
+                                <option value="Accountancy">Accountancy</option>
+                                <option value="Business Studies">Business Studies</option>
+                                <option value="Economics">Economics</option>
+                                <option value="Computer Applications">Computer Applications</option>
+                              </>
+                            )}
                             <option value="custom">-- Custom Subject --</option>
                           </select>
                           {newSubject === 'custom' && (
@@ -1156,7 +1188,28 @@ function CourseManagementTab({
                 )}
 
                 <FormGroup label="Assignment Title" required={true}>
-                  <input type="text" className="form-control" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. Lab Report 2" required />
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      value={newTitle} 
+                      onChange={e => setNewTitle(e.target.value.slice(0, 50))} 
+                      maxLength={50}
+                      placeholder="e.g. Lab Report 2" 
+                      required 
+                      style={{ paddingRight: '120px' }}
+                    />
+                    <span style={{ 
+                      position: 'absolute', 
+                      right: '12px', 
+                      fontSize: '11px', 
+                      color: 'rgba(30, 41, 59, 0.4)', 
+                      pointerEvents: 'none',
+                      fontWeight: 500
+                    }}>
+                      {newTitle.length}/50 characters
+                    </span>
+                  </div>
                 </FormGroup>
 
                 <FormGroup label="Description (Rich Text Editor Helper)">
@@ -1347,7 +1400,16 @@ function CourseManagementTab({
                             setPortalMode(a.portalMode || 'College');
                             if (a.portalMode === 'School') {
                               setSchoolClass(a.schoolClass || 'Class 10');
-                              setSchoolSection(a.schoolSection || 'Computer Science');
+                              
+                              const standardGroups = ['Computer Science', 'Bio-Maths', 'Commerce', 'Computer application'];
+                              if (a.schoolSection && !standardGroups.includes(a.schoolSection)) {
+                                setSchoolSection('custom');
+                                setCustomGroupName(a.schoolSection);
+                              } else {
+                                setSchoolSection(a.schoolSection || 'Computer Science');
+                                setCustomGroupName('');
+                              }
+                              
                               setSchoolTerm(a.schoolTerm || 'Term I');
                               setSchoolGradingScale(a.schoolGradingScale || 'Marks');
                               setParentSignatureRequired(!!a.parentSignatureRequired);
