@@ -597,6 +597,7 @@ function CourseManagementTab({
   const [showGradingModal, setShowGradingModal] = useState(null); // stores active submission
   const [showSubmitModal, setShowSubmitModal] = useState(null); // stores active assignment for student
   const [showSubmissionsPopup, setShowSubmissionsPopup] = useState(null); // stores active assignment for submissions list popup
+  const [deleteConfirmAssignment, setDeleteConfirmAssignment] = useState(null); // stores assignment to delete
   
   // Resource/Content Upload States
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -1500,11 +1501,8 @@ function CourseManagementTab({
                             setShowAddForm(true);
                           }}>Edit</button>
                           <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', color: 'var(--danger)' }} onClick={() => {
-                            setAssignments(assignments.filter(x => x.id !== a.id));
+                            setDeleteConfirmAssignment(a);
                           }}>Delete</button>
-                          <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => {
-                            setAssignments(assignments.map(x => x.id === a.id ? { ...x, status: 'Archived' } : x));
-                          }}>Archive</button>
                           <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => {
                             const dup = {
                               ...a,
@@ -1669,11 +1667,16 @@ function CourseManagementTab({
                     <option value="slides">PowerPoint / Presentation Slides</option>
                   </select>
                 </FormGroup>
-                <FormGroup label="Simulated File Name" required={true}>
-                  <input type="text" className="form-control" value={resUrl} onChange={e => setResUrl(e.target.value)} required />
-                </FormGroup>
                 <FormGroup label="Description">
                   <textarea className="form-control" rows={2} value={resDesc} onChange={e => setResDesc(e.target.value)} placeholder="What should students focus on?" />
+                </FormGroup>
+                <FormGroup label="Attach File & Simulated File Name" required={true}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                    <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setResUrl('lecture_notes.pdf')}>📁 pdf</button>
+                    <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setResUrl('presentation_slides.pptx')}>📊 slides</button>
+                    <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setResUrl('class_recording.mp4')}>🎥 video</button>
+                  </div>
+                  <input type="text" className="form-control" value={resUrl} onChange={e => setResUrl(e.target.value)} placeholder="e.g. vector_fields.pdf" required />
                 </FormGroup>
                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
                   <button type="button" className="btn-secondary-outline" onClick={() => setShowUploadForm(false)}>Cancel</button>
@@ -2144,6 +2147,32 @@ function CourseManagementTab({
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmAssignment && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '400px', padding: '24px', textAlign: 'center' }}>
+            <h5 style={{ fontWeight: 600, marginBottom: '14px', color: 'var(--danger)' }}>Confirm Deletion</h5>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+              Are you sure you want to delete the assignment <strong>"{deleteConfirmAssignment.title}"</strong>? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+              <button type="button" className="btn-secondary-outline" onClick={() => setDeleteConfirmAssignment(null)}>Cancel</button>
+              <button 
+                type="button" 
+                className="primary_btn" 
+                style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}
+                onClick={() => {
+                  setAssignments(assignments.filter(x => x.id !== deleteConfirmAssignment.id));
+                  setDeleteConfirmAssignment(null);
+                }}
+              >
+                Yes, Delete
+              </button>
             </div>
           </div>
         </div>
