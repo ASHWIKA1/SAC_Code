@@ -1672,7 +1672,7 @@ function CourseManagementTab({
                 <FormGroup label="Description">
                   <textarea className="form-control" rows={2} value={resDesc} onChange={e => setResDesc(e.target.value)} placeholder="What should students focus on?" />
                 </FormGroup>
-                <FormGroup label="Attach File & Simulated File Name" required={true}>
+                <FormGroup label="Attach Resource File" required={true}>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
                     <input 
                       type="file" 
@@ -1689,12 +1689,8 @@ function CourseManagementTab({
                       className="btn-secondary-outline btn_sm" 
                       style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', margin: 0, padding: '6px 12px' }}
                     >
-                      📁 Browse / Attach Local File
+                      📁 Browse & Attach Resource File
                     </label>
-                    <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>or simulate:</span>
-                    <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 6px', fontSize: '10.5px' }} onClick={() => setResUrl('lecture_notes.pdf')}>📁 pdf</button>
-                    <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 6px', fontSize: '10.5px' }} onClick={() => setResUrl('presentation_slides.pptx')}>📊 slides</button>
-                    <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 6px', fontSize: '10.5px' }} onClick={() => setResUrl('class_recording.mp4')}>🎥 video</button>
                   </div>
                   <input type="text" className="form-control" value={resUrl} onChange={e => setResUrl(e.target.value)} placeholder="No file attached" required />
                 </FormGroup>
@@ -2095,12 +2091,8 @@ function CourseManagementTab({
                     className="btn-secondary-outline btn_sm" 
                     style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', margin: 0, padding: '6px 12px' }}
                   >
-                    📁 Browse / Attach Local File
+                    📁 Browse & Attach Feedback File
                   </label>
-                  <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>or simulate:</span>
-                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 6px', fontSize: '10.5px' }} onClick={() => setGradeFeedbackFile('graded_feedback.pdf')}>📁 pdf</button>
-                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 6px', fontSize: '10.5px' }} onClick={() => setGradeFeedbackFile('graded_solution.zip')}>📦 zip</button>
-                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 6px', fontSize: '10.5px' }} onClick={() => setGradeFeedbackFile('corrected_work.png')}>🖼️ image</button>
                 </div>
                 <input type="text" className="form-control" value={gradeFeedbackFile} onChange={e => setGradeFeedbackFile(e.target.value)} placeholder="No file attached" required />
               </FormGroup>
@@ -2312,13 +2304,8 @@ function CourseManagementTab({
                     className="btn-secondary-outline btn_sm" 
                     style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', margin: 0, padding: '6px 12px' }}
                   >
-                    📁 Browse / Attach Local File
+                    📁 Browse & Attach Submission File
                   </label>
-                  <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>or simulate:</span>
-                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 6px', fontSize: '10.5px' }} onClick={() => setSubFile('my_submission.pdf')}>📁 pdf</button>
-                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 6px', fontSize: '10.5px' }} onClick={() => setSubFile('solution_code.zip')}>📦 zip</button>
-                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 6px', fontSize: '10.5px' }} onClick={() => setSubFile('screenshot.png')}>🖼️ image</button>
-                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 6px', fontSize: '10.5px' }} onClick={() => setSubFile('practical_demo.mp4')}>🎥 video</button>
                 </div>
                 <input type="text" className="form-control" value={subFile} onChange={e => setSubFile(e.target.value)} placeholder="No file attached" required />
               </FormGroup>
