@@ -607,7 +607,8 @@ function CourseManagementTab({
   const [resType, setResType] = useState('pdf');
   const [resDesc, setResDesc] = useState('');
   const [resUrl, setResUrl] = useState('lecture_resource.pdf');
-  const [resCourse, setResCourse] = useState('c1');
+  const [resCourse, setResCourse] = useState('');
+  const [resCustomCourseName, setResCustomCourseName] = useState('');
 
   // Media Viewer Modals
   const [activeVideo, setActiveVideo] = useState(null);
@@ -886,9 +887,29 @@ function CourseManagementTab({
     e.preventDefault();
     if (!resTitle.trim()) return;
 
+    let finalCourseId = resCourse;
+    if (resCourse === 'custom') {
+      if (!resCustomCourseName.trim()) {
+        alert('Please enter a custom course name.');
+        return;
+      }
+      const newCourseId = 'c_custom_' + (courses.length + 1);
+      const newCourse = {
+        id: newCourseId,
+        name: resCustomCourseName.trim(),
+        subject: 'General',
+        class: 'Class XI'
+      };
+      setCourses([...courses, newCourse]);
+      finalCourseId = newCourseId;
+    } else if (!resCourse) {
+      alert('Please choose a course.');
+      return;
+    }
+
     const newContent = {
       id: 'cnt' + (courseContents.length + 1),
-      courseId: resCourse,
+      courseId: finalCourseId,
       title: resTitle.trim(),
       type: resType,
       url: resUrl,
@@ -899,6 +920,8 @@ function CourseManagementTab({
     setShowUploadForm(false);
     setResTitle('');
     setResDesc('');
+    setResCourse('');
+    setResCustomCourseName('');
   };
 
   // Handle Live Class Scheduling
@@ -1656,9 +1679,23 @@ function CourseManagementTab({
               <form onSubmit={handleUploadContent}>
                 <FormGroup label="Course" required={true}>
                   <select className="form-control" value={resCourse} onChange={e => setResCourse(e.target.value)}>
+                    <option value="">choose course</option>
                     {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    <option value="custom">custom course</option>
                   </select>
                 </FormGroup>
+                {resCourse === 'custom' && (
+                  <FormGroup label="Custom Course Name" required={true}>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      value={resCustomCourseName} 
+                      onChange={e => setResCustomCourseName(e.target.value)} 
+                      placeholder="Enter custom course..." 
+                      required 
+                    />
+                  </FormGroup>
+                )}
                 <FormGroup label="Resource Title" required={true}>
                   <input type="text" className="form-control" value={resTitle} onChange={e => setResTitle(e.target.value)} placeholder="e.g. Chapter 3 Vector Fields Slides" required />
                 </FormGroup>
