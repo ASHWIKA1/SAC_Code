@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS assignments_details(
     status_id INT DEFAULT 1,       -- Points to assignment_statuses(id)
     created_at DATETIME,
     updated_at DATETIME,
-    updated_by INT UNSIGNED,
+    updated_by BIGINT,
     is_deleted INT DEFAULT 0,
 
     -- Foreign Keys
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS student_assignment (
     student_notes TEXT DEFAULT NULL COMMENT 'Additional submission details or notes from student',
     created_at DATETIME,
     updated_at DATETIME,
-    updated_by INT UNSIGNED,
+    updated_by BIGINT,
     is_deleted INT DEFAULT 0,
 
     -- Foreign Keys
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS student_assignment_review (
     review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_at DATETIME,
     updated_at DATETIME,
-    updated_by INT UNSIGNED,
+    updated_by BIGINT,
     is_deleted INT DEFAULT 0,
 
     -- Foreign Keys

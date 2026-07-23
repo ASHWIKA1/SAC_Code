@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ClassRecordRepository extends JpaRepository<ClassRecord, Long> {
     List<ClassRecord> findByActiveStatus(Integer activeStatus);
+    java.util.Optional<ClassRecord> findByClassName(String className);
 }

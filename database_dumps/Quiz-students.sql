@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     faculty_remarks TEXT DEFAULT NULL,
     is_allowed_reattempt TINYINT(1) DEFAULT 0 COMMENT '1 = Technical Exception Allowed',
     reattempt_granted_by INT UNSIGNED DEFAULT NULL,
+    created_at DATETIME,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0,
     
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -30,6 +34,10 @@ CREATE TABLE IF NOT EXISTS student_quiz_responses (
     is_skipped TINYINT(1) DEFAULT 0 COMMENT '1 = Student skipped question',
     time_spent_seconds INT DEFAULT 0 COMMENT 'Analytics tracking per question',
     is_correct TINYINT(1) DEFAULT NULL COMMENT 'Evaluated score result',
+    created_at DATETIME,
+    updated_at DATETIME,
+    updated_by BIGINT,
+    is_deleted INT DEFAULT 0,
     
     FOREIGN KEY (quiz_attempt_id) REFERENCES quiz_attempts(id) ON DELETE CASCADE,
     FOREIGN KEY (question_id) REFERENCES question_bank(id) ON DELETE CASCADE,
@@ -41,14 +49,14 @@ CREATE TABLE IF NOT EXISTS student_quiz_responses (
 -- ==========================================
 
 -- Demo Data for Quiz Attempts
-INSERT IGNORE INTO quiz_attempts (id, quiz_id, student_id, attempt_number, started_at, submitted_at, score_achieved, faculty_remarks, is_allowed_reattempt, reattempt_granted_by) VALUES
-(1, 1, 1, 1, CURRENT_TIMESTAMP, NOW(), 1.00, 'Good attempt.', 0, NULL),
-(2, 2, 2, 1, CURRENT_TIMESTAMP, NOW(), 1.00, 'Well done.', 0, NULL);
+INSERT IGNORE INTO quiz_attempts (id, quiz_id, student_id, attempt_number, started_at, submitted_at, score_achieved, faculty_remarks, is_allowed_reattempt, reattempt_granted_by, created_at, updated_at, updated_by, is_deleted) VALUES
+(1, 1, 1, 1, CURRENT_TIMESTAMP, NOW(), 1.00, 'Good attempt.', 0, NULL, NOW(), NOW(), 1, 0),
+(2, 2, 2, 1, CURRENT_TIMESTAMP, NOW(), 1.00, 'Well done.', 0, NULL, NOW(), NOW(), 2, 0);
 
 -- Demo Data for Student Quiz Responses
-INSERT IGNORE INTO student_quiz_responses (id, quiz_attempt_id, question_id, selected_option_index, descriptive_answer, is_marked_for_review, is_skipped, time_spent_seconds, is_correct) VALUES
-(1, 1, 1, 0, NULL, 0, 0, 45, 1),
-(2, 2, 2, 1, NULL, 0, 0, 65, 1);
+INSERT IGNORE INTO student_quiz_responses (id, quiz_attempt_id, question_id, selected_option_index, descriptive_answer, is_marked_for_review, is_skipped, time_spent_seconds, is_correct, created_at, updated_at, updated_by, is_deleted) VALUES
+(1, 1, 1, 0, NULL, 0, 0, 45, 1, NOW(), NOW(), 1, 0),
+(2, 2, 2, 1, NULL, 0, 0, 65, 1, NOW(), NOW(), 2, 0);
 
 -- View Upcoming Quizzes
 SELECT * FROM quizzes 
