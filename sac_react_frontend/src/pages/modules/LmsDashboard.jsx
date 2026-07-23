@@ -2062,9 +2062,9 @@ function CourseManagementTab({
 
               <FormGroup label="Feedback Attachment File (Select Type to Simulate)">
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setGradeFeedbackFile('graded_feedback.pdf')}>📁 pdf</button>
-                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setGradeFeedbackFile('graded_solution.zip')}>📦 zip</button>
-                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setGradeFeedbackFile('corrected_work.png')}>🖼️ image</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setGradeFeedbackFile('graded_feedback.pdf')}>📁 PDF</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setGradeFeedbackFile('graded_solution.zip')}>📦 ZIP</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setGradeFeedbackFile('corrected_work.png')}>🖼️ IMAGE</button>
                 </div>
                 <input type="text" className="form-control" value={gradeFeedbackFile} onChange={e => setGradeFeedbackFile(e.target.value)} placeholder="e.g. review_feedback.pdf" required />
               </FormGroup>
@@ -2200,6 +2200,11 @@ function CourseManagementTab({
                               style={{ padding: '4px 10px', fontSize: '11px' }}
                               onClick={() => {
                                 setShowGradingModal(s);
+                                setGradeFeedback(s.feedback || '');
+                                setGradeFeedbackFile(s.feedbackFile || 'graded_feedback.pdf');
+                                setRubricAccuracy(s.rubric ? s.rubric.accuracy : 10);
+                                setRubricCompleteness(s.rubric ? s.rubric.completeness : 10);
+                                setRubricPresentation(s.rubric ? s.rubric.presentation : 10);
                                 setShowSubmissionsPopup(null);
                               }}
                             >
