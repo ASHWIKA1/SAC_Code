@@ -9,7 +9,9 @@ public interface HomeworkService {
     Homework createHomework(Homework homework);
 
     HomeworkStudent submitHomework(Long homeworkId, Long studentId, String file);
+    HomeworkStudent submitHomework(Long homeworkId, Long studentId, String file, String submissionLink, String studentNotes);
     HomeworkStudent evaluateHomework(Long homeworkId, Long studentId, String marks, String status);
     HomeworkStudent evaluateHomework(Long homeworkId, Long studentId, String marks, String status, String feedbackFile);
+    HomeworkStudent evaluateHomework(Long homeworkId, Long studentId, String marks, String status, String feedbackFile, String feedback, Integer rubricAccuracy, Integer rubricCompleteness, Integer rubricPresentation);
     List<HomeworkStudent> getSubmissionsByHomework(Long homeworkId);
 }

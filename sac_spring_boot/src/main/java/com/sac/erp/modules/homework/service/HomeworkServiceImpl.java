@@ -40,6 +40,12 @@ public class HomeworkServiceImpl implements HomeworkService {
     @Override
     @Transactional
     public HomeworkStudent submitHomework(Long homeworkId, Long studentId, String file) {
+        return submitHomework(homeworkId, studentId, file, null, null);
+    }
+
+    @Override
+    @Transactional
+    public HomeworkStudent submitHomework(Long homeworkId, Long studentId, String file, String submissionLink, String studentNotes) {
         homeworkRepository.findById(homeworkId)
                 .orElseThrow(() -> new RuntimeException("Homework assignment not found"));
 
@@ -49,6 +55,8 @@ public class HomeworkServiceImpl implements HomeworkService {
         sub.setHomeworkId(homeworkId);
         sub.setStudentId(studentId);
         sub.setFile(file);
+        sub.setSubmissionLink(submissionLink);
+        sub.setStudentNotes(studentNotes);
         sub.setCompleteStatus("C"); // Completed/Submitted
         sub.setActiveStatus(1);
 
@@ -58,12 +66,18 @@ public class HomeworkServiceImpl implements HomeworkService {
     @Override
     @Transactional
     public HomeworkStudent evaluateHomework(Long homeworkId, Long studentId, String marks, String status) {
-        return evaluateHomework(homeworkId, studentId, marks, status, null);
+        return evaluateHomework(homeworkId, studentId, marks, status, null, null, null, null, null);
     }
 
     @Override
     @Transactional
     public HomeworkStudent evaluateHomework(Long homeworkId, Long studentId, String marks, String status, String feedbackFile) {
+        return evaluateHomework(homeworkId, studentId, marks, status, feedbackFile, null, null, null, null);
+    }
+
+    @Override
+    @Transactional
+    public HomeworkStudent evaluateHomework(Long homeworkId, Long studentId, String marks, String status, String feedbackFile, String feedback, Integer rubricAccuracy, Integer rubricCompleteness, Integer rubricPresentation) {
         HomeworkStudent sub = homeworkStudentRepository.findByHomeworkIdAndStudentId(homeworkId, studentId)
                 .orElseThrow(() -> new RuntimeException("Student homework submission not found"));
 
@@ -73,6 +87,18 @@ public class HomeworkServiceImpl implements HomeworkService {
         }
         if (feedbackFile != null) {
             sub.setFeedbackFile(feedbackFile);
+        }
+        if (feedback != null) {
+            sub.setFeedback(feedback);
+        }
+        if (rubricAccuracy != null) {
+            sub.setRubricAccuracy(rubricAccuracy);
+        }
+        if (rubricCompleteness != null) {
+            sub.setRubricCompleteness(rubricCompleteness);
+        }
+        if (rubricPresentation != null) {
+            sub.setRubricPresentation(rubricPresentation);
         }
 
         return homeworkStudentRepository.save(sub);

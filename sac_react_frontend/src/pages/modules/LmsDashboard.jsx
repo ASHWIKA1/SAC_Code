@@ -658,6 +658,7 @@ function CourseManagementTab({
   // Student Submit State
   const [subText, setSubText] = useState('');
   const [subFile, setSubFile] = useState('assignment_work.pdf');
+  const [subLink, setSubLink] = useState('https://github.com/excal/sac-lms-project');
   const [resubmitting, setResubmitting] = useState(false);
 
   // Faculty Grading State (Rubrics)
@@ -794,7 +795,7 @@ function CourseManagementTab({
 
     // Call real backend submit API
     try {
-      await api.post(`/api/v1/homework/submit?homeworkId=${assignmentId}&studentId=1&file=${subFile}`);
+      await api.post(`/api/v1/homework/submit?homeworkId=${assignmentId}&studentId=1&file=${subFile}&submissionLink=${encodeURIComponent(subLink)}&studentNotes=${encodeURIComponent(subText)}`);
     } catch (err) {
       console.warn("Backend submit failed, running local simulator.", err);
     }
@@ -808,6 +809,8 @@ function CourseManagementTab({
       studentName: 'Rahul Student',
       submissionText: subText,
       fileUrl: subFile,
+      submissionLink: subLink,
+      studentNotes: subText,
       submittedAt: new Date().toISOString(),
       marks: null,
       rubric: null,
@@ -826,6 +829,8 @@ function CourseManagementTab({
 
     setShowSubmitModal(null);
     setSubText('');
+    setSubLink('https://github.com/excal/sac-lms-project');
+    setSubFile('assignment_work.pdf');
   };
 
   // Handle Faculty grading submission with rubrics
@@ -836,7 +841,7 @@ function CourseManagementTab({
 
     // Call real backend evaluate API
     try {
-      await api.post(`/api/v1/homework/evaluate?homeworkId=${showGradingModal.assignmentId}&studentId=1&marks=${finalMarks}&status=C&feedbackFile=${gradeFeedbackFile}`);
+      await api.post(`/api/v1/homework/evaluate?homeworkId=${showGradingModal.assignmentId}&studentId=1&marks=${finalMarks}&status=C&feedbackFile=${gradeFeedbackFile}&feedback=${encodeURIComponent(gradeFeedback)}&rubricAccuracy=${rubricAccuracy}&rubricCompleteness=${rubricCompleteness}&rubricPresentation=${rubricPresentation}`);
     } catch (err) {
       console.warn("Backend evaluate failed, running local simulator.", err);
     }
@@ -1578,7 +1583,12 @@ function CourseManagementTab({
                         <strong>My Submitted Work:</strong> "{mySub.submissionText}"
                         {mySub.fileUrl && (
                           <div style={{ marginTop: '4px' }}>
-                            Attached: <a href={`#file-${mySub.fileUrl}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{mySub.fileUrl}</a>
+                            Attached File: <a href={`#file-${mySub.fileUrl}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{mySub.fileUrl}</a>
+                          </div>
+                        )}
+                        {mySub.submissionLink && (
+                          <div style={{ marginTop: '4px' }}>
+                            Submission URL: <a href={mySub.submissionLink} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{mySub.submissionLink}</a>
                           </div>
                         )}
                       </div>
@@ -2002,7 +2012,12 @@ function CourseManagementTab({
             <div style={{ background: '#f8f9fa', padding: '12px', borderRadius: '4px', marginBottom: '16px', fontSize: '12.5px' }}>
               <div><strong>Student:</strong> {showGradingModal.studentName}</div>
               <div><strong>Submitted Comment:</strong> "{showGradingModal.submissionText}"</div>
-              <div><strong>Attached File:</strong> <a href={`#file-${showGradingModal.fileUrl}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{showGradingModal.fileUrl}</a></div>
+              {showGradingModal.fileUrl && (
+                <div><strong>Attached File:</strong> <a href={`#file-${showGradingModal.fileUrl}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{showGradingModal.fileUrl}</a></div>
+              )}
+              {showGradingModal.submissionLink && (
+                <div><strong>Submission URL:</strong> <a href={showGradingModal.submissionLink} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{showGradingModal.submissionLink}</a></div>
+              )}
             </div>
             
             <form onSubmit={handleGradingSubmit}>
@@ -2071,6 +2086,9 @@ function CourseManagementTab({
             <form onSubmit={handleStudentSubmit}>
               <FormGroup label="Submission Text / Comments" required={true}>
                 <textarea className="form-control" rows={4} value={subText} onChange={e => setSubText(e.target.value)} placeholder="Type comments or description..." required />
+              </FormGroup>
+              <FormGroup label="Submission URL / Link (e.g. GitHub, Drive)">
+                <input type="text" className="form-control" value={subLink} onChange={e => setSubLink(e.target.value)} placeholder="https://github.com/..." />
               </FormGroup>
               <FormGroup label="Attached Work File (Select Type to Simulate)">
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
