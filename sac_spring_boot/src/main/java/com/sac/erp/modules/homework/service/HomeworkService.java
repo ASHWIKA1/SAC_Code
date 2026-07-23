@@ -10,5 +10,6 @@ public interface HomeworkService {
 
     HomeworkStudent submitHomework(Long homeworkId, Long studentId, String file);
     HomeworkStudent evaluateHomework(Long homeworkId, Long studentId, String marks, String status);
+    HomeworkStudent evaluateHomework(Long homeworkId, Long studentId, String marks, String status, String feedbackFile);
     List<HomeworkStudent> getSubmissionsByHomework(Long homeworkId);
 }

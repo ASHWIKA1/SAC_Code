@@ -58,12 +58,21 @@ public class HomeworkServiceImpl implements HomeworkService {
     @Override
     @Transactional
     public HomeworkStudent evaluateHomework(Long homeworkId, Long studentId, String marks, String status) {
+        return evaluateHomework(homeworkId, studentId, marks, status, null);
+    }
+
+    @Override
+    @Transactional
+    public HomeworkStudent evaluateHomework(Long homeworkId, Long studentId, String marks, String status, String feedbackFile) {
         HomeworkStudent sub = homeworkStudentRepository.findByHomeworkIdAndStudentId(homeworkId, studentId)
                 .orElseThrow(() -> new RuntimeException("Student homework submission not found"));
 
         sub.setMarks(marks);
         if (status != null) {
             sub.setCompleteStatus(status);
+        }
+        if (feedbackFile != null) {
+            sub.setFeedbackFile(feedbackFile);
         }
 
         return homeworkStudentRepository.save(sub);

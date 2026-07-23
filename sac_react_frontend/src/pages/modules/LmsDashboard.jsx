@@ -662,6 +662,7 @@ function CourseManagementTab({
 
   // Faculty Grading State (Rubrics)
   const [gradeFeedback, setGradeFeedback] = useState('');
+  const [gradeFeedbackFile, setGradeFeedbackFile] = useState('graded_feedback.pdf');
   const [rubricAccuracy, setRubricAccuracy] = useState(10);
   const [rubricCompleteness, setRubricCompleteness] = useState(10);
   const [rubricPresentation, setRubricPresentation] = useState(10);
@@ -835,7 +836,7 @@ function CourseManagementTab({
 
     // Call real backend evaluate API
     try {
-      await api.post(`/api/v1/homework/evaluate?homeworkId=${showGradingModal.assignmentId}&studentId=1&marks=${finalMarks}&status=C`);
+      await api.post(`/api/v1/homework/evaluate?homeworkId=${showGradingModal.assignmentId}&studentId=1&marks=${finalMarks}&status=C&feedbackFile=${gradeFeedbackFile}`);
     } catch (err) {
       console.warn("Backend evaluate failed, running local simulator.", err);
     }
@@ -846,6 +847,7 @@ function CourseManagementTab({
             ...s, 
             marks: finalMarks, 
             feedback: gradeFeedback, 
+            feedbackFile: gradeFeedbackFile,
             graded: true,
             rubric: {
               accuracy: Number(rubricAccuracy),
@@ -858,6 +860,7 @@ function CourseManagementTab({
     
     setShowGradingModal(null);
     setGradeFeedback('');
+    setGradeFeedbackFile('graded_feedback.pdf');
     setRubricAccuracy(10);
     setRubricCompleteness(10);
     setRubricPresentation(10);
@@ -1569,31 +1572,50 @@ function CourseManagementTab({
                   </div>
 
                   {/* Gradings & Detailed Rubrics Card */}
-                  {mySub && mySub.graded && (
+                  {mySub && (
                     <div style={{ background: '#f8f9fa', borderTop: '1px solid #eee', padding: '14px 16px', fontSize: '12.5px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '10px' }}>
-                        <div>
-                          <strong>Evaluated Grade:</strong> 
-                          <span className="badge badge-purple" style={{ marginLeft: '6px', fontSize: '12px' }}>
-                            Grade {getLetterGrade(mySub.marks, a.maxMarks)}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                          Feedback published by Faculty
-                        </div>
+                      <div style={{ marginBottom: '8px' }}>
+                        <strong>My Submitted Work:</strong> "{mySub.submissionText}"
+                        {mySub.fileUrl && (
+                          <div style={{ marginTop: '4px' }}>
+                            Attached: <a href={`#file-${mySub.fileUrl}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{mySub.fileUrl}</a>
+                          </div>
+                        )}
                       </div>
+                      
+                      {mySub.graded && (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '10px', borderTop: '1px dashed #ddd', paddingTop: '10px', marginTop: '10px' }}>
+                            <div>
+                              <strong>Evaluated Grade:</strong> 
+                              <span className="badge badge-purple" style={{ marginLeft: '6px', fontSize: '12px' }}>
+                                Grade {getLetterGrade(mySub.marks, a.maxMarks)}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                              Feedback published by Faculty
+                            </div>
+                          </div>
 
-                      {mySub.rubric && (
-                        <div style={{ display: 'flex', gap: '20px', margin: '10px 0', padding: '10px', background: '#fff', borderRadius: '4px', border: '1px solid #eef' }}>
-                          <div>Accuracy: <strong style={{ color: 'var(--primary-color)' }}>{mySub.rubric.accuracy}/10</strong></div>
-                          <div>Completeness: <strong style={{ color: 'var(--primary-color)' }}>{mySub.rubric.completeness}/10</strong></div>
-                          <div>Presentation: <strong style={{ color: 'var(--primary-color)' }}>{mySub.rubric.presentation}/10</strong></div>
-                        </div>
+                          {mySub.rubric && (
+                            <div style={{ display: 'flex', gap: '20px', margin: '10px 0', padding: '10px', background: '#fff', borderRadius: '4px', border: '1px solid #eef' }}>
+                              <div>Accuracy: <strong style={{ color: 'var(--primary-color)' }}>{mySub.rubric.accuracy}/10</strong></div>
+                              <div>Completeness: <strong style={{ color: 'var(--primary-color)' }}>{mySub.rubric.completeness}/10</strong></div>
+                              <div>Presentation: <strong style={{ color: 'var(--primary-color)' }}>{mySub.rubric.presentation}/10</strong></div>
+                            </div>
+                          )}
+
+                          <div style={{ marginTop: '6px' }}>
+                            <strong>Remarks & Feedback:</strong> <span style={{ color: 'var(--text-muted)' }}>"{mySub.feedback}"</span>
+                          </div>
+
+                          {mySub.feedbackFile && (
+                            <div style={{ marginTop: '6px' }}>
+                              <strong>Grading Feedback File:</strong> <a href={`#feedback-file-${mySub.feedbackFile}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{mySub.feedbackFile}</a>
+                            </div>
+                          )}
+                        </>
                       )}
-
-                      <div style={{ marginTop: '6px' }}>
-                        <strong>Remarks & Feedback:</strong> <span style={{ color: 'var(--text-muted)' }}>"{mySub.feedback}"</span>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -1980,7 +2002,7 @@ function CourseManagementTab({
             <div style={{ background: '#f8f9fa', padding: '12px', borderRadius: '4px', marginBottom: '16px', fontSize: '12.5px' }}>
               <div><strong>Student:</strong> {showGradingModal.studentName}</div>
               <div><strong>Submitted Comment:</strong> "{showGradingModal.submissionText}"</div>
-              <div><strong>Attached File:</strong> <a href="#file" style={{ color: 'var(--primary-color)' }}>{showGradingModal.fileUrl}</a></div>
+              <div><strong>Attached File:</strong> <a href={`#file-${showGradingModal.fileUrl}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{showGradingModal.fileUrl}</a></div>
             </div>
             
             <form onSubmit={handleGradingSubmit}>
@@ -2017,6 +2039,15 @@ function CourseManagementTab({
 
               <FormGroup label="Remarks / Constructive Feedback" required={true}>
                 <textarea className="form-control" rows={3} value={gradeFeedback} onChange={e => setGradeFeedback(e.target.value)} placeholder="e.g. Nicely formatted vectors..." required />
+              </FormGroup>
+
+              <FormGroup label="Feedback Attachment File (Select Type to Simulate)">
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setGradeFeedbackFile('graded_feedback.pdf')}>📁 pdf</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setGradeFeedbackFile('graded_solution.zip')}>📦 zip</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setGradeFeedbackFile('corrected_work.png')}>🖼️ image</button>
+                </div>
+                <input type="text" className="form-control" value={gradeFeedbackFile} onChange={e => setGradeFeedbackFile(e.target.value)} placeholder="e.g. review_feedback.pdf" required />
               </FormGroup>
 
               <div style={{ display: 'flex', justify: 'flex-end', gap: '10px', marginTop: '16px' }}>

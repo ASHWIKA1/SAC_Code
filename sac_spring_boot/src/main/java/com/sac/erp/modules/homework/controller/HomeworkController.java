@@ -51,9 +51,10 @@ public class HomeworkController {
             @RequestParam Long homeworkId,
             @RequestParam Long studentId,
             @RequestParam String marks,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String feedbackFile) {
         log.info("REST request teacher evaluates student: {} for task: {}", studentId, homeworkId);
-        return ResponseEntity.ok(homeworkService.evaluateHomework(homeworkId, studentId, marks, status));
+        return ResponseEntity.ok(homeworkService.evaluateHomework(homeworkId, studentId, marks, status, feedbackFile));
     }
 
     @GetMapping("/submissions/{homeworkId}")
