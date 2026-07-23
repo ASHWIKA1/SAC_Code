@@ -129,6 +129,7 @@ export default function VendorManagement() {
       else if (showModal === 'grn') path = '/api/v1/vendors/procurement/grns';
       else if (showModal === 'payment') path = '/api/v1/vendors/payments';
       else if (showModal === 'perf') path = '/api/v1/vendors/performance';
+      else if (showModal === 'delivery') path = '/api/v1/vendors/procurement/deliveries';
 
       const response = await api.post(path, payload);
       setAlert({ type: 'success', msg: 'Record saved successfully in ERP Backend!' });
@@ -167,6 +168,17 @@ export default function VendorManagement() {
         newRecord.paymentRequestStatus = 'Pending Approval';
         newRecord.paymentStatus = 'Unpaid';
         setPayments(prev => [newRecord, ...prev]);
+      } else if (showModal === 'delivery') {
+        newRecord.deliveryStatus = 'Shipped';
+        const foundPo = purchaseOrders.find(p => p.id === Number(payload.poId));
+        newRecord.purchaseOrder = foundPo ? { poNumber: foundPo.poNumber } : { poNumber: `PO-${payload.poId}` };
+        setDeliveries(prev => [newRecord, ...prev]);
+      } else if (showModal === 'perf') {
+        newRecord.overallRating = ((Number(payload.deliveryPerformance) + Number(payload.qualityRating) + Number(payload.pricing)) / 3).toFixed(2);
+        newRecord.ratingLevel = newRecord.overallRating >= 4.5 ? 'Excellent' : newRecord.overallRating >= 3.5 ? 'Good' : 'Average';
+        const foundVendor = vendors.find(v => v.id === Number(payload.vendorId));
+        newRecord.vendor = foundVendor ? { vendorName: foundVendor.vendorName } : { vendorName: `Vendor #${payload.vendorId}` };
+        setPerformances(prev => [newRecord, ...prev]);
       }
 
       setAlert({ type: 'success', msg: 'Simulated record creation locally!' });
