@@ -568,6 +568,8 @@ export default function LmsDashboard() {
           {activeTab === 'progress' && (
             <ProgressTrackingTab 
               role={role}
+              submissions={submissions}
+              assignments={assignments}
             />
           )}
         </div>
@@ -594,6 +596,7 @@ function CourseManagementTab({
   const [showAddForm, setShowAddForm] = useState(false);
   const [showGradingModal, setShowGradingModal] = useState(null); // stores active submission
   const [showSubmitModal, setShowSubmitModal] = useState(null); // stores active assignment for student
+  const [showSubmissionsPopup, setShowSubmissionsPopup] = useState(null); // stores active assignment for submissions list popup
   
   // Resource/Content Upload States
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -863,7 +866,11 @@ function CourseManagementTab({
         : s
     ));
     
+    const assignment = assignments.find(a => a.id === showGradingModal.assignmentId);
     setShowGradingModal(null);
+    if (assignment) {
+      setShowSubmissionsPopup(assignment);
+    }
     setGradeFeedback('');
     setGradeFeedbackFile('graded_feedback.pdf');
     setRubricAccuracy(10);
@@ -1518,21 +1525,13 @@ function CourseManagementTab({
                           <Badge type={a.submissionsCount > 0 ? 'success' : 'warning'}>
                             {a.submissionsCount} Submissions
                           </Badge>
-                          {a.submissionsCount > 0 && (
-                            <div style={{ marginTop: '8px' }}>
-                              <h6 style={{ fontSize: '11px', fontWeight: 600, textAlign: 'left', marginBottom: '4px' }}>Review Submissions:</h6>
-                              {allSubs.map(s => (
-                                <button 
-                                  key={s.id} 
-                                  className="btn-secondary-outline btn_sm" 
-                                  onClick={() => { setShowGradingModal(s); }}
-                                  style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', padding: '4px 8px', marginBottom: '4px' }}
-                                >
-                                  <FileText size={12} /> {s.studentName} {s.graded ? `(${s.marks}/${a.maxMarks})` : '(Pending)'}
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                          <button 
+                            className="btn-secondary-outline btn_sm" 
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', padding: '6px 12px', marginTop: '6px' }}
+                            onClick={() => { setShowSubmissionsPopup(a); }}
+                          >
+                            <FileText size={12} /> Review Submissions
+                          </button>
                         </>
                       )}
 
@@ -2066,10 +2065,86 @@ function CourseManagementTab({
               </FormGroup>
 
               <div style={{ display: 'flex', justify: 'flex-end', gap: '10px', marginTop: '16px' }}>
-                <button type="button" className="btn-secondary-outline" onClick={() => setShowGradingModal(null)}>Cancel</button>
+                <button type="button" className="btn-secondary-outline" onClick={() => {
+                  const assignment = assignments.find(a => a.id === showGradingModal.assignmentId);
+                  setShowGradingModal(null);
+                  if (assignment) {
+                    setShowSubmissionsPopup(assignment);
+                  }
+                }}>Cancel</button>
                 <button type="submit" className="primary_btn">Submit Grading</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Submissions List Popup Modal */}
+      {showSubmissionsPopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9998 }}>
+          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '640px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h5 style={{ fontWeight: 600, marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Submissions for: {showSubmissionsPopup.title}</span>
+              <button 
+                type="button" 
+                className="btn-secondary-outline btn_sm"
+                onClick={() => setShowSubmissionsPopup(null)}
+              >
+                Close
+              </button>
+            </h5>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+              Below is the list of student submissions. You can open their attachments and grade their work.
+            </p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {submissions.filter(s => s.assignmentId === showSubmissionsPopup.id).length === 0 ? (
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px', border: '1px dashed #ccc', borderRadius: '6px' }}>
+                  No submissions uploaded yet.
+                </div>
+              ) : (
+                submissions.filter(s => s.assignmentId === showSubmissionsPopup.id).map(s => (
+                  <div key={s.id} style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '6px', background: '#fcfcfc', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong style={{ fontSize: '13.5px' }}>{s.studentName}</strong>
+                      <span className={`badge ${s.graded ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: '11px' }}>
+                        {s.graded ? `Graded: ${s.marks}/${showSubmissionsPopup.maxMarks}` : 'Pending Grade'}
+                      </span>
+                    </div>
+                    
+                    <div style={{ fontSize: '12.5px', color: '#444' }}>
+                      <strong>Submitted Notes:</strong> "{s.submissionText || s.studentNotes || 'No notes provided'}"
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', borderTop: '1px solid #eee', paddingTop: '8px', marginTop: '4px' }}>
+                      <div style={{ display: 'flex', gap: '14px', fontSize: '12px' }}>
+                        {s.fileUrl && (
+                          <div>
+                            📁 Document: <a href={`#file-${s.fileUrl}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline', fontWeight: 600 }}>{s.fileUrl}</a>
+                          </div>
+                        )}
+                        {s.submissionLink && (
+                          <div>
+                            🔗 Link: <a href={s.submissionLink} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline', fontWeight: 600 }}>GitHub/Drive Link</a>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <button 
+                        className="primary_btn btn_sm" 
+                        style={{ padding: '4px 10px', fontSize: '11px' }}
+                        onClick={() => {
+                          setShowGradingModal(s);
+                          setShowSubmissionsPopup(null);
+                        }}
+                      >
+                        {s.graded ? 'Edit Grade / Review' : 'Grade Submission'}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -3686,7 +3761,7 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
 // ==========================================
 // MODULE 4: STUDENT PROGRESS TRACKING TAB
 // ==========================================
-function ProgressTrackingTab({ role }) {
+function ProgressTrackingTab({ role, submissions = [], assignments = [] }) {
   const [selectedStudent, setSelectedStudent] = useState('Rahul Student');
   const [metricView, setMetricView] = useState('Monthly'); // 'Monthly' or 'Semester'
 
@@ -3708,12 +3783,32 @@ function ProgressTrackingTab({ role }) {
         { week: 'Sem 2 Avg', score: 4.8 }
       ];
 
-  const submissionHistory = [
+  // Dynamically map submissions for selected student
+  const dynamicHistory = submissions
+    .filter(s => s.studentName === selectedStudent)
+    .map(s => {
+      const a = assignments.find(assign => assign.id === s.assignmentId);
+      const title = a ? a.title : 'Assignment';
+      const max = a ? a.maxMarks : 100;
+      const dueDate = a ? new Date(a.dueDate) : new Date();
+      const submittedDate = s.submittedAt ? new Date(s.submittedAt) : new Date();
+      return {
+        assignment: title,
+        date: s.submittedAt ? s.submittedAt.split('T')[0] : 'N/A',
+        status: s.graded ? 'Graded' : 'Submitted (Pending Review)',
+        marks: s.graded ? `${s.marks}/${max}` : `- / ${max}`,
+        onTime: submittedDate <= dueDate
+      };
+    });
+
+  const baseHistory = [
     { assignment: 'Gravitational Laws Essay', date: '2026-07-02', status: 'Graded', marks: '88/100', onTime: true },
     { assignment: 'Redox Reactions Lab', date: '2026-06-25', status: 'Graded', marks: '45/50', onTime: true },
     { assignment: 'Thermodynamics Worksheet', date: '2026-06-18', status: 'Late Submitted', marks: '32/50', onTime: false },
     { assignment: 'Calculus Derivatives Mock', date: '2026-06-10', status: 'Graded', marks: '96/100', onTime: true }
   ];
+
+  const submissionHistory = [...dynamicHistory, ...baseHistory];
 
   const strengths = ['Mathematical Formulation', 'Problem Solving Speed', 'Conceptual Clarity in Physics'];
   const weakAreas = ['Detailed Essay Structuring', 'Scribble notes readability', 'Organic Chemistry formulas'];
