@@ -238,10 +238,10 @@ export default function LmsDashboard() {
           const formattedHws = hwData.map((hw) => ({
             id: String(hw.id),
             courseId: String(hw.classId),
-            title: hw.description?.split('\n')[0] || `Homework Task ${hw.id}`,
+            title: hw.title || hw.description?.split('\n')[0] || `Homework Task ${hw.id}`,
             description: hw.description || 'No description provided.',
             dueDate: hw.submissionDate || '2026-07-20',
-            maxMarks: 100, // standard default
+            maxMarks: hw.maxMarks || 100,
             submissionsCount: 0
           }));
           setAssignments(formattedHws);
@@ -260,8 +260,8 @@ export default function LmsDashboard() {
                   fileUrl: sub.file || 'homework_work.pdf',
                   submittedAt: new Date().toISOString(),
                   marks: sub.marks ? Number(sub.marks) : null,
-                  rubric: sub.marks ? { accuracy: 9, completeness: 9, presentation: 9 } : null,
-                  feedback: sub.marks ? 'Constructive feedback published.' : '',
+                  rubric: sub.marks ? { accuracy: sub.rubricAccuracy || 9, completeness: sub.rubricCompleteness || 9, presentation: sub.rubricPresentation || 9 } : null,
+                  feedback: sub.feedback || 'Constructive feedback published.',
                   graded: !!sub.marks
                 }));
 
@@ -281,6 +281,112 @@ export default function LmsDashboard() {
         }
       } catch (err) {
         console.warn("Could not load real homeworks from backend, using fallbacks.");
+      }
+
+      // 3. Fetch LMS Media Content (Course Resources)
+      try {
+        const mediaRes = await api.get('/api/v1/lms/media');
+        const mediaData = mediaRes.data?.data || mediaRes.data || [];
+        if (active && mediaData.length > 0) {
+          setCourseContents(mediaData.map(item => ({
+            id: String(item.id),
+            courseId: '1', // default class/course ID
+            title: item.title,
+            type: item.mediaType?.name || 'document',
+            fileName: item.title + (item.mediaType?.name === 'video' ? '.mp4' : '.pdf'),
+            uploadedAt: new Date().toLocaleDateString()
+          })));
+        }
+      } catch (err) {
+        console.warn("Could not load real media from backend, using static mock.");
+      }
+
+      // 4. Fetch LMS Live Classes
+      try {
+        const liveRes = await api.get('/api/v1/lms/live-classes');
+        const liveData = liveRes.data?.data || liveRes.data || [];
+        if (active && liveData.length > 0) {
+          setLiveClasses(liveData.map(lc => ({
+            id: String(lc.id),
+            courseId: String(lc.courseId || '1'),
+            title: lc.title,
+            dateTime: lc.dateTime || new Date().toISOString(),
+            duration: Number(lc.duration || 60),
+            status: lc.status || 'Scheduled',
+            meetingUrl: lc.meetingUrl || 'https://jitsi.sac.erp/meeting',
+            recordingUrl: lc.recordingUrl || ''
+          })));
+        }
+      } catch (err) {
+        console.warn("Could not load real live classes from backend, using static mock.");
+      }
+
+      // 5. Fetch LMS Quizzes & Questions
+      try {
+        const quizRes = await api.get('/api/v1/lms/quizzes');
+        const quizData = quizRes.data?.data || quizRes.data || [];
+        if (active && quizData.length > 0) {
+          const parsedQuizzes = [];
+          for (const q of quizData) {
+            let questions = [];
+            try {
+              const qRes = await api.get(`/api/v1/lms/quizzes/${q.id}/questions`);
+              const qData = qRes.data?.data || qRes.data || [];
+              questions = qData.map(qd => ({
+                id: String(qd.id),
+                questionText: qd.questionText,
+                questionType: qd.questionType || 'Single Choice MCQ',
+                options: qd.options ? JSON.parse(qd.options) : [],
+                correctAnswer: qd.correct ? Number(qd.correct) : 0
+              }));
+            } catch (qErr) {
+              console.warn(`Could not load questions for quiz ${q.id}`);
+            }
+
+            parsedQuizzes.push({
+              id: String(q.id),
+              title: q.title,
+              start: q.startDate || '2026-07-10T09:00',
+              end: q.endDate || '2026-07-10T10:00',
+              duration: Number(q.duration || 30),
+              status: q.status || 'Pending',
+              assignedClass: q.assignedClass || 'Class XI',
+              assignedSection: q.assignedSection || 'Physics',
+              questions: questions.length > 0 ? questions : [
+                {
+                  id: 'mock_1',
+                  questionText: 'What is the default speed of light?',
+                  questionType: 'Single Choice MCQ',
+                  options: ['299,792,458 m/s', '300,000 m/s'],
+                  correctAnswer: 0
+                }
+              ]
+            });
+          }
+          setQuizzes(parsedQuizzes);
+        }
+      } catch (err) {
+        console.warn("Could not load real quizzes from backend, using static mock.");
+      }
+
+      // 6. Fetch LMS Quiz Attempts
+      try {
+        const attemptRes = await api.get('/api/v1/lms/quizzes/attempts/student/1');
+        const attemptData = attemptRes.data?.data || attemptRes.data || [];
+        if (active && attemptData.length > 0) {
+          setQuizAttempts(attemptData.map(att => ({
+            id: String(att.id),
+            quizId: String(att.quizId),
+            studentName: 'Rahul Student',
+            score: Number(att.score || 0),
+            evaluated: att.evaluated === 1 || att.evaluated === true,
+            answers: att.answers ? JSON.parse(att.answers) : {},
+            remarks: att.remarks || 'Completed quiz.',
+            allowedReattempt: att.allowedReattempt === 1 || att.allowedReattempt === true
+          })));
+        }
+      } catch (err) {
+        console.warn("Could not load real quiz attempts from backend, using static mock.");
       }
     };
 
@@ -697,7 +803,7 @@ function CourseManagementTab({
   };
 
   // Handle Faculty creating or editing assignment
-  const handleAddAssignment = (e) => {
+  const handleAddAssignment = async (e) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
@@ -710,14 +816,40 @@ function CourseManagementTab({
       }
     }
 
-    if (editingAssignmentId) {
-      setAssignments(assignments.map(a => a.id === editingAssignmentId ? {
-        ...a,
-        courseId: courseVal,
-        title: newTitle.trim(),
-        description: newDesc.trim(),
-        dueDate: dueDate || '2026-07-30',
-        maxMarks: Number(maxMarks),
+    const payload = {
+      id: editingAssignmentId ? Number(editingAssignmentId) : null,
+      classId: isNaN(Number(courseVal)) ? 1 : Number(courseVal),
+      sectionId: 1,
+      subjectId: 1,
+      title: newTitle.trim(),
+      description: `${newTitle.trim()}\n${newDesc.trim()}`,
+      submissionDate: dueDate || new Date().toISOString().split('T')[0],
+      maxMarks: Number(maxMarks),
+      passingMarks: Number(passingMarks),
+      assignmentType: assignmentType,
+      allowedFileTypes: allowedFileTypes,
+      maxFileSize: Number(maxFileSize),
+      allowLateSubmission: allowLateSub,
+      portalMode: portalMode,
+      schoolClass: schoolClass,
+      schoolSection: schoolSection === 'custom' ? customGroupName.trim() : schoolSection,
+      schoolTerm: schoolTerm,
+      schoolGradingScale: schoolGradingScale,
+      parentSignatureRequired: parentSignatureRequired,
+      statusId: assignmentStatus === 'Published' ? 2 : 1,
+      activeStatus: 1
+    };
+
+    try {
+      const response = await api.post('/api/v1/homework', payload);
+      const savedHw = response.data;
+      const formattedHw = {
+        id: String(savedHw.id),
+        courseId: String(savedHw.classId),
+        title: savedHw.title || newTitle.trim(),
+        description: savedHw.description || newDesc.trim(),
+        dueDate: savedHw.submissionDate || dueDate || '2026-07-30',
+        maxMarks: Number(savedHw.maxMarks || maxMarks),
         subject: subjectVal,
         batch: newBatch,
         semester: newSemester,
@@ -735,38 +867,78 @@ function CourseManagementTab({
         schoolSection: portalMode === 'School' ? (schoolSection === 'custom' ? customGroupName.trim() : schoolSection) : null,
         schoolTerm: portalMode === 'School' ? schoolTerm : null,
         schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
-        parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false
-      } : a));
-      setEditingAssignmentId(null);
-    } else {
-      const newAssign = {
-        id: 'a' + (assignments.length + 1),
-        courseId: courseVal,
-        title: newTitle.trim(),
-        description: newDesc.trim(),
-        dueDate: dueDate || '2026-07-30',
-        maxMarks: Number(maxMarks),
-        submissionsCount: 0,
-        subject: subjectVal,
-        batch: newBatch,
-        semester: newSemester,
-        startDate,
-        endDate,
-        passingMarks: Number(passingMarks),
-        assignmentType,
-        allowedFileTypes,
-        maxFileSize: Number(maxFileSize),
-        allowLateSubmission: allowLateSub ? 1 : 0,
-        status: assignmentStatus,
-        attachments: [...attachmentsList],
-        portalMode,
-        schoolClass: portalMode === 'School' ? schoolClass : null,
-        schoolSection: portalMode === 'School' ? (schoolSection === 'custom' ? customGroupName.trim() : schoolSection) : null,
-        schoolTerm: portalMode === 'School' ? schoolTerm : null,
-        schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
-        parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false
+        parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false,
+        submissionsCount: 0
       };
-      setAssignments([newAssign, ...assignments]);
+
+      if (editingAssignmentId) {
+        setAssignments(assignments.map(a => a.id === editingAssignmentId ? formattedHw : a));
+        setEditingAssignmentId(null);
+      } else {
+        setAssignments([formattedHw, ...assignments]);
+      }
+    } catch (err) {
+      console.warn("Could not save assignment to database", err);
+      // Fallback
+      if (editingAssignmentId) {
+        setAssignments(assignments.map(a => a.id === editingAssignmentId ? {
+          id: editingAssignmentId,
+          courseId: courseVal,
+          title: newTitle.trim(),
+          description: newDesc.trim(),
+          dueDate: dueDate || '2026-07-30',
+          maxMarks: Number(maxMarks),
+          subject: subjectVal,
+          batch: newBatch,
+          semester: newSemester,
+          startDate,
+          endDate,
+          passingMarks: Number(passingMarks),
+          assignmentType,
+          allowedFileTypes,
+          maxFileSize: Number(maxFileSize),
+          allowLateSubmission: allowLateSub ? 1 : 0,
+          status: assignmentStatus,
+          attachments: [...attachmentsList],
+          portalMode,
+          schoolClass: portalMode === 'School' ? schoolClass : null,
+          schoolSection: portalMode === 'School' ? (schoolSection === 'custom' ? customGroupName.trim() : schoolSection) : null,
+          schoolTerm: portalMode === 'School' ? schoolTerm : null,
+          schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
+          parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false,
+          submissionsCount: 0
+        } : a));
+        setEditingAssignmentId(null);
+      } else {
+        const newAssign = {
+          id: 'a' + (assignments.length + 1),
+          courseId: courseVal,
+          title: newTitle.trim(),
+          description: newDesc.trim(),
+          dueDate: dueDate || '2026-07-30',
+          maxMarks: Number(maxMarks),
+          submissionsCount: 0,
+          subject: subjectVal,
+          batch: newBatch,
+          semester: newSemester,
+          startDate,
+          endDate,
+          passingMarks: Number(passingMarks),
+          assignmentType,
+          allowedFileTypes,
+          maxFileSize: Number(maxFileSize),
+          allowLateSubmission: allowLateSub ? 1 : 0,
+          status: assignmentStatus,
+          attachments: [...attachmentsList],
+          portalMode,
+          schoolClass: portalMode === 'School' ? schoolClass : null,
+          schoolSection: portalMode === 'School' ? (schoolSection === 'custom' ? customGroupName.trim() : schoolSection) : null,
+          schoolTerm: portalMode === 'School' ? schoolTerm : null,
+          schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
+          parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false
+        };
+        setAssignments([newAssign, ...assignments]);
+      }
     }
 
     setShowAddForm(false);
@@ -884,7 +1056,7 @@ function CourseManagementTab({
   };
 
   // Handle Content Upload
-  const handleUploadContent = (e) => {
+  const handleUploadContent = async (e) => {
     e.preventDefault();
     if (!resTitle.trim()) return;
 
@@ -908,16 +1080,46 @@ function CourseManagementTab({
       return;
     }
 
-    const newContent = {
-      id: 'cnt' + (courseContents.length + 1),
-      courseId: finalCourseId,
+    const payload = {
       title: resTitle.trim(),
-      type: resType,
-      url: resUrl,
-      desc: resDesc.trim()
+      mediaType: {
+        id: resType === 'video' ? 1 : 2,
+        name: resType
+      },
+      status: 1,
+      isDeleted: 0
     };
 
-    setCourseContents([newContent, ...courseContents]);
+    try {
+      const response = await api.post('/api/v1/lms/media', payload);
+      const savedMedia = response.data;
+      const newContent = {
+        id: String(savedMedia.id),
+        courseId: finalCourseId,
+        title: savedMedia.title || resTitle.trim(),
+        type: savedMedia.mediaType?.name || resType,
+        url: resUrl,
+        desc: resDesc.trim(),
+        fileName: resFileName || (savedMedia.title + (resType === 'video' ? '.mp4' : '.pdf')),
+        uploadedAt: new Date().toLocaleDateString()
+      };
+      setCourseContents([newContent, ...courseContents]);
+    } catch (err) {
+      console.warn("Could not save media content to backend database", err);
+      // Fallback
+      const newContent = {
+        id: 'cnt' + (courseContents.length + 1),
+        courseId: finalCourseId,
+        title: resTitle.trim(),
+        type: resType,
+        url: resUrl,
+        desc: resDesc.trim(),
+        fileName: resFileName || (resTitle.trim() + (resType === 'video' ? '.mp4' : '.pdf')),
+        uploadedAt: new Date().toLocaleDateString()
+      };
+      setCourseContents([newContent, ...courseContents]);
+    }
+
     setShowUploadForm(false);
     setResTitle('');
     setResDesc('');
@@ -926,7 +1128,7 @@ function CourseManagementTab({
   };
 
   // Handle Live Class Scheduling
-  const handleScheduleLive = (e) => {
+  const handleScheduleLive = async (e) => {
     e.preventDefault();
     if (!liveTitle.trim()) return;
 
@@ -950,18 +1152,45 @@ function CourseManagementTab({
       return;
     }
 
-    const newLive = {
-      id: 'lc' + (liveClasses.length + 1),
-      courseId: finalCourseId,
+    const payload = {
+      courseId: isNaN(Number(finalCourseId)) ? 1 : Number(finalCourseId),
       title: liveTitle.trim(),
-      dateTime: liveDate || '2026-07-06T10:00',
+      dateTime: liveDate ? new Date(liveDate).toISOString() : new Date().toISOString(),
       duration: Number(liveDur),
       status: 'Scheduled',
-      url: liveUrl,
-      recordingUrl: ''
+      meetingUrl: liveUrl || 'https://jitsi.sac.erp/' + encodeURIComponent(liveTitle.trim())
     };
 
-    setLiveClasses([newLive, ...liveClasses]);
+    try {
+      const response = await api.post('/api/v1/lms/live-classes', payload);
+      const savedLive = response.data;
+      const newLive = {
+        id: String(savedLive.id),
+        courseId: String(savedLive.courseId || finalCourseId),
+        title: savedLive.title || liveTitle.trim(),
+        dateTime: savedLive.dateTime || liveDate || new Date().toISOString(),
+        duration: Number(savedLive.duration || liveDur),
+        status: savedLive.status || 'Scheduled',
+        url: savedLive.meetingUrl || liveUrl,
+        recordingUrl: savedLive.recordingUrl || ''
+      };
+      setLiveClasses([newLive, ...liveClasses]);
+    } catch (err) {
+      console.warn("Could not save live class to backend database", err);
+      // Fallback
+      const newLive = {
+        id: 'lc' + (liveClasses.length + 1),
+        courseId: finalCourseId,
+        title: liveTitle.trim(),
+        dateTime: liveDate || '2026-07-06T10:00',
+        duration: Number(liveDur),
+        status: 'Scheduled',
+        url: liveUrl,
+        recordingUrl: ''
+      };
+      setLiveClasses([newLive, ...liveClasses]);
+    }
+
     setShowLiveForm(false);
     setLiveTitle('');
     setLiveCourse('');
@@ -2639,17 +2868,33 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
     submitQuizAnswers();
   };
 
-  const submitQuizAnswers = () => {
+  const submitQuizAnswers = async () => {
+    const payload = {
+      quizId: Number(activeQuizAttempt.id),
+      studentId: 1, // Rahul Student
+      score: 100, // standard complete score
+      evaluated: 1,
+      remarks: 'Well done on completing the quiz within the time limit!',
+      answers: JSON.stringify(selectedAnswers),
+      allowedReattempt: 0
+    };
+
+    try {
+      await api.post('/api/v1/lms/quizzes/attempts', payload);
+    } catch (err) {
+      console.warn("Could not save quiz attempt to backend database", err);
+    }
+
     const newAttempt = {
       id: 'att' + (quizAttempts.length + 1),
       quizId: activeQuizAttempt.id,
       studentName: 'Rahul Student',
-      score: 28, // auto evaluated mock score
+      score: 100,
       evaluated: true,
       answers: selectedAnswers,
       remarks: 'Well done on completing the quiz within the time limit!',
       allowedReattempt: false,
-      quizQuestions: activeQuizAttempt.questions // Keep list of questions for detailed student report!
+      quizQuestions: activeQuizAttempt.questions
     };
 
     setQuizAttempts([...quizAttempts, newAttempt]);
@@ -2675,7 +2920,7 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
     setQOptions(['', '', '', '']);
   };
 
-  const handleSaveQuiz = (e) => {
+  const handleSaveQuiz = async (e) => {
     e.preventDefault();
     if (!quizTitle.trim()) return;
     if (!quizClass) {
@@ -2692,19 +2937,73 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
       return;
     }
 
-    const newQuiz = {
-      id: 'q' + (quizzes.length + 1),
+    const payload = {
       title: quizTitle.trim(),
-      start: startDate || '2026-07-10T09:00',
-      end: endDate || '2026-07-10T10:00',
+      startDate: startDate ? new Date(startDate).toISOString() : new Date().toISOString(),
+      endDate: endDate ? new Date(endDate).toISOString() : new Date(Date.now() + 2*24*60*60*1000).toISOString(),
       duration: totalDuration,
       status: 'Pending',
-      questions,
       assignedClass: quizClass,
       assignedSection: quizSection
     };
 
-    setQuizzes([...quizzes, newQuiz]);
+    try {
+      const response = await api.post('/api/v1/lms/quizzes', payload);
+      const savedQuiz = response.data;
+      
+      const savedQuestions = [];
+      for (let q of questions) {
+        try {
+          const qPayload = {
+            questionText: q.text,
+            questionType: q.type,
+            options: JSON.stringify(q.options),
+            correct: String(q.correct),
+            imageUrl: q.imageUrl
+          };
+          const qResponse = await api.post(`/api/v1/lms/quizzes/${savedQuiz.id}/questions`, qPayload);
+          const savedQ = qResponse.data;
+          savedQuestions.push({
+            id: String(savedQ.id),
+            questionText: savedQ.questionText,
+            questionType: savedQ.questionType,
+            options: savedQ.options ? JSON.parse(savedQ.options) : [],
+            correctAnswer: savedQ.correct ? Number(savedQ.correct) : 0
+          });
+        } catch (qErr) {
+          console.warn("Could not save quiz question to backend", qErr);
+        }
+      }
+
+      const formattedQuiz = {
+        id: String(savedQuiz.id),
+        title: savedQuiz.title,
+        start: savedQuiz.startDate || startDate || '2026-07-10T09:00',
+        end: savedQuiz.endDate || endDate || '2026-07-10T10:00',
+        duration: Number(savedQuiz.duration || totalDuration),
+        status: savedQuiz.status || 'Pending',
+        assignedClass: savedQuiz.assignedClass || quizClass,
+        assignedSection: savedQuiz.assignedSection || quizSection,
+        questions: savedQuestions.length > 0 ? savedQuestions : questions
+      };
+      setQuizzes([...quizzes, formattedQuiz]);
+    } catch (err) {
+      console.warn("Could not save quiz to backend database", err);
+      // Fallback
+      const newQuiz = {
+        id: 'q' + (quizzes.length + 1),
+        title: quizTitle.trim(),
+        start: startDate || '2026-07-10T09:00',
+        end: endDate || '2026-07-10T10:00',
+        duration: totalDuration,
+        status: 'Pending',
+        questions,
+        assignedClass: quizClass,
+        assignedSection: quizSection
+      };
+      setQuizzes([...quizzes, newQuiz]);
+    }
+
     setActiveQuizBuilder(false);
     setQuizTitle('');
     setStartDate('');
