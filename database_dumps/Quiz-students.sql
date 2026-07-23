@@ -36,6 +36,20 @@ CREATE TABLE IF NOT EXISTS student_quiz_responses (
     UNIQUE KEY idx_attempt_question (quiz_attempt_id, question_id)
 );
 
+-- ==========================================
+-- DEMO DATA FOR LMS QUIZ STUDENT ATTEMPTS
+-- ==========================================
+
+-- Demo Data for Quiz Attempts
+INSERT IGNORE INTO quiz_attempts (id, quiz_id, student_id, attempt_number, started_at, submitted_at, score_achieved, faculty_remarks, is_allowed_reattempt, reattempt_granted_by) VALUES
+(1, 1, 1, 1, CURRENT_TIMESTAMP, NOW(), 1.00, 'Good attempt.', 0, NULL),
+(2, 2, 2, 1, CURRENT_TIMESTAMP, NOW(), 1.00, 'Well done.', 0, NULL);
+
+-- Demo Data for Student Quiz Responses
+INSERT IGNORE INTO student_quiz_responses (id, quiz_attempt_id, question_id, selected_option_index, descriptive_answer, is_marked_for_review, is_skipped, time_spent_seconds, is_correct) VALUES
+(1, 1, 1, 0, NULL, 0, 0, 45, 1),
+(2, 2, 2, 1, NULL, 0, 0, 65, 1);
+
 -- View Upcoming Quizzes
 SELECT * FROM quizzes 
 WHERE start_date_time > NOW() AND status_id = 2; 
