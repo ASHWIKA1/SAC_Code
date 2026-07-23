@@ -40,7 +40,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     TenantContext.setCurrentTenant(tenantId);
                 }
 
-                List<String> permissions = menuPermissionService.getPermissionsForUser(username);
+                List<String> permissions;
+                try {
+                    permissions = menuPermissionService.getPermissionsForUser(username);
+                } catch (Exception ex) {
+                    log.warn("Could not load database permissions for user {}: {}", username, ex.getMessage());
+                    permissions = List.of();
+                }
 
                 boolean isSuperAdmin = "SUPERADMIN".equalsIgnoreCase(role);
                 CustomUserDetails userDetails = new CustomUserDetails(username, "", tenantId, role, isSuperAdmin, permissions);
