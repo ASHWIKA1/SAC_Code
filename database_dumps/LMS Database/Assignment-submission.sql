@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS assignments_details(
     status_id INT DEFAULT 1,       -- Points to assignment_statuses(id)
     created_at DATETIME,
     updated_at DATETIME,
-    updated_by BIGINT,
+    updated_by INT UNSIGNED,
     is_deleted INT DEFAULT 0,
 
     -- Foreign Keys
@@ -53,9 +53,13 @@ CREATE TABLE IF NOT EXISTS student_assignment (
     student_id INT UNSIGNED NOT NULL,
     status_id INT DEFAULT 1,
     submitted_date DATETIME DEFAULT NULL,
+    submission_file_path VARCHAR(255) DEFAULT NULL COMMENT 'Path to the submitted assignment PDF/file',
+    submission_file_name VARCHAR(150) DEFAULT NULL COMMENT 'Name of the submitted assignment file',
+    submission_link VARCHAR(255) DEFAULT NULL COMMENT 'Submitted URL/link (GitHub, Drive, etc.)',
+    student_notes TEXT DEFAULT NULL COMMENT 'Additional submission details or notes from student',
     created_at DATETIME,
     updated_at DATETIME,
-    updated_by BIGINT,
+    updated_by INT UNSIGNED,
     is_deleted INT DEFAULT 0,
 
     -- Foreign Keys
@@ -73,7 +77,7 @@ CREATE TABLE IF NOT EXISTS student_assignment_review (
     review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_at DATETIME,
     updated_at DATETIME,
-    updated_by BIGINT,
+    updated_by INT UNSIGNED,
     is_deleted INT DEFAULT 0,
 
     -- Foreign Keys
