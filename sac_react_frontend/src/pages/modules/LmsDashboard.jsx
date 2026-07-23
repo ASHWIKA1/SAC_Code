@@ -388,6 +388,39 @@ export default function LmsDashboard() {
       } catch (err) {
         console.warn("Could not load real quiz attempts from backend, using static mock.");
       }
+
+      // 7. Fetch Discussion Forums
+      try {
+        const forumRes = await api.get('/api/v1/lms/forums');
+        const forums = forumRes.data?.data || forumRes.data || [];
+        if (active && forums.length > 0) {
+          const parsedForums = forums.map(f => ({
+            id: String(f.id),
+            name: f.name,
+            members: ['Rahul Student', 'Teacher', 'Sneha Rao'],
+            createdBy: f.createdBy || 'System'
+          }));
+          setForumGroups(parsedForums);
+
+          // Fetch posts for the first forum
+          const initialGroupId = forums[0].id;
+          try {
+            const postsRes = await api.get(`/api/v1/lms/forums/${initialGroupId}/posts`);
+            const posts = postsRes.data?.data || postsRes.data || [];
+            const mappedPosts = posts.map(p => ({
+              sender: p.senderName || 'Anonymous',
+              senderRole: p.senderRole || 'student',
+              text: p.text,
+              pinned: false
+            }));
+            setMessages(prev => ({ ...prev, [String(initialGroupId)]: mappedPosts }));
+          } catch (postErr) {
+            console.warn(`Could not load posts for forum ${initialGroupId}`);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load real discussion groups from backend, using static mock.");
+      }
     };
 
     fetchBackendData();
@@ -1198,13 +1231,37 @@ function CourseManagementTab({
   };
 
   // Handle Recording Upload
-  const handlePublishRecording = (e) => {
+  const handlePublishRecording = async (e) => {
     e.preventDefault();
+
+    const updatedClass = {
+      ...recordingModal,
+      status: 'Completed',
+      recordingUrl: recUrl
+    };
+
     setLiveClasses(liveClasses.map(lc => 
-      lc.id === recordingModal.id 
-        ? { ...lc, status: 'Completed', recordingUrl: recUrl } 
-        : lc
+      lc.id === recordingModal.id ? updatedClass : lc
     ));
+
+    if (!recordingModal.id.startsWith('lc')) {
+      try {
+        const payload = {
+          id: Number(recordingModal.id),
+          courseId: Number(recordingModal.courseId || 1),
+          title: recordingModal.title,
+          dateTime: recordingModal.dateTime,
+          duration: Number(recordingModal.duration || 60),
+          status: 'Completed',
+          meetingUrl: recordingModal.meetingUrl || 'https://jitsi.sac.erp/meeting',
+          recordingUrl: recUrl
+        };
+        await api.put(`/api/v1/lms/live-classes/${recordingModal.id}`, payload);
+      } catch (err) {
+        console.warn("Could not save live class recording to database", err);
+      }
+    }
+
     setRecordingModal(null);
     setRecUrl('https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4');
   };
@@ -2025,7 +2082,17 @@ function CourseManagementTab({
                       {isTeacher && (
                         <button 
                           className="btn-secondary-outline btn_sm" 
-                          onClick={() => setCourseContents(courseContents.filter(x => x.id !== cnt.id))}
+                          onClick={async () => {
+                            if (!window.confirm("Are you sure you want to delete this resource?")) return;
+                            if (!cnt.id.startsWith('cnt')) {
+                              try {
+                                await api.delete(`/api/v1/lms/media/${cnt.id}`);
+                              } catch (err) {
+                                console.warn("Could not delete learning resource from database", err);
+                              }
+                            }
+                            setCourseContents(courseContents.filter(x => x.id !== cnt.id));
+                          }}
                           style={{ color: 'var(--danger)' }}
                         >
                           <Trash2 size={12} />
@@ -2562,7 +2629,14 @@ function CourseManagementTab({
                 type="button" 
                 className="primary_btn" 
                 style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}
-                onClick={() => {
+                onClick={async () => {
+                  if (!deleteConfirmAssignment.id.startsWith('hw')) {
+                    try {
+                      await api.delete(`/api/v1/homework/${deleteConfirmAssignment.id}`);
+                    } catch (err) {
+                      console.warn("Could not delete assignment task from database", err);
+                    }
+                  }
                   setAssignments(assignments.filter(x => x.id !== deleteConfirmAssignment.id));
                   setDeleteConfirmAssignment(null);
                 }}
@@ -3901,14 +3975,40 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
     { name: 'Mrs. Gupta Parent', role: 'parent' }
   ];
 
-  const handleSendMessage = (e) => {
+  // Auto-fetch posts when group selection changes
+  useEffect(() => {
+    if (!selectedGroup) return;
+    if (selectedGroup.startsWith('fg')) return;
+
+    const fetchPosts = async () => {
+      try {
+        const res = await api.get(`/api/v1/lms/forums/${selectedGroup}/posts`);
+        const posts = res.data?.data || res.data || [];
+        const mapped = posts.map(p => ({
+          sender: p.senderName || 'Anonymous',
+          senderRole: p.senderRole || 'student',
+          text: p.text,
+          pinned: false
+        }));
+        setMessages(prev => ({ ...prev, [selectedGroup]: mapped }));
+      } catch (err) {
+        console.warn(`Could not load posts for forum group ${selectedGroup}`, err);
+      }
+    };
+
+    fetchPosts();
+  }, [selectedGroup]);
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!typedMessage.trim()) return;
+
+    const textToSend = typedMessage.trim() + (attachment ? ` [📎 Attachment: ${attachment}]` : '');
 
     const newMsg = {
       sender: userName,
       senderRole: role,
-      text: typedMessage.trim() + (attachment ? ` [📎 Attachment: ${attachment}]` : ''),
+      text: textToSend,
       timestamp: new Date().toISOString()
     };
 
@@ -3919,29 +4019,73 @@ function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messa
 
     setTypedMessage('');
     setAttachment('');
+
+    if (!selectedGroup.startsWith('fg')) {
+      try {
+        const payload = {
+          forum: { id: Number(selectedGroup) },
+          senderName: userName,
+          senderRole: role,
+          text: textToSend
+        };
+        await api.post(`/api/v1/lms/forums/${selectedGroup}/posts`, payload);
+      } catch (err) {
+        console.warn("Could not save message to database", err);
+      }
+    }
   };
 
-  const handleCreateGroup = (e) => {
+  const handleCreateGroup = async (e) => {
     e.preventDefault();
     if (!newGroupName.trim()) return;
 
-    const newGroupId = 'fg' + (forumGroups.length + 1);
-    const newGroup = {
-      id: newGroupId,
-      name: newGroupName.trim(),
-      members: [userName], // starts with creator only
-      createdBy: userName
-    };
+    try {
+      const payload = {
+        name: newGroupName.trim(),
+        createdBy: userName
+      };
+      const res = await api.post('/api/v1/lms/forums', payload);
+      const createdForum = res.data?.data || res.data;
+      if (createdForum && createdForum.id) {
+        const newGroup = {
+          id: String(createdForum.id),
+          name: createdForum.name,
+          members: [userName],
+          createdBy: createdForum.createdBy || userName
+        };
+        setForumGroups([...forumGroups, newGroup]);
+        setMessages({ ...messages, [String(createdForum.id)]: [] });
+        setSelectedGroup(String(createdForum.id));
+      }
+    } catch (err) {
+      console.warn("Could not create discussion group on database", err);
+      const newGroupId = 'fg' + (forumGroups.length + 1);
+      const newGroup = {
+        id: newGroupId,
+        name: newGroupName.trim(),
+        members: [userName],
+        createdBy: userName
+      };
+      setForumGroups([...forumGroups, newGroup]);
+      setMessages({ ...messages, [newGroupId]: [] });
+      setSelectedGroup(newGroupId);
+    }
 
-    setForumGroups([...forumGroups, newGroup]);
-    setMessages({ ...messages, [newGroupId]: [] });
-    setSelectedGroup(newGroupId);
     setNewGroupName('');
     setShowGroupForm(false);
   };
 
-  const handleDeleteGroup = (groupId) => {
+  const handleDeleteGroup = async (groupId) => {
     if (!window.confirm("Are you sure you want to delete this discussion group?")) return;
+
+    if (!groupId.startsWith('fg')) {
+      try {
+        await api.delete(`/api/v1/lms/forums/${groupId}`);
+      } catch (err) {
+        console.warn(`Could not delete forum ${groupId} from database`, err);
+      }
+    }
+
     setForumGroups(forumGroups.filter(g => g.id !== groupId));
     if (selectedGroup === groupId) {
       setSelectedGroup(forumGroups[0]?.id || '');

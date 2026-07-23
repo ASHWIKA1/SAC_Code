@@ -359,4 +359,21 @@ public class LmsServiceImpl implements LmsService {
         liveClass.setRecordingUrl(liveClassDetails.getRecordingUrl());
         return lmsLiveClassRepository.save(liveClass);
     }
+
+    @Override
+    @Transactional
+    public void deleteMediaContent(Long id) {
+        MediaContent mediaContent = mediaContentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Media Content not found"));
+        mediaContent.setIsDeleted(1);
+        mediaContentRepository.save(mediaContent);
+    }
+
+    @Override
+    @Transactional
+    public void deleteForum(Long id) {
+        LmsForum forum = lmsForumRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Forum not found"));
+        lmsForumRepository.delete(forum);
+    }
 }

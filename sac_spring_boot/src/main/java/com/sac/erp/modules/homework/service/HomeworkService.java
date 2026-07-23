@@ -14,4 +14,5 @@ public interface HomeworkService {
     HomeworkStudent evaluateHomework(Long homeworkId, Long studentId, String marks, String status, String feedbackFile);
     HomeworkStudent evaluateHomework(Long homeworkId, Long studentId, String marks, String status, String feedbackFile, String feedback, Integer rubricAccuracy, Integer rubricCompleteness, Integer rubricPresentation);
     List<HomeworkStudent> getSubmissionsByHomework(Long homeworkId);
+    void deleteHomework(Long id);
 }

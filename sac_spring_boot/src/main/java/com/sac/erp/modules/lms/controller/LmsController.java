@@ -235,4 +235,18 @@ public class LmsController {
         log.info("REST request to update live class : {}", id);
         return ResponseEntity.ok(lmsService.updateLiveClass(id, liveClass));
     }
+
+    @DeleteMapping("/media/{id}")
+    public ResponseEntity<Void> deleteMediaContent(@PathVariable Long id) {
+        log.info("REST request to delete media content: {}", id);
+        lmsService.deleteMediaContent(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/forums/{id}")
+    public ResponseEntity<Void> deleteForum(@PathVariable Long id) {
+        log.info("REST request to delete discussion forum: {}", id);
+        lmsService.deleteForum(id);
+        return ResponseEntity.noContent().build();
+    }
 }

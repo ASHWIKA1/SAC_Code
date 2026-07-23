@@ -109,4 +109,13 @@ public class HomeworkServiceImpl implements HomeworkService {
     public List<HomeworkStudent> getSubmissionsByHomework(Long homeworkId) {
         return homeworkStudentRepository.findByHomeworkId(homeworkId);
     }
+
+    @Override
+    @Transactional
+    public void deleteHomework(Long id) {
+        Homework hw = homeworkRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Homework assignment not found"));
+        hw.setActiveStatus(0);
+        homeworkRepository.save(hw);
+    }
 }

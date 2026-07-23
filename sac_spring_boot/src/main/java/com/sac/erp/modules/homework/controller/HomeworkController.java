@@ -68,4 +68,11 @@ public class HomeworkController {
         log.info("REST request to get submissions list for task: {}", homeworkId);
         return ResponseEntity.ok(homeworkService.getSubmissionsByHomework(homeworkId));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteHomework(@PathVariable Long id) {
+        log.info("REST request to delete homework task: {}", id);
+        homeworkService.deleteHomework(id);
+        return ResponseEntity.noContent().build();
+    }
 }

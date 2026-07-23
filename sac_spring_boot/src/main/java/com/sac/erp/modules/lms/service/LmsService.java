@@ -47,4 +47,7 @@ public interface LmsService {
     List<LmsLiveClass> getAllLiveClasses();
     LmsLiveClass createLiveClass(LmsLiveClass liveClass);
     LmsLiveClass updateLiveClass(Long id, LmsLiveClass liveClass);
+
+    void deleteMediaContent(Long id);
+    void deleteForum(Long id);
 }
