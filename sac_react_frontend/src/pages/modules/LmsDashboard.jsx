@@ -1,0 +1,4674 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useAuth, ROLES } from '../../contexts/AuthContext';
+import { PageHeader, WhiteCard, FormGroup, Alert, Badge } from '../../components/UI';
+import { 
+  BookOpen, Award, MessageSquare, TrendingUp, Plus, Trash2, Edit3, 
+  Clock, CheckCircle2, AlertTriangle, UploadCloud, UserPlus, FolderPlus, 
+  Send, FileText, ChevronRight, CheckCircle, HelpCircle, User, 
+  Eye, RefreshCw, X, Play, Info, Video, Presentation, Monitor, ExternalLink,
+  ChevronLeft, ZoomIn, ZoomOut, CheckSquare, Download, Award as GradeIcon
+} from 'lucide-react';
+import { 
+  ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, 
+  CartesianGrid, Tooltip, Legend, LineChart, Line 
+} from 'recharts';
+import api from '../../utils/api';
+
+// Helper function to format minutes into human readable hours and minutes
+const formatDurationToHours = (mins) => {
+  const m = Number(mins);
+  if (isNaN(m) || m <= 0) return '';
+  const hours = Math.floor(m / 60);
+  const remainingMins = m % 60;
+  
+  if (hours === 0) {
+    return `${remainingMins} min${remainingMins !== 1 ? 's' : ''}`;
+  } else if (remainingMins === 0) {
+    return `${hours} hr${hours !== 1 ? 's' : ''}`;
+  } else {
+    return `${hours} hr${hours !== 1 ? 's' : ''} ${remainingMins} min${remainingMins !== 1 ? 's' : ''}`;
+  }
+};
+
+// --- STYLES FOR CARD HOVERS & CUSTOM GRAPHICS ---
+const styles = {
+  tabButton: (isActive) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '12px 20px',
+    border: 'none',
+    background: isActive ? 'linear-gradient(90deg, rgba(124,50,255,0.08) 0%, rgba(199,56,216,0.08) 100%)' : 'none',
+    color: isActive ? 'var(--primary-color)' : '#666',
+    fontWeight: isActive ? '600' : '400',
+    cursor: 'pointer',
+    borderLeft: isActive ? '3px solid var(--primary-color)' : '3px solid transparent',
+    transition: 'all 0.2s ease',
+    textAlign: 'left',
+    width: '100%',
+    borderRadius: '0 4px 4px 0'
+  }),
+  innerTabButton: (isActive) => ({
+    padding: '10px 24px',
+    border: 'none',
+    background: isActive ? 'rgba(124, 50, 255, 0.12)' : 'transparent',
+    color: isActive ? 'var(--primary-color, #7c32ff)' : '#475569',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '600',
+    transition: 'all 0.15s ease',
+    textTransform: 'uppercase',
+    letterSpacing: '0.6px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  }),
+  quizCard: {
+    padding: '16px',
+    border: '1px solid var(--border-color)',
+    borderRadius: '6px',
+    marginBottom: '14px',
+    transition: 'all 0.2s',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  }
+};
+
+// ==========================================
+// MOCK DATA STORE (For Offline Simulation)
+// ==========================================
+
+const INITIAL_COURSES = [
+  { id: 'c1', name: 'Physics Class XI - Mechanics' },
+  { id: 'c2', name: 'Computer Science - Data Structures' },
+  { id: 'c3', name: 'Advanced Calculus (MATH-302)' },
+  { id: 'c4', name: 'Chemistry Class XII - Organic Chemistry' },
+  { id: 'c5', name: 'Biology Class X - Genetics & Evolution' },
+  { id: 'c6', name: 'English Class IX - Grammar & Literature' },
+  { id: 'c7', name: 'History Class X - Modern World History' },
+  { id: 'c8', name: 'Geography Class IX - Physical Geography' }
+];
+
+const INITIAL_ASSIGNMENTS = [
+  { id: 'a1', courseId: 'c1', title: 'Newtonian Gravitation Lab', description: 'Solve problems 1-10 on planetary mechanics.', dueDate: '2026-07-15', maxMarks: 50, submissionsCount: 2 },
+  { id: 'a2', courseId: 'c2', title: 'Binary Search Trees Implementation', description: 'Implement BST insertion, deletion, and traversal in JS/Java.', dueDate: '2026-07-20', maxMarks: 100, submissionsCount: 1 },
+  { id: 'a3', courseId: 'c3', title: 'Double Integrals Worksheet', description: 'Evaluate double integrals over general polar regions.', dueDate: '2026-07-10', maxMarks: 30, submissionsCount: 0 }
+];
+
+const INITIAL_SUBMISSIONS = [
+  { id: 'sub1', assignmentId: 'a1', studentName: 'Rahul Student', submissionText: 'My Lab report is attached. Answers are solved.', fileUrl: 'gravitation_report.pdf', submittedAt: '2026-07-03T10:10:00Z', marks: 45, rubric: { accuracy: 9, completeness: 9, presentation: 9 }, feedback: 'Excellent analysis of force equations!', graded: true },
+  { id: 'sub2', assignmentId: 'a2', studentName: 'Rahul Student', submissionText: 'BST completed. Attached is index.js.', fileUrl: 'bst_index.js', submittedAt: '2026-07-04T12:00:00Z', marks: null, rubric: null, feedback: '', graded: false }
+];
+
+const INITIAL_CONTENTS = [
+  { id: 'cnt1', courseId: 'c1', title: 'Introduction to Kinematics', type: 'video', url: 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4', desc: 'Covering basic particle motion and frames of reference.' },
+  { id: 'cnt2', courseId: 'c1', title: 'Work-Energy Theorem Notes', type: 'pdf', url: 'work_energy_notes.pdf', desc: 'Derivation and examples of work-energy integrations.' },
+  { id: 'cnt3', courseId: 'c2', title: 'Binary Search Tree Slides', type: 'slides', url: 'bst_lecture.pptx', desc: 'Lecture presentation covering tree balancing algorithms.' }
+];
+
+const INITIAL_LIVE_CLASSES = [
+  { id: 'lc1', courseId: 'c1', title: 'Quantum Mechanics Q&A Session', dateTime: '2026-07-06T10:00', duration: 60, status: 'Scheduled', url: 'https://meet.google.com/abc-defg-hij', recordingUrl: '' },
+  { id: 'lc2', courseId: 'c2', title: 'Recursion & Dynamic Programming Review', dateTime: '2026-07-03T15:00', duration: 90, status: 'Completed', url: '', recordingUrl: 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4' }
+];
+
+const INITIAL_QUIZZES = [
+  { id: 'q1', title: 'Calculus Derivatives Pop Quiz', start: '2026-07-05T09:00', end: '2026-07-05T10:00', duration: 30, status: 'Published', questions: [
+    { id: 'q1_1', type: 'mcq-single', text: 'What is the derivative of sin(x)?', options: ['cos(x)', '-cos(x)', 'sin(x)', '-sin(x)'], correct: 0 },
+    { id: 'q1_2', type: 'mcq-multiple', text: 'Which of the following functions are differentiable at x=0? (Select all that apply)', options: ['f(x)=|x|', 'f(x)=x^2', 'f(x)=sin(x)', 'f(x)=x^(1/3)'], correct: [1, 2] },
+    { id: 'q1_3', type: 'descriptive', text: 'Explain the geometric meaning of the derivative of a function.', correct: null }
+  ]},
+  { id: 'q2', title: 'Data Structures Tree Operations Quiz', start: '2026-07-10T14:00', end: '2026-07-10T15:00', duration: 45, status: 'Pending', questions: [] }
+];
+
+const INITIAL_QUIZ_ATTEMPTS = [
+  { id: 'att1', quizId: 'q1', studentName: 'Rahul Student', score: null, evaluated: false, answers: { q1_1: '0', q1_2: [1, 2], q1_3: 'The derivative represents the slope of the tangent line to the curve at a given point.' }, remarks: '', allowedReattempt: false }
+];
+
+const INITIAL_FORUMS = [
+  { id: 'fg1', name: 'Physics Mechanics Discussion', members: ['Faculty John', 'Rahul Student', 'Priya Parent'], createdBy: 'Faculty John' },
+  { id: 'fg2', name: 'CS Data Structures QA Forum', members: ['Faculty John', 'Rahul Student'], createdBy: 'Faculty John' }
+];
+
+const INITIAL_MESSAGES = {
+  'fg1': [
+    { sender: 'Faculty John', senderRole: 'teacher', text: 'Hello everyone! Please post any questions about homework 1 here.', timestamp: '2026-07-03T09:00:00Z' },
+    { sender: 'Rahul Student', senderRole: 'student', text: 'I am stuck on question 4 about orbits. Any hints?', timestamp: '2026-07-03T10:15:00Z' },
+    { sender: 'Priya Parent', senderRole: 'parent', text: 'Thank you for this group. Rahul is working hard on this!', timestamp: '2026-07-04T08:00:00Z' }
+  ],
+  'fg2': [
+    { sender: 'Faculty John', senderRole: 'teacher', text: 'The BST practical due date is extended by 2 days.', timestamp: '2026-07-04T11:00:00Z' }
+  ]
+};
+
+const MOCK_ANALYTICS = {
+  quizScores: [
+    { name: 'Quiz 1', classAvg: 78, studentScore: 85 },
+    { name: 'Quiz 2', classAvg: 65, studentScore: 72 },
+    { name: 'Quiz 3', classAvg: 80, studentScore: 92 },
+    { name: 'Quiz 4', classAvg: 72, studentScore: 68 }
+  ],
+  examGrades: [
+    { name: 'Unit Test I', max: 50, avg: 38, student: 42 },
+    { name: 'Midterm', max: 100, avg: 74, student: 84 },
+    { name: 'Unit Test II', max: 50, avg: 41, student: 46 }
+  ],
+  attendance: [
+    { month: 'Jan', percent: 95 },
+    { month: 'Feb', percent: 92 },
+    { month: 'Mar', percent: 96 },
+    { month: 'Apr', percent: 89 },
+    { month: 'May', percent: 94 },
+    { month: 'Jun', percent: 98 }
+  ],
+  behavior: [
+    { week: 'W1', score: 4.5 },
+    { week: 'W2', score: 4.8 },
+    { week: 'W3', score: 4.2 },
+    { week: 'W4', score: 4.9 }
+  ]
+};
+
+// ==========================================
+// MAIN COMPONENT ENTRY POINT
+// ==========================================
+export default function LmsDashboard() {
+  const { user } = useAuth();
+  const role = user?.role || ROLES.ADMIN;
+  const location = useLocation();
+  const path = location.pathname;
+
+  // Determine activeTab based on current URL path
+  let activeTab = 'courses';
+  let pageTitle = 'Course Management';
+  let breadcrumbLabel = 'Course Management';
+
+  if (path.includes('/lms/quizzes')) {
+    activeTab = 'quizzes';
+    pageTitle = 'Online Quizzes';
+    breadcrumbLabel = 'Online Quizzes';
+  } else if (path.includes('/lms/forum')) {
+    activeTab = 'forums';
+    pageTitle = 'Discussion Forum';
+    breadcrumbLabel = 'Discussion Forum';
+  } else if (path.includes('/lms/progress')) {
+    activeTab = 'progress';
+    pageTitle = 'Progress & Analytics';
+    breadcrumbLabel = 'Progress & Analytics';
+  }
+
+  // --- Dynamic Shared State ---
+  const [courses, setCourses] = useState(INITIAL_COURSES);
+  const [assignments, setAssignments] = useState(INITIAL_ASSIGNMENTS);
+  const [submissions, setSubmissions] = useState(INITIAL_SUBMISSIONS);
+  const [quizzes, setQuizzes] = useState(INITIAL_QUIZZES);
+  const [quizAttempts, setQuizAttempts] = useState(INITIAL_QUIZ_ATTEMPTS);
+  const [forumGroups, setForumGroups] = useState(INITIAL_FORUMS);
+  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  
+  // New States
+  const [courseContents, setCourseContents] = useState(INITIAL_CONTENTS);
+  const [liveClasses, setLiveClasses] = useState(INITIAL_LIVE_CLASSES);
+
+  // --- API Integrations for Real Spring Boot Backend ---
+  useEffect(() => {
+    let active = true;
+    const fetchBackendData = async () => {
+      try {
+        // 1. Fetch Classes (Courses)
+        const classRes = await api.get('/api/v1/academics/classes');
+        const classData = classRes.data?.data || classRes.data || [];
+        if (active && classData.length > 0) {
+          setCourses(classData.map(c => ({
+            id: String(c.id),
+            name: c.className || `Class ${c.id}`
+          })));
+        }
+      } catch (err) {
+        console.warn("Could not load real classes from backend, using fallbacks.");
+      }
+
+      try {
+        // 2. Fetch Homeworks (Assignments)
+        const hwRes = await api.get('/api/v1/homework');
+        const hwData = hwRes.data?.data || hwRes.data || [];
+        if (active && hwData.length > 0) {
+          const formattedHws = hwData.map((hw) => ({
+            id: String(hw.id),
+            courseId: String(hw.classId),
+            title: hw.title || hw.description?.split('\n')[0] || `Homework Task ${hw.id}`,
+            description: hw.description || 'No description provided.',
+            dueDate: hw.submissionDate || '2026-07-20',
+            maxMarks: hw.maxMarks || 100,
+            submissionsCount: 0
+          }));
+          setAssignments(formattedHws);
+
+          // Fetch submissions for loaded homeworks
+          for (let hw of formattedHws) {
+            try {
+              const subRes = await api.get(`/api/v1/homework/submissions/${hw.id}`);
+              const subData = subRes.data?.data || subRes.data || [];
+              if (active && subData.length > 0) {
+                const formattedSubs = subData.map(sub => ({
+                  id: String(sub.id),
+                  assignmentId: String(sub.homeworkId),
+                  studentName: sub.studentId === 1 ? 'Rahul Student' : `Student ID ${sub.studentId}`,
+                  submissionText: sub.file ? `Submitted file: ${sub.file}` : 'Completed homework submission.',
+                  fileUrl: sub.file || 'homework_work.pdf',
+                  submittedAt: new Date().toISOString(),
+                  marks: sub.marks ? Number(sub.marks) : null,
+                  rubric: sub.marks ? { accuracy: sub.rubricAccuracy || 9, completeness: sub.rubricCompleteness || 9, presentation: sub.rubricPresentation || 9 } : null,
+                  feedback: sub.feedback || 'Constructive feedback published.',
+                  graded: !!sub.marks
+                }));
+
+                // Update submissions list
+                setSubmissions(prev => {
+                  const filtered = prev.filter(p => p.assignmentId !== String(hw.id));
+                  return [...filtered, ...formattedSubs];
+                });
+
+                // Update assignment submissions count
+                setAssignments(prev => prev.map(p => p.id === hw.id ? { ...p, submissionsCount: formattedSubs.length } : p));
+              }
+            } catch (err) {
+              // Ignore failure for individual task submissions
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load real homeworks from backend, using fallbacks.");
+      }
+
+      // 3. Fetch LMS Media Content (Course Resources)
+      try {
+        const mediaRes = await api.get('/api/v1/lms/media');
+        const mediaData = mediaRes.data?.data || mediaRes.data || [];
+        if (active && mediaData.length > 0) {
+          setCourseContents(mediaData.map(item => ({
+            id: String(item.id),
+            courseId: '1', // default class/course ID
+            title: item.title,
+            type: item.mediaType?.name || 'document',
+            fileName: item.title + (item.mediaType?.name === 'video' ? '.mp4' : '.pdf'),
+            uploadedAt: new Date().toLocaleDateString()
+          })));
+        }
+      } catch (err) {
+        console.warn("Could not load real media from backend, using static mock.");
+      }
+
+      // 4. Fetch LMS Live Classes
+      try {
+        const liveRes = await api.get('/api/v1/lms/live-classes');
+        const liveData = liveRes.data?.data || liveRes.data || [];
+        if (active && liveData.length > 0) {
+          setLiveClasses(liveData.map(lc => ({
+            id: String(lc.id),
+            courseId: String(lc.courseId || '1'),
+            title: lc.title,
+            dateTime: lc.dateTime || new Date().toISOString(),
+            duration: Number(lc.duration || 60),
+            status: lc.status || 'Scheduled',
+            meetingUrl: lc.meetingUrl || 'https://jitsi.sac.erp/meeting',
+            recordingUrl: lc.recordingUrl || ''
+          })));
+        }
+      } catch (err) {
+        console.warn("Could not load real live classes from backend, using static mock.");
+      }
+
+      // 5. Fetch LMS Quizzes & Questions
+      try {
+        const quizRes = await api.get('/api/v1/lms/quizzes');
+        const quizData = quizRes.data?.data || quizRes.data || [];
+        if (active && quizData.length > 0) {
+          const parsedQuizzes = [];
+          for (const q of quizData) {
+            let questions = [];
+            try {
+              const qRes = await api.get(`/api/v1/lms/quizzes/${q.id}/questions`);
+              const qData = qRes.data?.data || qRes.data || [];
+              questions = qData.map(qd => ({
+                id: String(qd.id),
+                questionText: qd.questionText,
+                questionType: qd.questionType || 'Single Choice MCQ',
+                options: qd.options ? JSON.parse(qd.options) : [],
+                correctAnswer: qd.correct ? Number(qd.correct) : 0
+              }));
+            } catch (qErr) {
+              console.warn(`Could not load questions for quiz ${q.id}`);
+            }
+
+            parsedQuizzes.push({
+              id: String(q.id),
+              title: q.title,
+              start: q.startDate || '2026-07-10T09:00',
+              end: q.endDate || '2026-07-10T10:00',
+              duration: Number(q.duration || 30),
+              status: q.status || 'Pending',
+              assignedClass: q.assignedClass || 'Class XI',
+              assignedSection: q.assignedSection || 'Physics',
+              questions: questions.length > 0 ? questions : [
+                {
+                  id: 'mock_1',
+                  questionText: 'What is the default speed of light?',
+                  questionType: 'Single Choice MCQ',
+                  options: ['299,792,458 m/s', '300,000 m/s'],
+                  correctAnswer: 0
+                }
+              ]
+            });
+          }
+          setQuizzes(parsedQuizzes);
+        }
+      } catch (err) {
+        console.warn("Could not load real quizzes from backend, using static mock.");
+      }
+
+      // 6. Fetch LMS Quiz Attempts
+      try {
+        const attemptRes = await api.get('/api/v1/lms/quizzes/attempts/student/1');
+        const attemptData = attemptRes.data?.data || attemptRes.data || [];
+        if (active && attemptData.length > 0) {
+          setQuizAttempts(attemptData.map(att => ({
+            id: String(att.id),
+            quizId: String(att.quizId),
+            studentName: 'Rahul Student',
+            score: Number(att.score || 0),
+            evaluated: att.evaluated === 1 || att.evaluated === true,
+            answers: att.answers ? JSON.parse(att.answers) : {},
+            remarks: att.remarks || 'Completed quiz.',
+            allowedReattempt: att.allowedReattempt === 1 || att.allowedReattempt === true
+          })));
+        }
+      } catch (err) {
+        console.warn("Could not load real quiz attempts from backend, using static mock.");
+      }
+
+      // 7. Fetch Discussion Forums
+      try {
+        const forumRes = await api.get('/api/v1/lms/forums');
+        const forums = forumRes.data?.data || forumRes.data || [];
+        if (active && forums.length > 0) {
+          const parsedForums = forums.map(f => ({
+            id: String(f.id),
+            name: f.name,
+            members: ['Rahul Student', 'Teacher', 'Sneha Rao'],
+            createdBy: f.createdBy || 'System'
+          }));
+          setForumGroups(parsedForums);
+
+          // Fetch posts for the first forum
+          const initialGroupId = forums[0].id;
+          try {
+            const postsRes = await api.get(`/api/v1/lms/forums/${initialGroupId}/posts`);
+            const posts = postsRes.data?.data || postsRes.data || [];
+            const mappedPosts = posts.map(p => ({
+              sender: p.senderName || 'Anonymous',
+              senderRole: p.senderRole || 'student',
+              text: p.text,
+              pinned: false
+            }));
+            setMessages(prev => ({ ...prev, [String(initialGroupId)]: mappedPosts }));
+          } catch (postErr) {
+            console.warn(`Could not load posts for forum ${initialGroupId}`);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load real discussion groups from backend, using static mock.");
+      }
+    };
+
+    fetchBackendData();
+    return () => { active = false; };
+  }, []);
+
+  return (
+    <div className="lms-dashboard-style-wrapper">
+      <style>{`
+        /* --- LMS Local UI Overrides --- */
+        .lms-dashboard-style-wrapper {
+          font-family: 'Poppins', 'Inter', sans-serif;
+        }
+
+        /* Form spacing and layout alignment */
+        .lms-dashboard-style-wrapper .form-group {
+          margin-bottom: 20px !important;
+          text-align: left !important;
+        }
+
+        /* Form Section Headers */
+        .lms-dashboard-style-wrapper h3, 
+        .lms-dashboard-style-wrapper h4, 
+        .lms-dashboard-style-wrapper .section-header {
+          text-transform: uppercase !important;
+          font-size: 13px !important;
+          font-weight: 700 !important;
+          color: #475569 !important;
+          letter-spacing: 0.8px;
+          margin-bottom: 20px;
+          border-bottom: none !important;
+          text-align: left;
+        }
+
+        /* Input fields labels */
+        .lms-dashboard-style-wrapper .form-group label {
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          color: #475569 !important;
+          letter-spacing: 0.6px;
+          margin-bottom: 8px;
+          display: inline-block;
+        }
+
+        /* Form Fields Alignment & Heights */
+        .lms-dashboard-style-wrapper input[type="text"],
+        .lms-dashboard-style-wrapper input[type="number"],
+        .lms-dashboard-style-wrapper input[type="date"],
+        .lms-dashboard-style-wrapper input[type="datetime-local"],
+        .lms-dashboard-style-wrapper input[type="email"],
+        .lms-dashboard-style-wrapper input[type="password"],
+        .lms-dashboard-style-wrapper input[type="url"],
+        .lms-dashboard-style-wrapper select,
+        .lms-dashboard-style-wrapper .form-control {
+          border-radius: 4px !important;
+          border: 1px solid #cbd5e1 !important;
+          background-color: #fff !important;
+          color: #1e293b !important;
+          padding: 8px 14px !important;
+          font-size: 13px !important;
+          font-weight: 400 !important;
+          width: 100% !important;
+          outline: none !important;
+          transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+          height: 42px !important; /* Perfect uniform height alignment */
+          box-sizing: border-box !important;
+        }
+
+        .lms-dashboard-style-wrapper select {
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          -moz-appearance: none !important;
+          background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%23475569%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E') !important;
+          background-repeat: no-repeat !important;
+          background-position: right 14px center !important;
+          background-size: 16px !important;
+          padding-right: 40px !important;
+        }
+
+        .lms-dashboard-style-wrapper textarea {
+          border-radius: 4px !important;
+          border: 1px solid #cbd5e1 !important;
+          background-color: #fff !important;
+          color: #1e293b !important;
+          padding: 10px 14px !important;
+          font-size: 13px !important;
+          font-weight: 400 !important;
+          width: 100% !important;
+          outline: none !important;
+          transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+          height: auto !important;
+          min-height: 100px !important;
+          box-sizing: border-box !important;
+        }
+
+        .lms-dashboard-style-wrapper input:focus,
+        .lms-dashboard-style-wrapper select:focus,
+        .lms-dashboard-style-wrapper textarea:focus {
+          border-color: var(--primary-color, #7c32ff) !important;
+          box-shadow: 0 0 0 2px rgba(124, 50, 255, 0.1) !important;
+        }
+
+        /* Buttons styling */
+        .lms-dashboard-style-wrapper .primary_btn {
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          background: var(--primary-color, #7c32ff) !important;
+          color: #fff !important;
+          border-radius: 4px !important;
+          padding: 10px 24px !important;
+          letter-spacing: 0.8px;
+          border: none !important;
+          cursor: pointer !important;
+          transition: all 0.15s ease !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 8px !important;
+          box-shadow: none !important;
+          height: 42px !important; /* Match uniform height alignment */
+          box-sizing: border-box !important;
+        }
+
+        .lms-dashboard-style-wrapper .primary_btn:hover {
+          background: #631ee6 !important;
+          transform: translateY(-1px);
+        }
+
+        .lms-dashboard-style-wrapper .primary_btn.btn_sm {
+          padding: 8px 16px !important;
+          height: 34px !important;
+          font-size: 10.5px !important;
+        }
+
+        .lms-dashboard-style-wrapper .btn-secondary-outline {
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          background: transparent !important;
+          color: #475569 !important;
+          border-radius: 4px !important;
+          padding: 10px 24px !important;
+          letter-spacing: 0.8px;
+          border: 1px solid #cbd5e1 !important;
+          cursor: pointer !important;
+          transition: all 0.15s ease !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 8px !important;
+          height: 42px !important; /* Match uniform height alignment */
+          box-sizing: border-box !important;
+        }
+
+        .lms-dashboard-style-wrapper .btn-secondary-outline:hover {
+          background: #f8fafc !important;
+          color: #1e293b !important;
+          border-color: #94a3b8 !important;
+        }
+
+        .lms-dashboard-style-wrapper .btn-secondary-outline.btn_sm {
+          padding: 8px 16px !important;
+          height: 34px !important;
+          font-size: 10.5px !important;
+        }
+
+        /* WhiteCard layout improvements to match screenshot */
+        .lms-dashboard-style-wrapper .white_card {
+          border-radius: 6px !important;
+          border: 1px solid #e2e8f0 !important;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+          margin-bottom: 24px !important;
+          background: #fff !important;
+        }
+
+        .lms-dashboard-style-wrapper .white_card_header {
+          padding: 20px 24px !important;
+          border-bottom: 1px solid #e2e8f0 !important;
+          background-color: #fff !important;
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+        }
+
+        .lms-dashboard-style-wrapper .white_card_header h4 {
+          font-size: 15px !important;
+          font-weight: 600 !important;
+          color: #1e293b !important;
+          margin: 0 !important;
+          text-transform: none !important;
+        }
+
+        .lms-dashboard-style-wrapper .white_card_body {
+          padding: 24px !important;
+        }
+
+        /* Professional Tables Styling & Alignment */
+        .lms-dashboard-style-wrapper table.data_table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+          margin-top: 8px !important;
+          text-align: left !important;
+        }
+
+        .lms-dashboard-style-wrapper table.data_table th {
+          background-color: #f8fafc !important;
+          color: #475569 !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.5px;
+          padding: 12px 16px !important;
+          border-bottom: 1px solid #cbd5e1 !important;
+        }
+
+        .lms-dashboard-style-wrapper table.data_table td {
+          padding: 14px 16px !important;
+          font-size: 13px !important;
+          color: #1e293b !important;
+          border-bottom: 1px solid #f1f5f9 !important;
+          vertical-align: middle !important;
+        }
+
+        .lms-dashboard-style-wrapper table.data_table tr:hover {
+          background-color: #f8fafc !important;
+        }
+      `}</style>
+      <PageHeader 
+        title={pageTitle} 
+        breadcrumbs={[{ label: 'LMS' }, { label: breadcrumbLabel }]} 
+      />
+
+      {/* Role Banner */}
+      <div className="alert alert-info mb-4" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <Info size={18} />
+        <div>
+          Logged in as <strong>{user?.name || 'Administrator'}</strong> ({role.replace(/_/g, ' ').toUpperCase()}). 
+          Your interface is dynamically customized with Role-Based Access Controls (RBAC).
+        </div>
+      </div>
+
+      <div className="row">
+        {/* Right Hand Dashboard Tab Content (Full Width) */}
+        <div className="col-12">
+          {activeTab === 'courses' && (
+            <CourseManagementTab 
+              role={role}
+              courses={courses}
+              setCourses={setCourses}
+              assignments={assignments}
+              setAssignments={setAssignments}
+              submissions={submissions}
+              setSubmissions={setSubmissions}
+              courseContents={courseContents}
+              setCourseContents={setCourseContents}
+              liveClasses={liveClasses}
+              setLiveClasses={setLiveClasses}
+            />
+          )}
+
+          {activeTab === 'quizzes' && (
+            <QuizAssessmentTab 
+              role={role}
+              quizzes={quizzes}
+              setQuizzes={setQuizzes}
+              quizAttempts={quizAttempts}
+              setQuizAttempts={setQuizAttempts}
+            />
+          )}
+
+          {activeTab === 'forums' && (
+            <DiscussionForumTab 
+              role={role}
+              userName={user?.name || 'Rahul Student'}
+              forumGroups={forumGroups}
+              setForumGroups={setForumGroups}
+              messages={messages}
+              setMessages={setMessages}
+            />
+          )}
+
+          {activeTab === 'progress' && (
+            <ProgressTrackingTab 
+              role={role}
+              submissions={submissions}
+              assignments={assignments}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// MODULE 1: COURSE MANAGEMENT TAB
+// ==========================================
+const GROUP_SUBJECTS = {
+  'Computer Science': ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'],
+  'Bio-Maths': ['Physics', 'Chemistry', 'Biology', 'Mathematics'],
+  'Commerce': ['Accountancy', 'Business Studies', 'Economics', 'Mathematics'],
+  'Computer application': ['Accountancy', 'Business Studies', 'Economics', 'English', 'Computer Applications']
+};
+
+function CourseManagementTab({ 
+  role, courses, setCourses, assignments, setAssignments, submissions, setSubmissions,
+  courseContents, setCourseContents, liveClasses, setLiveClasses
+}) {
+  const [innerTab, setInnerTab] = useState('assignments'); // 'assignments' | 'resources' | 'live'
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showGradingModal, setShowGradingModal] = useState(null); // stores active submission
+  const [showSubmitModal, setShowSubmitModal] = useState(null); // stores active assignment for student
+  const [showSubmissionsPopup, setShowSubmissionsPopup] = useState(null); // stores active assignment for submissions list popup
+  const [deleteConfirmAssignment, setDeleteConfirmAssignment] = useState(null); // stores assignment to delete
+  const [submissionSearch, setSubmissionSearch] = useState('');
+  const [submissionFilter, setSubmissionFilter] = useState('all'); // 'all' | 'submitted' | 'pending'
+  
+  // Resource/Content Upload States
+  const [showUploadForm, setShowUploadForm] = useState(false);
+  const [resTitle, setResTitle] = useState('');
+  const [resType, setResType] = useState('pdf');
+  const [resDesc, setResDesc] = useState('');
+  const [resUrl, setResUrl] = useState('lecture_resource.pdf');
+  const [resCourse, setResCourse] = useState('');
+  const [resCustomCourseName, setResCustomCourseName] = useState('');
+
+  // Media Viewer Modals
+  const [activeVideo, setActiveVideo] = useState(null);
+  const [activePdf, setActivePdf] = useState(null);
+  const [activeSlides, setActiveSlides] = useState(null);
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [pdfZoom, setPdfZoom] = useState(100);
+
+  // Live Class Scheduling States
+  const [showLiveForm, setShowLiveForm] = useState(false);
+  const [liveTitle, setLiveTitle] = useState('');
+  const [liveDate, setLiveDate] = useState('');
+  const [liveDur, setLiveDur] = useState(60);
+  const [liveUrl, setLiveUrl] = useState('https://meet.google.com/abc-defg-hij');
+  const [liveCourse, setLiveCourse] = useState('');
+  const [liveCustomCourseName, setLiveCustomCourseName] = useState('');
+
+  // Recording upload state
+  const [recordingModal, setRecordingModal] = useState(null);
+  const [recUrl, setRecUrl] = useState('https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4');
+
+  // Assignment Form State
+  const [newTitle, setNewTitle] = useState('');
+  const [newDesc, setNewDesc] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [maxMarks, setMaxMarks] = useState(100);
+
+  // Editing Assignment Mode
+  const [editingAssignmentId, setEditingAssignmentId] = useState(null);
+  
+  // Enhanced Form Fields
+  const [newSubject, setNewSubject] = useState('');
+  const [newBatch, setNewBatch] = useState('2026 Batch');
+  const [newSemester, setNewSemester] = useState('Semester 1');
+  const [portalMode, setPortalMode] = useState('College'); // 'College' or 'School'
+  const [schoolClass, setSchoolClass] = useState('Class 10');
+  const [schoolSection, setSchoolSection] = useState('');
+  const [customGroupName, setCustomGroupName] = useState('');
+  const [schoolTerm, setSchoolTerm] = useState('Term I');
+  const [schoolGradingScale, setSchoolGradingScale] = useState('Marks');
+  const [parentSignatureRequired, setParentSignatureRequired] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [passingMarks, setPassingMarks] = useState(40);
+  const [assignmentType, setAssignmentType] = useState('Written Essay');
+  const [allowedFileTypes, setAllowedFileTypes] = useState('pdf, zip, docx');
+  const [maxFileSize, setMaxFileSize] = useState(10); // MB
+  const [allowLateSub, setAllowLateSub] = useState(true);
+  const [assignmentStatus, setAssignmentStatus] = useState('Published');
+  const [attachmentsList, setAttachmentsList] = useState([]);
+  const [customCourseName, setCustomCourseName] = useState('');
+  const [customSubjectName, setCustomSubjectName] = useState('');
+
+  // Student Submit State
+  const [subText, setSubText] = useState('');
+  const [subFile, setSubFile] = useState('assignment_work.pdf');
+  const [subLink, setSubLink] = useState('https://github.com/excal/sac-lms-project');
+  const [resubmitting, setResubmitting] = useState(false);
+
+  // Faculty Grading State (Rubrics)
+  const [gradeFeedback, setGradeFeedback] = useState('');
+  const [gradeFeedbackFile, setGradeFeedbackFile] = useState('graded_feedback.pdf');
+  const [rubricAccuracy, setRubricAccuracy] = useState(10);
+  const [rubricCompleteness, setRubricCompleteness] = useState(10);
+  const [rubricPresentation, setRubricPresentation] = useState(10);
+
+  // Auto-calculated marks based on rubrics (weighted max assignment marks)
+  const calculateTotalMarks = (max) => {
+    const accuracy = Number(rubricAccuracy);
+    const completeness = Number(rubricCompleteness);
+    const presentation = Number(rubricPresentation);
+    
+    // total score out of 30, scaled to assignment maxMarks
+    const pct = (accuracy + completeness + presentation) / 30;
+    return Math.round(pct * max);
+  };
+
+  const getLetterGrade = (score, max) => {
+    const pct = (score / max) * 100;
+    if (pct >= 90) return 'A';
+    if (pct >= 80) return 'B';
+    if (pct >= 70) return 'C';
+    if (pct >= 60) return 'D';
+    return 'F';
+  };
+
+  // Handle Faculty creating or editing assignment
+  const handleAddAssignment = async (e) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+
+    const courseVal = selectedCourse === 'custom' ? customCourseName.trim() : selectedCourse;
+    const subjectVal = newSubject === 'custom' ? customSubjectName.trim() : newSubject;
+
+    if (selectedCourse === 'custom' && courseVal && !courses.some(c => c.id === courseVal)) {
+      if (setCourses) {
+        setCourses(prev => [...prev, { id: courseVal, name: courseVal }]);
+      }
+    }
+
+    const payload = {
+      id: editingAssignmentId ? Number(editingAssignmentId) : null,
+      classId: isNaN(Number(courseVal)) ? 1 : Number(courseVal),
+      sectionId: 1,
+      subjectId: 1,
+      title: newTitle.trim(),
+      description: `${newTitle.trim()}\n${newDesc.trim()}`,
+      submissionDate: dueDate || new Date().toISOString().split('T')[0],
+      maxMarks: Number(maxMarks),
+      passingMarks: Number(passingMarks),
+      assignmentType: assignmentType,
+      allowedFileTypes: allowedFileTypes,
+      maxFileSize: Number(maxFileSize),
+      allowLateSubmission: allowLateSub,
+      portalMode: portalMode,
+      schoolClass: schoolClass,
+      schoolSection: schoolSection === 'custom' ? customGroupName.trim() : schoolSection,
+      schoolTerm: schoolTerm,
+      schoolGradingScale: schoolGradingScale,
+      parentSignatureRequired: parentSignatureRequired,
+      statusId: assignmentStatus === 'Published' ? 2 : 1,
+      activeStatus: 1
+    };
+
+    try {
+      const response = await api.post('/api/v1/homework', payload);
+      const savedHw = response.data;
+      const formattedHw = {
+        id: String(savedHw.id),
+        courseId: String(savedHw.classId),
+        title: savedHw.title || newTitle.trim(),
+        description: savedHw.description || newDesc.trim(),
+        dueDate: savedHw.submissionDate || dueDate || '2026-07-30',
+        maxMarks: Number(savedHw.maxMarks || maxMarks),
+        subject: subjectVal,
+        batch: newBatch,
+        semester: newSemester,
+        startDate,
+        endDate,
+        passingMarks: Number(passingMarks),
+        assignmentType,
+        allowedFileTypes,
+        maxFileSize: Number(maxFileSize),
+        allowLateSubmission: allowLateSub ? 1 : 0,
+        status: assignmentStatus,
+        attachments: [...attachmentsList],
+        portalMode,
+        schoolClass: portalMode === 'School' ? schoolClass : null,
+        schoolSection: portalMode === 'School' ? (schoolSection === 'custom' ? customGroupName.trim() : schoolSection) : null,
+        schoolTerm: portalMode === 'School' ? schoolTerm : null,
+        schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
+        parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false,
+        submissionsCount: 0
+      };
+
+      if (editingAssignmentId) {
+        setAssignments(assignments.map(a => a.id === editingAssignmentId ? formattedHw : a));
+        setEditingAssignmentId(null);
+      } else {
+        setAssignments([formattedHw, ...assignments]);
+      }
+    } catch (err) {
+      console.warn("Could not save assignment to database", err);
+      // Fallback
+      if (editingAssignmentId) {
+        setAssignments(assignments.map(a => a.id === editingAssignmentId ? {
+          id: editingAssignmentId,
+          courseId: courseVal,
+          title: newTitle.trim(),
+          description: newDesc.trim(),
+          dueDate: dueDate || '2026-07-30',
+          maxMarks: Number(maxMarks),
+          subject: subjectVal,
+          batch: newBatch,
+          semester: newSemester,
+          startDate,
+          endDate,
+          passingMarks: Number(passingMarks),
+          assignmentType,
+          allowedFileTypes,
+          maxFileSize: Number(maxFileSize),
+          allowLateSubmission: allowLateSub ? 1 : 0,
+          status: assignmentStatus,
+          attachments: [...attachmentsList],
+          portalMode,
+          schoolClass: portalMode === 'School' ? schoolClass : null,
+          schoolSection: portalMode === 'School' ? (schoolSection === 'custom' ? customGroupName.trim() : schoolSection) : null,
+          schoolTerm: portalMode === 'School' ? schoolTerm : null,
+          schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
+          parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false,
+          submissionsCount: 0
+        } : a));
+        setEditingAssignmentId(null);
+      } else {
+        const newAssign = {
+          id: 'a' + (assignments.length + 1),
+          courseId: courseVal,
+          title: newTitle.trim(),
+          description: newDesc.trim(),
+          dueDate: dueDate || '2026-07-30',
+          maxMarks: Number(maxMarks),
+          submissionsCount: 0,
+          subject: subjectVal,
+          batch: newBatch,
+          semester: newSemester,
+          startDate,
+          endDate,
+          passingMarks: Number(passingMarks),
+          assignmentType,
+          allowedFileTypes,
+          maxFileSize: Number(maxFileSize),
+          allowLateSubmission: allowLateSub ? 1 : 0,
+          status: assignmentStatus,
+          attachments: [...attachmentsList],
+          portalMode,
+          schoolClass: portalMode === 'School' ? schoolClass : null,
+          schoolSection: portalMode === 'School' ? (schoolSection === 'custom' ? customGroupName.trim() : schoolSection) : null,
+          schoolTerm: portalMode === 'School' ? schoolTerm : null,
+          schoolGradingScale: portalMode === 'School' ? schoolGradingScale : null,
+          parentSignatureRequired: portalMode === 'School' ? parentSignatureRequired : false
+        };
+        setAssignments([newAssign, ...assignments]);
+      }
+    }
+
+    setShowAddForm(false);
+    setNewTitle('');
+    setNewDesc('');
+    setSelectedCourse('');
+    setCustomCourseName('');
+    setNewSubject('');
+    setCustomSubjectName('');
+    setNewBatch('2026 Batch');
+    setNewSemester('Semester 1');
+    setStartDate('');
+    setEndDate('');
+    setPassingMarks(40);
+    setAssignmentType('Written Essay');
+    setAllowedFileTypes('pdf, zip, docx');
+    setMaxFileSize(10);
+    setAllowLateSub(true);
+    setAssignmentStatus('Published');
+    setAttachmentsList([]);
+    setPortalMode('College');
+    setSchoolClass('Class 10');
+    setSchoolSection('');
+    setCustomGroupName('');
+    setSchoolTerm('Term I');
+    setSchoolGradingScale('Marks');
+    setParentSignatureRequired(false);
+  };
+
+  // Handle Student submitting assignment
+  const handleStudentSubmit = async (e) => {
+    e.preventDefault();
+    const assignmentId = showSubmitModal.id;
+
+    // Call real backend submit API
+    try {
+      await api.post(`/api/v1/homework/submit?homeworkId=${assignmentId}&studentId=1&file=${subFile}&submissionLink=${encodeURIComponent(subLink)}&studentNotes=${encodeURIComponent(subText)}`);
+    } catch (err) {
+      console.warn("Backend submit failed, running local simulator.", err);
+    }
+
+    // Check if duplicate submission
+    const existingIndex = submissions.findIndex(s => s.assignmentId === assignmentId && s.studentName === 'Rahul Student');
+
+    const newSub = {
+      id: existingIndex >= 0 ? submissions[existingIndex].id : 'sub' + (submissions.length + 1),
+      assignmentId,
+      studentName: 'Rahul Student',
+      submissionText: subText,
+      fileUrl: subFile,
+      submissionLink: subLink,
+      studentNotes: subText,
+      submittedAt: new Date().toISOString(),
+      marks: null,
+      rubric: null,
+      feedback: '',
+      graded: false
+    };
+
+    if (existingIndex >= 0) {
+      const updated = [...submissions];
+      updated[existingIndex] = newSub;
+      setSubmissions(updated);
+    } else {
+      setSubmissions([newSub, ...submissions]);
+      setAssignments(assignments.map(a => a.id === assignmentId ? { ...a, submissionsCount: a.submissionsCount + 1 } : a));
+    }
+
+    setShowSubmitModal(null);
+    setSubText('');
+    setSubLink('https://github.com/excal/sac-lms-project');
+    setSubFile('assignment_work.pdf');
+  };
+
+  // Handle Faculty grading submission with rubrics
+  const handleGradingSubmit = async (e) => {
+    e.preventDefault();
+    const maxVal = assignments.find(a => a.id === showGradingModal.assignmentId)?.maxMarks || 100;
+    const finalMarks = calculateTotalMarks(maxVal);
+
+    // Call real backend evaluate API
+    try {
+      await api.post(`/api/v1/homework/evaluate?homeworkId=${showGradingModal.assignmentId}&studentId=1&marks=${finalMarks}&status=C&feedbackFile=${gradeFeedbackFile}&feedback=${encodeURIComponent(gradeFeedback)}&rubricAccuracy=${rubricAccuracy}&rubricCompleteness=${rubricCompleteness}&rubricPresentation=${rubricPresentation}`);
+    } catch (err) {
+      console.warn("Backend evaluate failed, running local simulator.", err);
+    }
+    
+    setSubmissions(submissions.map(s => 
+      s.id === showGradingModal.id 
+        ? { 
+            ...s, 
+            marks: finalMarks, 
+            feedback: gradeFeedback, 
+            feedbackFile: gradeFeedbackFile,
+            graded: true,
+            rubric: {
+              accuracy: Number(rubricAccuracy),
+              completeness: Number(rubricCompleteness),
+              presentation: Number(rubricPresentation)
+            }
+          } 
+        : s
+    ));
+    
+    const assignment = assignments.find(a => a.id === showGradingModal.assignmentId);
+    setShowGradingModal(null);
+    if (assignment) {
+      setShowSubmissionsPopup(assignment);
+    }
+    setGradeFeedback('');
+    setGradeFeedbackFile('graded_feedback.pdf');
+    setRubricAccuracy(10);
+    setRubricCompleteness(10);
+    setRubricPresentation(10);
+  };
+
+  // Handle Content Upload
+  const handleUploadContent = async (e) => {
+    e.preventDefault();
+    if (!resTitle.trim()) return;
+
+    let finalCourseId = resCourse;
+    if (resCourse === 'custom') {
+      if (!resCustomCourseName.trim()) {
+        alert('Please enter a custom course name.');
+        return;
+      }
+      const newCourseId = 'c_custom_' + (courses.length + 1);
+      const newCourse = {
+        id: newCourseId,
+        name: resCustomCourseName.trim(),
+        subject: 'General',
+        class: 'Class XI'
+      };
+      setCourses([...courses, newCourse]);
+      finalCourseId = newCourseId;
+    } else if (!resCourse) {
+      alert('Please choose a course.');
+      return;
+    }
+
+    const payload = {
+      title: resTitle.trim(),
+      mediaType: {
+        id: resType === 'video' ? 1 : 2,
+        name: resType
+      },
+      status: 1,
+      isDeleted: 0
+    };
+
+    try {
+      const response = await api.post('/api/v1/lms/media', payload);
+      const savedMedia = response.data;
+      const newContent = {
+        id: String(savedMedia.id),
+        courseId: finalCourseId,
+        title: savedMedia.title || resTitle.trim(),
+        type: savedMedia.mediaType?.name || resType,
+        url: resUrl,
+        desc: resDesc.trim(),
+        fileName: resFileName || (savedMedia.title + (resType === 'video' ? '.mp4' : '.pdf')),
+        uploadedAt: new Date().toLocaleDateString()
+      };
+      setCourseContents([newContent, ...courseContents]);
+    } catch (err) {
+      console.warn("Could not save media content to backend database", err);
+      // Fallback
+      const newContent = {
+        id: 'cnt' + (courseContents.length + 1),
+        courseId: finalCourseId,
+        title: resTitle.trim(),
+        type: resType,
+        url: resUrl,
+        desc: resDesc.trim(),
+        fileName: resFileName || (resTitle.trim() + (resType === 'video' ? '.mp4' : '.pdf')),
+        uploadedAt: new Date().toLocaleDateString()
+      };
+      setCourseContents([newContent, ...courseContents]);
+    }
+
+    setShowUploadForm(false);
+    setResTitle('');
+    setResDesc('');
+    setResCourse('');
+    setResCustomCourseName('');
+  };
+
+  // Handle Live Class Scheduling
+  const handleScheduleLive = async (e) => {
+    e.preventDefault();
+    if (!liveTitle.trim()) return;
+
+    let finalCourseId = liveCourse;
+    if (liveCourse === 'custom') {
+      if (!liveCustomCourseName.trim()) {
+        alert('Please enter a custom course name.');
+        return;
+      }
+      const newCourseId = 'c_custom_' + (courses.length + 1);
+      const newCourse = {
+        id: newCourseId,
+        name: liveCustomCourseName.trim(),
+        subject: 'General',
+        class: 'Class XI'
+      };
+      setCourses([...courses, newCourse]);
+      finalCourseId = newCourseId;
+    } else if (!liveCourse) {
+      alert('Please choose a course.');
+      return;
+    }
+
+    const payload = {
+      courseId: isNaN(Number(finalCourseId)) ? 1 : Number(finalCourseId),
+      title: liveTitle.trim(),
+      dateTime: liveDate ? new Date(liveDate).toISOString() : new Date().toISOString(),
+      duration: Number(liveDur),
+      status: 'Scheduled',
+      meetingUrl: liveUrl || 'https://jitsi.sac.erp/' + encodeURIComponent(liveTitle.trim())
+    };
+
+    try {
+      const response = await api.post('/api/v1/lms/live-classes', payload);
+      const savedLive = response.data;
+      const newLive = {
+        id: String(savedLive.id),
+        courseId: String(savedLive.courseId || finalCourseId),
+        title: savedLive.title || liveTitle.trim(),
+        dateTime: savedLive.dateTime || liveDate || new Date().toISOString(),
+        duration: Number(savedLive.duration || liveDur),
+        status: savedLive.status || 'Scheduled',
+        url: savedLive.meetingUrl || liveUrl,
+        recordingUrl: savedLive.recordingUrl || ''
+      };
+      setLiveClasses([newLive, ...liveClasses]);
+    } catch (err) {
+      console.warn("Could not save live class to backend database", err);
+      // Fallback
+      const newLive = {
+        id: 'lc' + (liveClasses.length + 1),
+        courseId: finalCourseId,
+        title: liveTitle.trim(),
+        dateTime: liveDate || '2026-07-06T10:00',
+        duration: Number(liveDur),
+        status: 'Scheduled',
+        url: liveUrl,
+        recordingUrl: ''
+      };
+      setLiveClasses([newLive, ...liveClasses]);
+    }
+
+    setShowLiveForm(false);
+    setLiveTitle('');
+    setLiveCourse('');
+    setLiveCustomCourseName('');
+  };
+
+  // Handle Recording Upload
+  const handlePublishRecording = async (e) => {
+    e.preventDefault();
+
+    const updatedClass = {
+      ...recordingModal,
+      status: 'Completed',
+      recordingUrl: recUrl
+    };
+
+    setLiveClasses(liveClasses.map(lc => 
+      lc.id === recordingModal.id ? updatedClass : lc
+    ));
+
+    if (!recordingModal.id.startsWith('lc')) {
+      try {
+        const payload = {
+          id: Number(recordingModal.id),
+          courseId: Number(recordingModal.courseId || 1),
+          title: recordingModal.title,
+          dateTime: recordingModal.dateTime,
+          duration: Number(recordingModal.duration || 60),
+          status: 'Completed',
+          meetingUrl: recordingModal.meetingUrl || 'https://jitsi.sac.erp/meeting',
+          recordingUrl: recUrl
+        };
+        await api.put(`/api/v1/lms/live-classes/${recordingModal.id}`, payload);
+      } catch (err) {
+        console.warn("Could not save live class recording to database", err);
+      }
+    }
+
+    setRecordingModal(null);
+    setRecUrl('https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4');
+  };
+
+  const isTeacher = role === 'teacher' || role === 'admin';
+  const isStudent = role === 'student';
+  const isParent = role === 'parent';
+
+  return (
+    <div>
+      {/* Sub tabs in Course Management */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+        <button onClick={() => setInnerTab('assignments')} style={styles.innerTabButton(innerTab === 'assignments')}>
+          Assignments Portal
+        </button>
+        <button onClick={() => setInnerTab('resources')} style={styles.innerTabButton(innerTab === 'resources')}>
+          Learning Content (PDF, Video, Slides)
+        </button>
+        <button onClick={() => setInnerTab('live')} style={styles.innerTabButton(innerTab === 'live')}>
+          Live Classes & Recordings
+        </button>
+      </div>
+
+      {/* ==========================================
+          SUB-TAB 1: ASSIGNMENTS PORTAL
+          ========================================== */}
+      {innerTab === 'assignments' && (
+        <WhiteCard 
+          title="Assignments Portal" 
+          actions={isTeacher && (
+            <button className="primary_btn btn_sm" onClick={() => setShowAddForm(true)}>
+              <Plus size={14} /> New Assignment
+            </button>
+          )}
+        >
+          {/* Create Assignment Form */}
+          {showAddForm && (
+            <div style={{ padding: '20px', background: '#f8f8ff', border: '1px solid #e8e4ff', borderRadius: '6px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <h5 style={{ fontWeight: 600 }}>{editingAssignmentId ? 'Edit Assignment' : 'Create Assignment'}</h5>
+                <button onClick={() => { setShowAddForm(false); setEditingAssignmentId(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>×</button>
+              </div>
+              <form onSubmit={handleAddAssignment}>
+                {/* School vs College Portal Mode Toggle Selector */}
+                <div style={{ marginBottom: '16px', background: 'rgba(124,50,255,0.04)', padding: '10px 14px', borderRadius: '6px', border: '1px solid rgba(124,50,255,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-dark)' }}>Portal Mode Configuration:</span>
+                  <div className="btn-group" style={{ display: 'flex', border: '1px solid #7C32FF', borderRadius: '6px', overflow: 'hidden' }}>
+                    <button 
+                      type="button" 
+                      style={{ 
+                        padding: '9px 20px', 
+                        fontSize: '13px', 
+                        fontWeight: 500,
+                        cursor: 'pointer', 
+                        border: 'none', 
+                        background: portalMode === 'College' ? '#7C32FF' : '#fff', 
+                        color: portalMode === 'College' ? '#fff' : '#7C32FF',
+                        transition: 'all 0.2s'
+                      }}
+                      onClick={() => {
+                        setPortalMode('College');
+                        setNewSubject('');
+                      }}
+                    >
+                      🎓 College Assignment
+                    </button>
+                    <button 
+                      type="button" 
+                      style={{ 
+                        padding: '9px 20px', 
+                        fontSize: '13px', 
+                        fontWeight: 500,
+                        cursor: 'pointer', 
+                        border: 'none', 
+                        background: portalMode === 'School' ? '#7C32FF' : '#fff', 
+                        color: portalMode === 'School' ? '#fff' : '#7C32FF',
+                        transition: 'all 0.2s'
+                      }}
+                      onClick={() => {
+                        setPortalMode('School');
+                        setSchoolSection('');
+                        setNewSubject('');
+                      }}
+                    >
+                      🏫 School Assignment
+                    </button>
+                  </div>
+                </div>
+
+                {/* College Portal Fields */}
+                {portalMode === 'College' && (
+                  <>
+                    <div className="row">
+                      <div className="col-4">
+                        <FormGroup label="Course" required={true}>
+                          <select className="form-control" value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)}>
+                            <option value="">-- Choose Course --</option>
+                            {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            <option value="custom">-- Custom Course --</option>
+                          </select>
+                          {selectedCourse === 'custom' && (
+                            <input 
+                              type="text" 
+                              className="form-control mt-2" 
+                              value={customCourseName} 
+                              onChange={e => setCustomCourseName(e.target.value)} 
+                              placeholder="Enter custom course..." 
+                              required 
+                            />
+                          )}
+                        </FormGroup>
+                      </div>
+                      <div className="col-4">
+                        <FormGroup label="Subject" required={true}>
+                          <select className="form-control" value={newSubject} onChange={e => setNewSubject(e.target.value)}>
+                            <option value="">-- Choose Subject --</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Biology">Biology</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="English">English</option>
+                            <option value="History">History</option>
+                            <option value="Geography">Geography</option>
+                            <option value="custom">-- Custom Subject --</option>
+                          </select>
+                          {newSubject === 'custom' && (
+                            <input 
+                              type="text" 
+                              className="form-control mt-2" 
+                              value={customSubjectName} 
+                              onChange={e => setCustomSubjectName(e.target.value)} 
+                              placeholder="Enter custom subject..." 
+                              required 
+                            />
+                          )}
+                        </FormGroup>
+                      </div>
+                      <div className="col-4">
+                        <FormGroup label="Batch" required={true}>
+                          <select className="form-control" value={newBatch} onChange={e => setNewBatch(e.target.value)}>
+                            <option value="2026 Batch">2026 Batch</option>
+                            <option value="2027 Batch">2027 Batch</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-6">
+                        <FormGroup label="Semester" required={true}>
+                          <select className="form-control" value={newSemester} onChange={e => setNewSemester(e.target.value)}>
+                            <option value="Semester 1">Semester 1</option>
+                            <option value="Semester 2">Semester 2</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                      <div className="col-6">
+                        <FormGroup label="Assignment Type" required={true}>
+                          <select className="form-control" value={assignmentType} onChange={e => setAssignmentType(e.target.value)}>
+                            <option value="Lab Work">Lab Work</option>
+                            <option value="Written Essay">Written Essay</option>
+                            <option value="Project">Project</option>
+                            <option value="Practical Code">Practical Code</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* School Portal Fields */}
+                {portalMode === 'School' && (
+                  <>
+                    <div className="row">
+                      <div className="col-4">
+                        <FormGroup label="Class Level" required={true}>
+                          <select className="form-control" value={schoolClass} onChange={e => setSchoolClass(e.target.value)}>
+                            <option value="Class 9">Class 9</option>
+                            <option value="Class 10">Class 10</option>
+                            <option value="Class 11">Class 11</option>
+                            <option value="Class 12">Class 12</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                      <div className="col-4">
+                        <FormGroup label="Group" required={true}>
+                          <select className="form-control" value={schoolSection} onChange={e => {
+                            const newGrp = e.target.value;
+                            setSchoolSection(newGrp);
+                            setNewSubject('');
+                          }}>
+                            <option value="">-- Choose Group --</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Bio-Maths">Bio-Maths</option>
+                            <option value="Commerce">Commerce</option>
+                            <option value="Computer application">Computer application</option>
+                            <option value="custom">-- Custom Group --</option>
+                          </select>
+                          {schoolSection === 'custom' && (
+                            <input 
+                              type="text" 
+                              className="form-control mt-2" 
+                              value={customGroupName} 
+                              onChange={e => setCustomGroupName(e.target.value)} 
+                              placeholder="Enter custom group..." 
+                              required 
+                            />
+                          )}
+                        </FormGroup>
+                      </div>
+                      <div className="col-4">
+                        <FormGroup label="Subject" required={true}>
+                          <select className="form-control" value={newSubject} onChange={e => setNewSubject(e.target.value)}>
+                            <option value="">-- Choose Subject --</option>
+                            {(GROUP_SUBJECTS[schoolSection] || []).map(sub => (
+                              <option key={sub} value={sub}>{sub}</option>
+                            ))}
+                            {(schoolSection === '' || schoolSection === 'custom') && (
+                              <>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Biology">Biology</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="English">English</option>
+                                <option value="History">History</option>
+                                <option value="Geography">Geography</option>
+                                <option value="Accountancy">Accountancy</option>
+                                <option value="Business Studies">Business Studies</option>
+                                <option value="Economics">Economics</option>
+                                <option value="Computer Applications">Computer Applications</option>
+                              </>
+                            )}
+                            <option value="custom">-- Custom Subject --</option>
+                          </select>
+                          {newSubject === 'custom' && (
+                            <input 
+                              type="text" 
+                              className="form-control mt-2" 
+                              value={customSubjectName} 
+                              onChange={e => setCustomSubjectName(e.target.value)} 
+                              placeholder="Enter custom subject..." 
+                              required 
+                            />
+                          )}
+                        </FormGroup>
+                      </div>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-4">
+                        <FormGroup label="School Term" required={true}>
+                          <select className="form-control" value={schoolTerm} onChange={e => setSchoolTerm(e.target.value)}>
+                            <option value="Term I">Term I (Quarterly)</option>
+                            <option value="Term II">Term II (Half Yearly)</option>
+                            <option value="Term III">Term III (Annual)</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                      <div className="col-4">
+                        <FormGroup label="Grading Scale" required={true}>
+                          <select className="form-control" value={schoolGradingScale} onChange={e => setSchoolGradingScale(e.target.value)}>
+                            <option value="Marks">Raw Marks (0-100)</option>
+                            <option value="Grade A-F">Letter Grades (A, B, C, D, F)</option>
+                            <option value="GPA">GPA Scale (0.0 - 4.0)</option>
+                          </select>
+                        </FormGroup>
+                      </div>
+                      <div className="col-4" style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '14px' }}>
+                          <input 
+                            type="checkbox" 
+                            id="parentSigCheck" 
+                            checked={parentSignatureRequired} 
+                            onChange={e => setParentSignatureRequired(e.target.checked)} 
+                          />
+                          <label htmlFor="parentSigCheck" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-dark)', cursor: 'pointer', margin: 0 }}>
+                            ✍️ Require Parent Signature
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <FormGroup label="Assignment Title" required={true}>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      value={newTitle} 
+                      onChange={e => setNewTitle(e.target.value.slice(0, 50))} 
+                      maxLength={50}
+                      placeholder="e.g. Lab Report 2" 
+                      required 
+                      style={{ paddingRight: '120px' }}
+                    />
+                    <span style={{ 
+                      position: 'absolute', 
+                      right: '12px', 
+                      fontSize: '11px', 
+                      color: 'rgba(30, 41, 59, 0.4)', 
+                      pointerEvents: 'none',
+                      fontWeight: 500
+                    }}>
+                      {newTitle.length}/50 characters
+                    </span>
+                  </div>
+                </FormGroup>
+
+                <FormGroup label="Description (Rich Text Editor Helper)">
+                  <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                    <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', fontWeight: 700 }} onClick={() => setNewDesc(p => p + ' **Bold Text**')}>B</button>
+                    <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', fontStyle: 'italic' }} onClick={() => setNewDesc(p => p + ' *Italic Text*')}>I</button>
+                    <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', textDecoration: 'underline' }} onClick={() => setNewDesc(p => p + ' <u>Underline</u>')}>U</button>
+                    <span style={{ fontSize: '11px', color: '#999', alignSelf: 'center', marginLeft: 'auto' }}>Standard WYSIWYG format options</span>
+                  </div>
+                  <textarea className="form-control" rows={3} value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Provide detailed description..." />
+                </FormGroup>
+
+                <div className="row">
+                  <div className="col-6">
+                    <FormGroup label="Start Date">
+                      <input type="date" className="form-control" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                    </FormGroup>
+                  </div>
+                  <div className="col-6">
+                    <FormGroup label="Due / End Date" required={true}>
+                      <input type="date" className="form-control" value={dueDate} onChange={e => setDueDate(e.target.value)} required />
+                    </FormGroup>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-4">
+                    <FormGroup label="Total Marks" required={true}>
+                      <input type="number" className="form-control" value={maxMarks} onChange={e => setMaxMarks(e.target.value)} required min={1} />
+                    </FormGroup>
+                  </div>
+                  <div className="col-4">
+                    <FormGroup label="Passing Marks" required={true}>
+                      <input type="number" className="form-control" value={passingMarks} onChange={e => setPassingMarks(e.target.value)} required min={1} />
+                    </FormGroup>
+                  </div>
+                  <div className="col-4">
+                    <FormGroup label="Max File Size (MB)" required={true}>
+                      <input type="number" className="form-control" value={maxFileSize} onChange={e => setMaxFileSize(e.target.value)} required min={1} />
+                    </FormGroup>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-6">
+                    <FormGroup label="Allowed File Types" required={true}>
+                      <input type="text" className="form-control" value={allowedFileTypes} onChange={e => setAllowedFileTypes(e.target.value)} placeholder="e.g. pdf, zip, docx" required />
+                    </FormGroup>
+                  </div>
+                  <div className="col-6">
+                    <FormGroup label="Status" required={true}>
+                      <select className="form-control" value={assignmentStatus} onChange={e => setAssignmentStatus(e.target.value)}>
+                        <option value="Draft">Draft</option>
+                        <option value="Published">Published</option>
+                        <option value="Closed">Closed</option>
+                        <option value="Archived">Archived</option>
+                      </select>
+                    </FormGroup>
+                  </div>
+                </div>
+
+                <div style={{ margin: '14px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input type="checkbox" id="allowLate" checked={allowLateSub} onChange={e => setAllowLateSub(e.target.checked)} />
+                  <label htmlFor="allowLate" style={{ fontSize: '13px', cursor: 'pointer', margin: 0 }}>Allow Late Submission</label>
+                </div>
+
+                {/* Upload attachments simulator */}
+                <div style={{ background: '#fff', border: '1px solid #e1e1f5', borderRadius: '4px', padding: '14px', marginBottom: '16px' }}>
+                  <h6 style={{ fontWeight: 600, fontSize: '12px', marginBottom: '8px' }}>Upload Reference Attachments:</h6>
+                  
+                  {/* Hidden Real File Input */}
+                  <input 
+                    type="file" 
+                    id="real-attachment-file" 
+                    style={{ display: 'none' }} 
+                    multiple
+                    onChange={e => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length > 0) {
+                        const newNames = files.map(f => f.name);
+                        setAttachmentsList([...attachmentsList, ...newNames]);
+                      }
+                      e.target.value = '';
+                    }}
+                  />
+
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                    <button 
+                      type="button" 
+                      className="btn-secondary-outline btn_sm" 
+                      onClick={() => {
+                        const fileInput = document.getElementById('real-attachment-file');
+                        if (fileInput) {
+                          fileInput.setAttribute('accept', '.pdf');
+                          fileInput.click();
+                        }
+                      }}
+                    >
+                      📎 Attach PDF
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn-secondary-outline btn_sm" 
+                      onClick={() => {
+                        const fileInput = document.getElementById('real-attachment-file');
+                        if (fileInput) {
+                          fileInput.setAttribute('accept', '.zip');
+                          fileInput.click();
+                        }
+                      }}
+                    >
+                      📦 Attach ZIP
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn-secondary-outline btn_sm" 
+                      onClick={() => {
+                        const url = window.prompt("Enter Reference URL:");
+                        if (url && url.trim() !== '') {
+                          let formattedUrl = url.trim();
+                          if (!/^https?:\/\//i.test(formattedUrl)) {
+                            formattedUrl = 'https://' + formattedUrl;
+                          }
+                          setAttachmentsList([...attachmentsList, formattedUrl]);
+                        }
+                      }}
+                    >
+                      🔗 Attach URL
+                    </button>
+                  </div>
+                  {attachmentsList.length > 0 && (
+                    <div style={{ fontSize: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {attachmentsList.map((file, i) => (
+                        <span key={i} style={{ background: '#f0efff', color: '#7C32FF', padding: '2px 8px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          {file} <span style={{ cursor: 'pointer', fontWeight: 'bold' }} onClick={() => setAttachmentsList(attachmentsList.filter((_, idx) => idx !== i))}>×</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                  <button type="button" className="btn-secondary-outline" onClick={() => { setShowAddForm(false); setEditingAssignmentId(null); }}>Cancel</button>
+                  <button type="submit" className="primary_btn">{editingAssignmentId ? 'Save Edits' : 'Publish Assignment'}</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Assignment list */}
+          <div>
+            {assignments.map(a => {
+              const course = courses.find(c => c.id === a.courseId);
+              const mySub = submissions.find(s => s.assignmentId === a.id && s.studentName === 'Rahul Student');
+              const allSubs = submissions.filter(s => s.assignmentId === a.id);
+              
+              return (
+                <div key={a.id} className="white_card" style={{ border: '1px solid var(--border-color)', boxShadow: 'none', marginBottom: '16px' }}>
+                  <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                    <div>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {a.portalMode === 'School' ? (
+                          <>
+                            <Badge type="info">{a.schoolClass || 'Class 10'}</Badge>
+                            <Badge type="purple">{a.subject || 'Physics'}</Badge>
+                            <Badge type="warning">{a.schoolSection || 'Computer Science'} ({a.schoolTerm || 'Term I'})</Badge>
+                          </>
+                        ) : (
+                          <>
+                            <Badge type="info">{course ? course.name : 'General'}</Badge>
+                            <Badge type="purple">{a.subject || 'Physics'}</Badge>
+                            <Badge type="warning">{a.semester || 'Semester 1'} ({a.batch || '2026 Batch'})</Badge>
+                          </>
+                        )}
+                        <Badge type={a.status === 'Published' ? 'success' : a.status === 'Archived' ? 'danger' : 'secondary'}>{a.status || 'Published'}</Badge>
+                      </div>
+                      <h4 style={{ fontSize: '15px', fontWeight: 600, marginTop: '8px', color: 'var(--text-dark)' }}>{a.title}</h4>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '12.5px', marginTop: '4px', whiteSpace: 'pre-line' }}>{a.description}</p>
+                      
+                      <div style={{ display: 'flex', gap: '16px', marginTop: '10px', fontSize: '12px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+                        <span><Clock size={12} style={{ marginRight: '4px', verticalAlign: 'middle' }} /> Due: <strong>{a.dueDate}</strong></span>
+                        <span>Max Marks: <strong>{a.maxMarks}</strong></span>
+                        <span>Type: <strong>{a.assignmentType || 'Written Essay'}</strong></span>
+                        <span>Allowed Types: <strong>{a.allowedFileTypes || 'pdf, zip, docx'}</strong></span>
+                      </div>
+
+                      {/* Reference Attachments Listing */}
+                      {a.attachments && a.attachments.length > 0 && (
+                        <div style={{ marginTop: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '12px', color: '#666' }}>Reference files:</span>
+                          {a.attachments.map((file, i) => (
+                            <a href={`#download-${file}`} key={i} style={{ fontSize: '12px', color: 'var(--primary-color)', textDecoration: 'none', background: '#f5f5fc', padding: '2px 8px', borderRadius: '4px' }}>
+                              📎 {file}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Faculty Action Controls */}
+                      {isTeacher && (
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                          <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => {
+                            setEditingAssignmentId(a.id);
+                            
+                            // Handle Custom Course
+                            const courseExists = courses.some(c => c.id === a.courseId);
+                            if (a.courseId && !courseExists) {
+                              setSelectedCourse('custom');
+                              setCustomCourseName(a.courseId);
+                            } else {
+                              setSelectedCourse(a.courseId || '');
+                              setCustomCourseName('');
+                            }
+                            
+                            // Handle Custom Subject
+                            const standardSubjects = [
+                              'Physics', 'Chemistry', 'Biology', 'Computer Science', 'Mathematics', 'English', 'History', 'Geography',
+                              'Accountancy', 'Business Studies', 'Economics', 'Computer Applications'
+                            ];
+                            if (a.subject && !standardSubjects.includes(a.subject)) {
+                              setNewSubject('custom');
+                              setCustomSubjectName(a.subject);
+                            } else {
+                              setNewSubject(a.subject || '');
+                              setCustomSubjectName('');
+                            }
+
+                            setNewTitle(a.title);
+                            setNewDesc(a.description);
+                            setDueDate(a.dueDate);
+                            setMaxMarks(a.maxMarks);
+                            setNewBatch(a.batch || '2026 Batch');
+                            setNewSemester(a.semester || 'Semester 1');
+                            setStartDate(a.startDate || '');
+                            setEndDate(a.endDate || '');
+                            setPassingMarks(a.passingMarks || 40);
+                            setAssignmentType(a.assignmentType || 'Written Essay');
+                            setAllowedFileTypes(a.allowedFileTypes || 'pdf, zip, docx');
+                            setMaxFileSize(a.maxFileSize || 10);
+                            setAllowLateSub(a.allowLateSubmission !== 0);
+                            setAssignmentStatus(a.status || 'Published');
+                            setAttachmentsList(a.attachments || []);
+                            
+                            setPortalMode(a.portalMode || 'College');
+                            if (a.portalMode === 'School') {
+                              setSchoolClass(a.schoolClass || 'Class 10');
+                              
+                              const standardGroups = ['Computer Science', 'Bio-Maths', 'Commerce', 'Computer application'];
+                              if (a.schoolSection && !standardGroups.includes(a.schoolSection)) {
+                                setSchoolSection('custom');
+                                setCustomGroupName(a.schoolSection);
+                              } else {
+                                setSchoolSection(a.schoolSection || 'Computer Science');
+                                setCustomGroupName('');
+                              }
+                              
+                              setSchoolTerm(a.schoolTerm || 'Term I');
+                              setSchoolGradingScale(a.schoolGradingScale || 'Marks');
+                              setParentSignatureRequired(!!a.parentSignatureRequired);
+                            }
+                            
+                            setShowAddForm(true);
+                          }}>Edit</button>
+                          <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', color: 'var(--danger)' }} onClick={() => {
+                            setDeleteConfirmAssignment(a);
+                          }}>Delete</button>
+                          <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => {
+                            const dup = {
+                              ...a,
+                              id: 'a' + (assignments.length + 1),
+                              title: a.title + ' (Copy)',
+                              submissionsCount: 0
+                            };
+                            setAssignments([dup, ...assignments]);
+                          }}>Duplicate</button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {/* Faculty Grading panel */}
+                      {isTeacher && (
+                        <>
+                          <Badge type={a.submissionsCount > 0 ? 'success' : 'warning'}>
+                            {a.submissionsCount} Submissions
+                          </Badge>
+                          <button 
+                            className="btn-secondary-outline btn_sm" 
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', padding: '6px 12px', marginTop: '6px' }}
+                            onClick={() => { setShowSubmissionsPopup(a); }}
+                          >
+                            <FileText size={12} /> Review Submissions
+                          </button>
+                        </>
+                      )}
+
+                      {/* Student view */}
+                      {isStudent && (
+                        <>
+                          {mySub ? (
+                            <>
+                              <Badge type={mySub.graded ? 'success' : 'info'}>
+                                {mySub.graded ? `Graded: ${mySub.marks} / ${a.maxMarks}` : 'Submitted (Pending Review)'}
+                              </Badge>
+                              {new Date(a.dueDate) > new Date() && (
+                                <button className="btn-secondary-outline btn_sm" onClick={() => { setShowSubmitModal(a); setSubText(mySub.submissionText); }}>
+                                  Edit Submission
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <Badge type="danger">Not Submitted</Badge>
+                              <button className="primary_btn btn_sm" onClick={() => setShowSubmitModal(a)}>
+                                <UploadCloud size={12} /> Upload Work
+                              </button>
+                            </>
+                          )}
+                        </>
+                      )}
+
+                      {/* Parent view */}
+                      {isParent && (
+                        <>
+                          {mySub ? (
+                            <Badge type={mySub.graded ? 'success' : 'info'}>
+                              {mySub.graded ? `Rahul's Grade: ${mySub.marks} / ${a.maxMarks}` : 'Submitted (Pending Review)'}
+                            </Badge>
+                          ) : (
+                            <Badge type="danger">Rahul Not Submitted</Badge>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Gradings & Detailed Rubrics Card */}
+                  {mySub && (
+                    <div style={{ background: '#f8f9fa', borderTop: '1px solid #eee', padding: '14px 16px', fontSize: '12.5px' }}>
+                      <div style={{ marginBottom: '8px' }}>
+                        <strong>My Submitted Work:</strong> "{mySub.submissionText}"
+                        {mySub.fileUrl && (
+                          <div style={{ marginTop: '4px' }}>
+                            Attached File: <a href={`#file-${mySub.fileUrl}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{mySub.fileUrl}</a>
+                          </div>
+                        )}
+                        {mySub.submissionLink && (
+                          <div style={{ marginTop: '4px' }}>
+                            Submission URL: <a href={mySub.submissionLink} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{mySub.submissionLink}</a>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {mySub.graded && (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '10px', borderTop: '1px dashed #ddd', paddingTop: '10px', marginTop: '10px' }}>
+                            <div>
+                              <strong>Evaluated Grade:</strong> 
+                              <span className="badge badge-purple" style={{ marginLeft: '6px', fontSize: '12px' }}>
+                                Grade {getLetterGrade(mySub.marks, a.maxMarks)}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                              Feedback published by Faculty
+                            </div>
+                          </div>
+
+                          {mySub.rubric && (
+                            <div style={{ display: 'flex', gap: '20px', margin: '10px 0', padding: '10px', background: '#fff', borderRadius: '4px', border: '1px solid #eef' }}>
+                              <div>Accuracy: <strong style={{ color: 'var(--primary-color)' }}>{mySub.rubric.accuracy}/10</strong></div>
+                              <div>Completeness: <strong style={{ color: 'var(--primary-color)' }}>{mySub.rubric.completeness}/10</strong></div>
+                              <div>Presentation: <strong style={{ color: 'var(--primary-color)' }}>{mySub.rubric.presentation}/10</strong></div>
+                            </div>
+                          )}
+
+                          <div style={{ marginTop: '6px' }}>
+                            <strong>Remarks & Feedback:</strong> <span style={{ color: 'var(--text-muted)' }}>"{mySub.feedback}"</span>
+                          </div>
+
+                          {mySub.feedbackFile && (
+                            <div style={{ marginTop: '6px' }}>
+                              <strong>Grading Feedback File:</strong> <a href={`#feedback-file-${mySub.feedbackFile}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{mySub.feedbackFile}</a>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </WhiteCard>
+      )}
+
+      {/* ==========================================
+          SUB-TAB 2: LEARNING CONTENT & RESOURCES
+          ========================================== */}
+      {innerTab === 'resources' && (
+        <WhiteCard
+          title="Course Resources & Materials"
+          actions={isTeacher && (
+            <button className="primary_btn btn_sm" onClick={() => setShowUploadForm(true)}>
+              <UploadCloud size={14} /> Upload Content
+            </button>
+          )}
+        >
+          {/* Faculty Resource Upload Form */}
+          {showUploadForm && (
+            <div style={{ padding: '16px', background: '#f8f8ff', border: '1px solid #e8e4ff', borderRadius: '6px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <h5 style={{ fontWeight: 600 }}>Upload Content File</h5>
+                <button onClick={() => setShowUploadForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>×</button>
+              </div>
+              <form onSubmit={handleUploadContent}>
+                <FormGroup label="Course" required={true}>
+                  <select className="form-control" value={resCourse} onChange={e => setResCourse(e.target.value)}>
+                    <option value="">choose course</option>
+                    {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    <option value="custom">custom course</option>
+                  </select>
+                </FormGroup>
+                {resCourse === 'custom' && (
+                  <FormGroup label="Custom Course Name" required={true}>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      value={resCustomCourseName} 
+                      onChange={e => setResCustomCourseName(e.target.value)} 
+                      placeholder="Enter custom course..." 
+                      required 
+                    />
+                  </FormGroup>
+                )}
+                <FormGroup label="Resource Title" required={true}>
+                  <input type="text" className="form-control" value={resTitle} onChange={e => setResTitle(e.target.value)} placeholder="e.g. Chapter 3 Vector Fields Slides" required />
+                </FormGroup>
+                <FormGroup label="Content Type" required={true}>
+                  <select className="form-control" value={resType} onChange={e => setResType(e.target.value)}>
+                    <option value="pdf">PDF Document / Handout</option>
+                    <option value="video">Lecture Video (MP4)</option>
+                    <option value="slides">PowerPoint / Presentation Slides</option>
+                  </select>
+                </FormGroup>
+                <FormGroup label="Description">
+                  <textarea className="form-control" rows={2} value={resDesc} onChange={e => setResDesc(e.target.value)} placeholder="What should students focus on?" />
+                </FormGroup>
+                <FormGroup label="Attach Resource File" required={true}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                    <input 
+                      type="file" 
+                      id="resource-file-upload" 
+                      style={{ display: 'none' }} 
+                      onChange={e => {
+                        if (e.target.files && e.target.files[0]) {
+                          setResUrl(e.target.files[0].name);
+                        }
+                      }} 
+                    />
+                    <label 
+                      htmlFor="resource-file-upload" 
+                      className="btn-secondary-outline btn_sm" 
+                      style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', margin: 0, padding: '6px 12px' }}
+                    >
+                      📁 Browse & Attach Resource File
+                    </label>
+                  </div>
+                  <input type="text" className="form-control" value={resUrl} onChange={e => setResUrl(e.target.value)} placeholder="No file attached" required />
+                </FormGroup>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                  <button type="button" className="btn-secondary-outline" onClick={() => setShowUploadForm(false)}>Cancel</button>
+                  <button type="submit" className="primary_btn">Upload Resource</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Resources listing */}
+          <div className="row">
+            {courseContents.map(cnt => {
+              const course = courses.find(c => c.id === cnt.courseId);
+              return (
+                <div key={cnt.id} className="col-6 mb-3">
+                  <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', padding: '16px', background: '#fff', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Badge type="purple">{course ? course.name : 'General'}</Badge>
+                        {cnt.type === 'video' && <Video size={16} className="text-muted" />}
+                        {cnt.type === 'pdf' && <FileText size={16} className="text-muted" />}
+                        {cnt.type === 'slides' && <Presentation size={16} className="text-muted" />}
+                      </div>
+                      <h5 style={{ fontWeight: 600, fontSize: '13.5px', marginTop: '10px', color: 'var(--text-dark)' }}>{cnt.title}</h5>
+                      <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px', minHeight: '34px' }}>{cnt.desc}</p>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '14px', borderTop: '1px solid #f0f0f0', paddingTop: '10px' }}>
+                      <button 
+                        className="primary_btn btn_sm" 
+                        style={{ flex: 1, justifyContent: 'center' }}
+                        onClick={() => {
+                          if (cnt.type === 'video') setActiveVideo(cnt);
+                          if (cnt.type === 'pdf') setActivePdf(cnt);
+                          if (cnt.type === 'slides') setActiveSlides(cnt);
+                        }}
+                      >
+                        <Eye size={12} /> View Material
+                      </button>
+                      
+                      {isTeacher && (
+                        <button 
+                          className="btn-secondary-outline btn_sm" 
+                          onClick={async () => {
+                            if (!window.confirm("Are you sure you want to delete this resource?")) return;
+                            if (!cnt.id.startsWith('cnt')) {
+                              try {
+                                await api.delete(`/api/v1/lms/media/${cnt.id}`);
+                              } catch (err) {
+                                console.warn("Could not delete learning resource from database", err);
+                              }
+                            }
+                            setCourseContents(courseContents.filter(x => x.id !== cnt.id));
+                          }}
+                          style={{ color: 'var(--danger)' }}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </WhiteCard>
+      )}
+
+      {/* ==========================================
+          SUB-TAB 3: LIVE CLASSES & RECORDINGS
+          ========================================== */}
+      {innerTab === 'live' && (
+        <WhiteCard
+          title="Live Virtual Classes Schedule"
+          actions={isTeacher && (
+            <button className="primary_btn btn_sm" onClick={() => setShowLiveForm(true)}>
+              <Video size={14} /> Schedule Live Class
+            </button>
+          )}
+        >
+          {/* Live class schedule form */}
+          {showLiveForm && (
+            <div style={{ padding: '16px', background: '#f8f8ff', border: '1px solid #e8e4ff', borderRadius: '6px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <h5 style={{ fontWeight: 600 }}>Schedule Live Class Room</h5>
+                <button onClick={() => setShowLiveForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>×</button>
+              </div>
+              <form onSubmit={handleScheduleLive}>
+                <FormGroup label="Course" required={true}>
+                  <select className="form-control" value={liveCourse} onChange={e => setLiveCourse(e.target.value)}>
+                    <option value="">choose course</option>
+                    {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    <option value="custom">custom course</option>
+                  </select>
+                </FormGroup>
+                {liveCourse === 'custom' && (
+                  <FormGroup label="Custom Course Name" required={true}>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      value={liveCustomCourseName} 
+                      onChange={e => setLiveCustomCourseName(e.target.value)} 
+                      placeholder="Enter custom course..." 
+                      required 
+                    />
+                  </FormGroup>
+                )}
+                <FormGroup label="Lecture Title" required={true}>
+                  <input type="text" className="form-control" value={liveTitle} onChange={e => setLiveTitle(e.target.value)} placeholder="e.g. Weekly Doubts Clearing Seminar" required />
+                </FormGroup>
+                <div className="row">
+                  <div className="col-6">
+                    <FormGroup label="Date & Start Time" required={true}>
+                      <input type="datetime-local" className="form-control" value={liveDate} onChange={e => setLiveDate(e.target.value)} required />
+                    </FormGroup>
+                  </div>
+                  <div className="col-6">
+                    <FormGroup label="Duration (Mins)" required={true}>
+                      <input type="number" className="form-control" value={liveDur} onChange={e => setLiveDur(e.target.value)} required />
+                      {liveDur && (
+                        <div style={{ fontSize: '11px', color: '#7C32FF', marginTop: '4px', fontWeight: 600 }}>
+                          ⏱️ {formatDurationToHours(liveDur)}
+                        </div>
+                      )}
+                    </FormGroup>
+                  </div>
+                </div>
+                <FormGroup label="Virtual Room URL" required={true}>
+                  <input type="url" className="form-control" value={liveUrl} onChange={e => setLiveUrl(e.target.value)} required />
+                </FormGroup>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                  <button type="button" className="btn-secondary-outline" onClick={() => setShowLiveForm(false)}>Cancel</button>
+                  <button type="submit" className="primary_btn">Schedule Room</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Classes Listing */}
+          <div>
+            <h5 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '14px', borderBottom: '1px solid #f0f0f0', paddingBottom: '8px' }}>Upcoming Live Classes</h5>
+            {liveClasses.filter(c => c.status === 'Scheduled').map(lc => {
+              const course = courses.find(c => c.id === lc.courseId);
+              return (
+                <div key={lc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px', border: '1px solid var(--border-color)', borderRadius: '6px', marginBottom: '12px', background: '#fcfcff' }}>
+                  <div>
+                    <Badge type="info">{course ? course.name : 'General'}</Badge>
+                    <h5 style={{ fontWeight: 600, fontSize: '13.5px', marginTop: '6px' }}>{lc.title}</h5>
+                    <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      <span>Date/Time: <strong>{new Date(lc.dateTime).toLocaleString()}</strong></span>
+                      <span>Duration: <strong>{lc.duration} Mins</strong></span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <a href={lc.url} target="_blank" rel="noreferrer" className="primary_btn btn_sm" style={{ textDecoration: 'none' }}>
+                      <ExternalLink size={12} style={{ marginRight: '4px' }} /> Join Lecture Room
+                    </a>
+                    {isTeacher && (
+                      <button className="btn-secondary-outline btn_sm" onClick={() => setRecordingModal(lc)}>
+                        Record / Complete
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            <h5 style={{ fontWeight: 600, fontSize: '13px', marginTop: '24px', marginBottom: '14px', borderBottom: '1px solid #f0f0f0', paddingBottom: '8px' }}>Past Classes & Recordings</h5>
+            {liveClasses.filter(c => c.status === 'Completed').map(lc => {
+              const course = courses.find(c => c.id === lc.courseId);
+              return (
+                <div key={lc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px', border: '1px solid var(--border-color)', borderRadius: '6px', marginBottom: '12px', background: '#fff' }}>
+                  <div>
+                    <Badge type="success">Completed</Badge>
+                    <h5 style={{ fontWeight: 600, fontSize: '13.5px', marginTop: '6px' }}>{lc.title}</h5>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      Conducted on: <strong>{new Date(lc.dateTime).toLocaleString()}</strong>
+                    </div>
+                  </div>
+
+                  <div>
+                    {lc.recordingUrl ? (
+                      <button 
+                        className="primary_btn btn_sm" 
+                        onClick={() => setActiveVideo({ title: `${lc.title} - Recording`, url: lc.recordingUrl })}
+                      >
+                        <Play size={12} style={{ marginRight: '4px' }} /> Watch Video Recording
+                      </button>
+                    ) : (
+                      <Badge type="warning">No Recording Available</Badge>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </WhiteCard>
+      )}
+
+      {/* ==========================================
+          MODALS & OVERLAY MEDIA VIEWERS
+          ========================================== */}
+
+      {/* 1. Video Player Modal */}
+      {activeVideo && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '750px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 20px', background: '#fafafa', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h5 style={{ fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}><Video size={16} /> {activeVideo.title}</h5>
+              <button onClick={() => setActiveVideo(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}><X size={18} /></button>
+            </div>
+            <div style={{ padding: '10px', background: '#000', display: 'flex', justifyContent: 'center' }}>
+              {/* HTML5 Video Player */}
+              <video controls style={{ width: '100%', maxHeight: '420px' }}>
+                <source src={activeVideo.url} type="video/mp4" />
+                Your browser does not support HTML5 video tag.
+              </video>
+            </div>
+            <div style={{ padding: '16px 20px', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: '#999' }}>Simulated Video Stream Player</span>
+              <button className="btn-secondary-outline btn_sm" onClick={() => setActiveVideo(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. PDF Handout Reader Modal */}
+      {activePdf && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '700px', height: '90vh', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column' }}>
+            {/* Header */}
+            <div style={{ padding: '14px 20px', background: '#fafafa', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h5 style={{ fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}><FileText size={16} /> {activePdf.title}</h5>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <button onClick={() => setPdfZoom(z => Math.max(z - 10, 50))} style={{ padding: '2px', background: 'none', border: 'none', cursor: 'pointer' }}><ZoomOut size={16} /></button>
+                <span style={{ fontSize: '11.5px', color: '#666' }}>{pdfZoom}%</span>
+                <button onClick={() => setPdfZoom(z => Math.min(z + 10, 150))} style={{ padding: '2px', background: 'none', border: 'none', cursor: 'pointer' }}><ZoomIn size={16} /></button>
+              </div>
+              <button onClick={() => setActivePdf(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}><X size={18} /></button>
+            </div>
+            
+            {/* Page body */}
+            <div style={{ flex: 1, background: '#525659', overflow: 'auto', padding: '20px', display: 'flex', justifyContent: 'center' }}>
+              <div style={{
+                background: '#fff',
+                width: '100%',
+                maxWidth: '560px',
+                minHeight: '680px',
+                padding: '40px',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                transform: `scale(${pdfZoom / 100})`,
+                transformOrigin: 'top center',
+                transition: 'transform 0.15s ease',
+                fontFamily: 'serif',
+                fontSize: '14px',
+                lineHeight: '1.6'
+              }}>
+                <h3 style={{ textAlign: 'center', borderBottom: '1px solid #eee', paddingBottom: '15px' }}>{activePdf.title}</h3>
+                <h6 style={{ textAlign: 'center', color: '#777', fontStyle: 'italic', marginBottom: '30px' }}>LMS Handout Series & Notes</h6>
+                <p><strong>Section 1: Foundations and Derivatives</strong></p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum congue neque, at dictum justo semper a. In id urna vitae ligula pellentesque porta. Proin lobortis lorem vel nunc rhoncus condimentum.</p>
+                <p>Pellentesque hendrerit elit eget ante dictum, vel elementum eros efficitur. Integer nec erat eros. Sed varius tortor vitae congue tempus. Proin a feugiat lectus. Ut sed tempor nisl, vitae cursus purus.</p>
+                <p>Duis sed finibus purus. Donec ut diam in eros laoreet porttitor ac vel sem. Sed ultrices ante non tellus sodales tempor. Ut rhoncus tortor sit amet quam consequat luctus.</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: '14px 20px', background: '#fafafa', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: '#888' }}>Page 1 of 5 (Simulated PDF Reader)</span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="btn-secondary-outline btn_sm"><Download size={12} /> Download PDF</button>
+                <button className="btn-secondary-outline btn_sm" onClick={() => setActivePdf(null)}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Slides Viewer Modal */}
+      {activeSlides && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '720px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 20px', background: '#fafafa', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h5 style={{ fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}><Presentation size={16} /> Lecture Slide Deck</h5>
+              <button onClick={() => setActiveSlides(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}><X size={18} /></button>
+            </div>
+            
+            {/* Slide Area */}
+            <div style={{ padding: '40px 20px', background: '#1e1e1e', color: '#fff', display: 'flex', justifyContent: 'center', minHeight: '360px' }}>
+              <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid #444', padding: '24px', background: '#2d2d2d', borderRadius: '4px' }}>
+                {slideIndex === 0 && (
+                  <div>
+                    <h3 style={{ borderBottom: '1px solid #555', paddingBottom: '12px', color: 'var(--primary-color)' }}>{activeSlides.title}</h3>
+                    <p style={{ marginTop: '20px', fontSize: '15px' }}>Introduction and Concept Formulations</p>
+                    <p style={{ color: '#aaa', fontSize: '12.5px' }}>• Scope of the module<br />• Key theorems<br />• Basic practical cases</p>
+                  </div>
+                )}
+                {slideIndex === 1 && (
+                  <div>
+                    <h3 style={{ borderBottom: '1px solid #555', paddingBottom: '12px' }}>Methodology Overview</h3>
+                    <p style={{ marginTop: '20px', fontSize: '14px' }}>How to solve balanced tree traversals:</p>
+                    <p style={{ color: '#aaa', fontSize: '12.5px' }}>1. Left node traversing<br />2. Right node evaluation<br />3. Node rotation constraints</p>
+                  </div>
+                )}
+                {slideIndex === 2 && (
+                  <div>
+                    <h3 style={{ borderBottom: '1px solid #555', paddingBottom: '12px' }}>Exercises & Next Steps</h3>
+                    <p style={{ marginTop: '20px', fontSize: '14px' }}>For the homework submission:</p>
+                    <p style={{ color: '#aaa', fontSize: '12.5px' }}>• Complete tree node counts exercise<br />• Submit the index.js before due date</p>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '30px', borderTop: '1px solid #444', paddingTop: '14px', fontSize: '11px', color: '#aaa' }}>
+                  <span>Slide {slideIndex + 1} of 3</span>
+                  <span>TIS ERP LMS</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ padding: '14px 20px', background: '#fafafa', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="btn-secondary-outline btn_sm" disabled={slideIndex === 0} onClick={() => setSlideIndex(s => s - 1)}><ChevronLeft size={12} /> Prev Slide</button>
+                <button className="btn-secondary-outline btn_sm" disabled={slideIndex === 2} onClick={() => setSlideIndex(s => s + 1)}>Next Slide <ChevronRight size={12} /></button>
+              </div>
+              <button className="btn-secondary-outline btn_sm" onClick={() => setActiveSlides(null)}>Close Presentation</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Live Class Record Completion Modal */}
+      {recordingModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '460px', padding: '24px' }}>
+            <h5 style={{ fontWeight: 600, marginBottom: '14px' }}>Publish Lecture Recording</h5>
+            <p style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>
+              Complete and upload lecture recording for: <strong>{recordingModal.title}</strong>
+            </p>
+            <form onSubmit={handlePublishRecording}>
+              <FormGroup label="Simulated Recording URL" required={true}>
+                <input type="text" className="form-control" value={recUrl} onChange={e => setRecUrl(e.target.value)} required />
+              </FormGroup>
+              <div style={{ display: 'flex', justify: 'flex-end', gap: '10px', marginTop: '16px' }}>
+                <button type="button" className="btn-secondary-outline" onClick={() => setRecordingModal(null)}>Cancel</button>
+                <button type="submit" className="primary_btn">Complete & Publish</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Faculty Grading Modal (With Advanced Rubrics) */}
+      {showGradingModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '540px', padding: '24px' }}>
+            <h5 style={{ fontWeight: 600, marginBottom: '14px' }}>Grade Submission: Rubrics Evaluator</h5>
+            <div style={{ background: '#f8f9fa', padding: '12px', borderRadius: '4px', marginBottom: '16px', fontSize: '12.5px' }}>
+              <div><strong>Student:</strong> {showGradingModal.studentName}</div>
+              <div><strong>Submitted Comment:</strong> "{showGradingModal.submissionText}"</div>
+              {showGradingModal.fileUrl && (
+                <div><strong>Attached File:</strong> <a href={`#file-${showGradingModal.fileUrl}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{showGradingModal.fileUrl}</a></div>
+              )}
+              {showGradingModal.submissionLink && (
+                <div><strong>Submission URL:</strong> <a href={showGradingModal.submissionLink} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{showGradingModal.submissionLink}</a></div>
+              )}
+            </div>
+            
+            <form onSubmit={handleGradingSubmit}>
+              <div style={{ padding: '14px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '16px', background: '#fafaff' }}>
+                <h6 style={{ fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--primary-color)', marginBottom: '12px' }}>
+                  Rubric Assessment Criteria (Scores: 1-10)
+                </h6>
+                
+                <div className="row">
+                  <div className="col-4">
+                    <FormGroup label="Accuracy">
+                      <input type="number" className="form-control" min={0} max={10} value={rubricAccuracy} onChange={e => setRubricAccuracy(e.target.value)} required />
+                    </FormGroup>
+                  </div>
+                  <div className="col-4">
+                    <FormGroup label="Completeness">
+                      <input type="number" className="form-control" min={0} max={10} value={rubricCompleteness} onChange={e => setRubricCompleteness(e.target.value)} required />
+                    </FormGroup>
+                  </div>
+                  <div className="col-4">
+                    <FormGroup label="Presentation">
+                      <input type="number" className="form-control" min={0} max={10} value={rubricPresentation} onChange={e => setRubricPresentation(e.target.value)} required />
+                    </FormGroup>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px dashed #ccc', paddingTop: '10px', marginTop: '10px', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <strong>Weighted Final Score:</strong> 
+                  <span className="badge badge-purple" style={{ fontSize: '12px' }}>
+                    {calculateTotalMarks(assignments.find(a => a.id === showGradingModal.assignmentId)?.maxMarks || 100)} / {assignments.find(a => a.id === showGradingModal.assignmentId)?.maxMarks || 100}
+                  </span>
+                </div>
+              </div>
+
+              <FormGroup label="Remarks / Constructive Feedback" required={true}>
+                <textarea className="form-control" rows={3} value={gradeFeedback} onChange={e => setGradeFeedback(e.target.value)} placeholder="e.g. Nicely formatted vectors..." required />
+              </FormGroup>
+
+              <FormGroup label="Feedback Attachment File" required={true}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px' }}>
+                  <input 
+                    type="file" 
+                    id="feedback-file-upload" 
+                    style={{ display: 'none' }} 
+                    onChange={e => {
+                      if (e.target.files && e.target.files[0]) {
+                        setGradeFeedbackFile(e.target.files[0].name);
+                      }
+                    }} 
+                  />
+                  <label 
+                    htmlFor="feedback-file-upload" 
+                    className="btn-secondary-outline btn_sm" 
+                    style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', margin: 0, padding: '6px 12px' }}
+                  >
+                    📁 Browse & Attach Feedback File
+                  </label>
+                </div>
+                <input type="text" className="form-control" value={gradeFeedbackFile} onChange={e => setGradeFeedbackFile(e.target.value)} placeholder="No file attached" required />
+              </FormGroup>
+
+              <div style={{ display: 'flex', justify: 'flex-end', gap: '10px', marginTop: '16px' }}>
+                <button type="button" className="btn-secondary-outline" onClick={() => {
+                  const assignment = assignments.find(a => a.id === showGradingModal.assignmentId);
+                  setShowGradingModal(null);
+                  if (assignment) {
+                    setShowSubmissionsPopup(assignment);
+                  }
+                }}>Cancel</button>
+                <button type="submit" className="primary_btn">Submit Grading</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Submissions List Popup Modal */}
+      {showSubmissionsPopup && (() => {
+        // Enrolled students list
+        const enrolledStudents = [
+          { id: 1, name: 'Rahul Student' },
+          { id: 2, name: 'Sneha Rao' },
+          { id: 3, name: 'Arjun Singh' }
+        ];
+
+        // Map students to submissions
+        const studentSubmissionList = enrolledStudents.map(student => {
+          const sub = submissions.find(s => s.assignmentId === showSubmissionsPopup.id && s.studentName === student.name);
+          return {
+            studentName: student.name,
+            submission: sub,
+            submitted: !!sub
+          };
+        });
+
+        // Filter student list by search and status
+        const filteredList = studentSubmissionList.filter(item => {
+          const matchesSearch = item.studentName.toLowerCase().includes(submissionSearch.toLowerCase());
+          const matchesFilter = submissionFilter === 'all' 
+            ? true 
+            : submissionFilter === 'submitted' 
+              ? item.submitted 
+              : !item.submitted;
+          return matchesSearch && matchesFilter;
+        });
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9998 }}>
+            <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '640px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
+              <h5 style={{ fontWeight: 600, marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Submissions for: {showSubmissionsPopup.title}</span>
+                <button 
+                  type="button" 
+                  className="btn-secondary-outline btn_sm"
+                  onClick={() => {
+                    setShowSubmissionsPopup(null);
+                    setSubmissionSearch('');
+                    setSubmissionFilter('all');
+                  }}
+                >
+                  Close
+                </button>
+              </h5>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                Below is the list of student submissions. You can open their attachments and grade their work.
+              </p>
+
+              {/* Search and Filter Row */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="🔍 Search student name..." 
+                    value={submissionSearch} 
+                    onChange={e => setSubmissionSearch(e.target.value)} 
+                  />
+                </div>
+                <div style={{ width: '180px' }}>
+                  <select 
+                    className="form-control" 
+                    value={submissionFilter} 
+                    onChange={e => setSubmissionFilter(e.target.value)}
+                  >
+                    <option value="all">Show All Students</option>
+                    <option value="submitted">Submitted Only</option>
+                    <option value="pending">Not Submitted Only</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {filteredList.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px', border: '1px dashed #ccc', borderRadius: '6px' }}>
+                    No matching students or submissions found.
+                  </div>
+                ) : (
+                  filteredList.map(item => {
+                    const s = item.submission;
+                    return (
+                      <div key={item.studentName} style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '6px', background: item.submitted ? '#fcfcfc' : '#fcf8f8', opacity: item.submitted ? 1 : 0.8 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong style={{ fontSize: '13.5px' }}>{item.studentName}</strong>
+                          <span className={`badge ${item.submitted ? (s.graded ? 'badge-success' : 'badge-warning') : 'badge-danger'}`} style={{ fontSize: '11px' }}>
+                            {item.submitted ? (s.graded ? `Graded: ${s.marks}/${showSubmissionsPopup.maxMarks}` : 'Pending Grade') : 'Not Submitted'}
+                          </span>
+                        </div>
+                        
+                        <div style={{ fontSize: '12.5px', color: '#444', marginTop: '8px' }}>
+                          <strong>Submitted Notes:</strong> "{item.submitted ? (s.submissionText || s.studentNotes || 'No notes provided') : 'No work submitted yet.'}"
+                        </div>
+
+                        {item.submitted && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', borderTop: '1px solid #eee', paddingTop: '8px', marginTop: '8px' }}>
+                            <div style={{ display: 'flex', gap: '14px', fontSize: '12px' }}>
+                              {s.fileUrl && (
+                                <div>
+                                  📁 Document: <a href={`#file-${s.fileUrl}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline', fontWeight: 600 }}>{s.fileUrl}</a>
+                                </div>
+                              )}
+                              {s.submissionLink && (
+                                <div>
+                                  🔗 Link: <a href={s.submissionLink} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline', fontWeight: 600 }}>GitHub/Drive Link</a>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <button 
+                              className="primary_btn btn_sm" 
+                              style={{ padding: '4px 10px', fontSize: '11px' }}
+                              onClick={() => {
+                                setShowGradingModal(s);
+                                setShowSubmissionsPopup(null);
+                              }}
+                            >
+                              {s.graded ? 'Edit Grade / Review' : 'Grade Submission'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmAssignment && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '400px', padding: '24px', textAlign: 'center' }}>
+            <h5 style={{ fontWeight: 600, marginBottom: '14px', color: 'var(--danger)' }}>Confirm Deletion</h5>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+              Are you sure you want to delete the assignment <strong>"{deleteConfirmAssignment.title}"</strong>? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+              <button type="button" className="btn-secondary-outline" onClick={() => setDeleteConfirmAssignment(null)}>Cancel</button>
+              <button 
+                type="button" 
+                className="primary_btn" 
+                style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}
+                onClick={async () => {
+                  if (!deleteConfirmAssignment.id.startsWith('hw')) {
+                    try {
+                      await api.delete(`/api/v1/homework/${deleteConfirmAssignment.id}`);
+                    } catch (err) {
+                      console.warn("Could not delete assignment task from database", err);
+                    }
+                  }
+                  setAssignments(assignments.filter(x => x.id !== deleteConfirmAssignment.id));
+                  setDeleteConfirmAssignment(null);
+                }}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Student Submit Modal */}
+      {showSubmitModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '500px', padding: '24px' }}>
+            <h5 style={{ fontWeight: 600, marginBottom: '14px' }}>Upload Assignment Work</h5>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+              Submitting for: <strong>{showSubmitModal.title}</strong><br />
+              Allowed Types: <strong style={{ color: 'var(--primary-color)' }}>{showSubmitModal.allowedFileTypes || 'pdf, zip, docx'}</strong> (Max Size: {showSubmitModal.maxFileSize || 10} MB)
+            </p>
+            <form onSubmit={handleStudentSubmit}>
+              <FormGroup label="Submission Text / Comments" required={true}>
+                <textarea className="form-control" rows={4} value={subText} onChange={e => setSubText(e.target.value)} placeholder="Type comments or description..." required />
+              </FormGroup>
+              <FormGroup label="Submission URL / Link (e.g. GitHub, Drive)">
+                <input type="text" className="form-control" value={subLink} onChange={e => setSubLink(e.target.value)} placeholder="https://github.com/..." />
+              </FormGroup>
+              <FormGroup label="Attached Work File" required={true}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px' }}>
+                  <input 
+                    type="file" 
+                    id="student-work-upload" 
+                    style={{ display: 'none' }} 
+                    onChange={e => {
+                      if (e.target.files && e.target.files[0]) {
+                        setSubFile(e.target.files[0].name);
+                      }
+                    }} 
+                  />
+                  <label 
+                    htmlFor="student-work-upload" 
+                    className="btn-secondary-outline btn_sm" 
+                    style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', margin: 0, padding: '6px 12px' }}
+                  >
+                    📁 Browse & Attach Submission File
+                  </label>
+                </div>
+                <input type="text" className="form-control" value={subFile} onChange={e => setSubFile(e.target.value)} placeholder="No file attached" required />
+              </FormGroup>
+              <div style={{ display: 'flex', justify: 'flex-end', gap: '10px', marginTop: '16px' }}>
+                <button type="button" className="btn-secondary-outline" onClick={() => setShowSubmitModal(null)}>Cancel</button>
+                <button type="submit" className="primary_btn">Submit Work</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
+// MODULE 2: QUIZ & ASSESSMENT TAB
+// ==========================================
+function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAttempts }) {
+  const [activeQuizBuilder, setActiveQuizBuilder] = useState(false);
+  const [activeQuizAttempt, setActiveQuizAttempt] = useState(null); // stores active quiz object
+  const [activeEvaluation, setActiveEvaluation] = useState(null); // stores active submission attempt
+
+  // Live Quiz State
+  const [currentQIndex, setCurrentQIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState({}); // { questionId: val }
+  const [quizTimer, setQuizTimer] = useState(0);
+  const [markedForReview, setMarkedForReview] = useState([]); // array of question indices
+
+  // Quiz Builder State
+  const [quizTitle, setQuizTitle] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [durationHours, setDurationHours] = useState(0);
+  const [durationMinutes, setDurationMinutes] = useState(30);
+  const [quizClass, setQuizClass] = useState('');
+  const [quizSection, setQuizSection] = useState('');
+  const [questions, setQuestions] = useState([]);
+  
+  // Question Builder states
+  const [qText, setQText] = useState('');
+  const [qType, setQType] = useState('mcq-single');
+  const [qOptions, setQOptions] = useState(['', '', '', '']);
+  const [qCorrect, setQCorrect] = useState(0);
+  const [qImageUrl, setQImageUrl] = useState('');
+  const [showQBank, setShowQBank] = useState(false);
+  const [selectedAttemptReport, setSelectedAttemptReport] = useState(null);
+  const [docxParsing, setDocxParsing] = useState(false);
+  const [docxSuccess, setDocxSuccess] = useState(false);
+
+  // Question Bank Mock Repository
+  const QUESTION_BANK_REPO = [
+    { id: 'qb1', type: 'mcq-single', text: 'What is the velocity of light in a vacuum?', options: ['3 x 10^8 m/s', '3 x 10^6 m/s', '1.5 x 10^8 m/s', '3 x 10^10 m/s'], correct: 0 },
+    { id: 'qb2', type: 'mcq-single', text: 'Which data structure follows the Last-In-First-Out (LIFO) principle?', options: ['Queue', 'Linked List', 'Stack', 'Tree'], correct: 2 },
+    { id: 'qb3', type: 'mcq-multiple', text: 'Select all prime numbers from the list below:', options: ['2', '4', '9', '11'], correct: [0, 3] },
+    { id: 'qb4', type: 'descriptive', text: 'Explain the difference between a process and a thread.', correct: null }
+  ];
+
+  // AI Question Generator States
+  const [showAiGenerator, setShowAiGenerator] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiFile, setAiFile] = useState('');
+  const [aiUploadedFile, setAiUploadedFile] = useState(null);
+  const [aiUploadedFileName, setAiUploadedFileName] = useState('');
+  const [aiCount, setAiCount] = useState(5);
+  const [aiDifficulty, setAiDifficulty] = useState('medium');
+  const [aiTopicInput, setAiTopicInput] = useState('');
+  const [aiBloomLevelInput, setAiBloomLevelInput] = useState('Understand');
+  const [aiQTypeInput, setAiQTypeInput] = useState('mcq-single');
+  const [generatedQuestions, setGeneratedQuestions] = useState([]);
+  const [aiHistoryLogs, setAiHistoryLogs] = useState([]);
+
+  // Timer interval reference
+  const intervalRef = useRef(null);
+
+  // AI Generation handler
+  const handleAiGenerate = async (e) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+    if (!aiUploadedFile && !aiUploadedFileName) {
+      alert("Please upload a source document file first.");
+      return;
+    }
+    if (!aiTopicInput.trim()) {
+      alert("Please enter a topic name.");
+      return;
+    }
+    setAiGenerating(true);
+    setTimeout(async () => {
+      const topic = aiTopicInput.trim() || "General Concepts";
+      const difficulty = aiDifficulty || "medium";
+      const bloomLevel = aiBloomLevelInput || "Understand";
+      const qType = aiQTypeInput || "mcq-single";
+      
+      let generated = [];
+      
+      for (let i = 0; i < aiCount; i++) {
+        const qNum = i + 1;
+        let qText = '';
+        let options = [];
+        let correct = 0;
+        let explanation = `This question evaluates the student's ability to ${bloomLevel.toLowerCase()} the principles of "${topic}" at a ${difficulty} difficulty level.`;
+        
+        if (qType === 'mcq-single') {
+          const templates = [
+            `Which of the following is a primary characteristic of ${topic} under standard conditions?`,
+            `What is the main limitation encountered when analyzing ${topic} at a ${difficulty} level?`,
+            `How does a change in boundary variables affect the overall behavior of ${topic}?`,
+            `Which method is most recommended to ${bloomLevel.toLowerCase()} the performance of ${topic}?`,
+            `What is the standard mathematical representation for the base rate of ${topic}?`,
+            `Which of the following plays the most critical role in the stabilization of ${topic}?`,
+            `What is the expected outcome if the primary constant of ${topic} is doubled?`,
+            `Which scientific theory provides the underlying framework for ${topic}?`
+          ];
+          qText = templates[i % templates.length];
+          options = [
+            `Standard equilibrium state of ${topic}`,
+            `Transient variable fluctuations`,
+            `External force field interference`,
+            `Non-linear threshold limit`
+          ];
+          correct = (i + 1) % 4;
+        } else if (qType === 'mcq-multi') {
+          const templates = [
+            `Identify all valid assertions regarding the behavior of ${topic} under standard conditions (Choose all that apply):`,
+            `Which of the following factors directly influence the state variables of ${topic}?`,
+            `Select all recommended practices when evaluating the metrics of ${topic}:`,
+            `Which components are essential to construct a valid model of ${topic}?`
+          ];
+          qText = templates[i % templates.length];
+          options = [
+            `It behaves linearly in ideal conditions`,
+            `It converges to stable equilibrium`,
+            `It remains unaffected by thermal noise`,
+            `It requires continuous validation`
+          ];
+          correct = [0, 1];
+        } else if (qType === 'true-false') {
+          const templates = [
+            `True or False: The basic principles governing ${topic} remain constant under all standard conditions.`,
+            `True or False: Analyzing the metrics of ${topic} does not require specialized calibration.`,
+            `True or False: Higher difficulty levels of ${topic} introduce non-linear variables.`,
+            `True or False: The effect of ${topic} is negligible at macroscopic scales.`
+          ];
+          qText = templates[i % templates.length];
+          options = ["True", "False"];
+          correct = i % 2;
+        } else if (qType === 'fill-blank') {
+          const templates = [
+            `In standard experimental studies, the behavior of ${topic} is represented by the __________ equation.`,
+            `The study of ${topic} requires a clear understanding of the __________ coefficient.`,
+            `When applying ${bloomLevel.toLowerCase()} levels of analysis, the principal variable in ${topic} is __________.`
+          ];
+          qText = templates[i % templates.length];
+          options = ["Linear", "Differential", "Quadratic", "Empirical"];
+          correct = (i + 2) % 4;
+        } else {
+          // descriptive
+          const templates = [
+            `Provide a comprehensive overview of ${topic}, discussing its fundamental principles and practical applications.`,
+            `Detail how one would ${bloomLevel.toLowerCase()} the performance metrics of ${topic} at a ${difficulty} difficulty tier.`,
+            `Analyze the main challenges associated with stabilizing ${topic} in real-world deployments.`,
+            `Describe a standard laboratory experiment to measure the rate of change of ${topic}.`
+          ];
+          qText = templates[i % templates.length];
+          options = [];
+          correct = "";
+        }
+        
+        generated.push({
+          id: `ai_${Date.now()}_${qNum}`,
+          type: qType,
+          text: qText,
+          options,
+          correct,
+          explanation,
+          difficulty,
+          bloomLevel,
+          topic,
+          suggestedMarks: qType === 'descriptive' ? 5 : 2,
+          selected: true
+        });
+      }
+
+      setGeneratedQuestions(generated);
+
+      // Call Backend REST API to log AI generation request
+      try {
+        const backendPayload = generated.map(q => ({
+          questionText: q.text,
+          correctAnswer: q.options && q.options[q.correct] ? String(q.options[q.correct]) : String(q.correct),
+          explanation: q.explanation || '',
+          difficulty: q.difficulty || aiDifficulty,
+          topic: q.topic || aiTopicInput,
+          bloomLevel: q.bloomLevel || aiBloomLevelInput,
+          suggestedMarks: q.suggestedMarks || 2
+        }));
+        await api.post(`/api/v1/lms/ai/generate?subject=Physics&topic=${aiTopicInput}&difficulty=${aiDifficulty}&bloomLevel=${aiBloomLevelInput}&questionType=${aiQTypeInput}`, backendPayload);
+      } catch (err) {
+        console.warn("Backend AI log failed, using local simulation.");
+      }
+
+      // Add to local history list
+      setAiHistoryLogs([
+        {
+          id: Date.now(),
+          subject: 'Physics',
+          topic: aiTopicInput,
+          difficulty: aiDifficulty,
+          bloomLevel: aiBloomLevelInput,
+          questionType: aiQTypeInput,
+          count: generated.length,
+          createdAt: new Date().toISOString()
+        },
+        ...aiHistoryLogs
+      ]);
+
+      setAiGenerating(false);
+    }, 2000);
+  };
+
+  const handleAddAiQuestions = () => {
+    const selected = generatedQuestions.filter(q => q.selected);
+    if (selected.length === 0) {
+      alert("Please select at least one question to add.");
+      return;
+    }
+    const formatted = selected.map(({ selected, ...rest }) => rest);
+    setQuestions([...questions, ...formatted]);
+    setGeneratedQuestions([]);
+    setShowAiGenerator(false);
+    setAiFile('');
+  };
+
+  // Start attempt timer
+  useEffect(() => {
+    if (activeQuizAttempt) {
+      setQuizTimer(activeQuizAttempt.duration * 60);
+      intervalRef.current = setInterval(() => {
+        setQuizTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(intervalRef.current);
+            // Auto submit
+            handleAutoSubmit();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [activeQuizAttempt]);
+
+  const handleAutoSubmit = () => {
+    alert("Time limit reached! Your quiz answers are automatically submitted.");
+    submitQuizAnswers();
+  };
+
+  const submitQuizAnswers = async () => {
+    const payload = {
+      quiz: { id: Number(activeQuizAttempt.id) },
+      studentId: 2, // Rahul Student (user_id 2 in users table)
+      score: 100, // standard complete score
+      evaluated: 1,
+      remarks: 'Well done on completing the quiz within the time limit!',
+      answers: JSON.stringify(selectedAnswers),
+      allowedReattempt: 0
+    };
+
+    try {
+      await api.post('/api/v1/lms/quizzes/attempts', payload);
+    } catch (err) {
+      console.warn("Could not save quiz attempt to backend database", err);
+    }
+
+    const newAttempt = {
+      id: 'att' + (quizAttempts.length + 1),
+      quizId: activeQuizAttempt.id,
+      studentName: 'Rahul Student',
+      score: 100,
+      evaluated: true,
+      answers: selectedAnswers,
+      remarks: 'Well done on completing the quiz within the time limit!',
+      allowedReattempt: false,
+      quizQuestions: activeQuizAttempt.questions
+    };
+
+    setQuizAttempts([...quizAttempts, newAttempt]);
+    setActiveQuizAttempt(null);
+    setSelectedAnswers({});
+    setMarkedForReview([]);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
+
+  const handleAddQuestion = () => {
+    if (!qText.trim()) return;
+    const newQ = {
+      id: 'q_' + Date.now(),
+      type: qType,
+      text: qText.trim(),
+      options: qType.startsWith('mcq') ? [...qOptions] : [],
+      correct: qType === 'mcq-single' ? Number(qCorrect) : qCorrect,
+      imageUrl: qImageUrl.trim() || null
+    };
+    setQuestions([...questions, newQ]);
+    setQText('');
+    setQImageUrl('');
+    setQOptions(['', '', '', '']);
+  };
+
+  const handleSaveQuiz = async (e) => {
+    e.preventDefault();
+    if (!quizTitle.trim()) return;
+    if (!quizClass) {
+      alert("Please select a class for the quiz.");
+      return;
+    }
+    if (!quizSection) {
+      alert("Please select a section for the quiz.");
+      return;
+    }
+    const totalDuration = (Number(durationHours) * 60) + Number(durationMinutes);
+    if (totalDuration <= 0) {
+      alert("Please specify a quiz duration greater than 0 minutes.");
+      return;
+    }
+
+    const payload = {
+      title: quizTitle.trim(),
+      startDate: startDate ? new Date(startDate).toISOString() : new Date().toISOString(),
+      endDate: endDate ? new Date(endDate).toISOString() : new Date(Date.now() + 2*24*60*60*1000).toISOString(),
+      duration: totalDuration,
+      status: 'Pending',
+      assignedClass: quizClass,
+      assignedSection: quizSection
+    };
+
+    try {
+      const response = await api.post('/api/v1/lms/quizzes', payload);
+      const savedQuiz = response.data;
+      
+      const savedQuestions = [];
+      for (let q of questions) {
+        try {
+          const qPayload = {
+            questionText: q.text,
+            questionType: q.type,
+            options: JSON.stringify(q.options),
+            correct: String(q.correct),
+            imageUrl: q.imageUrl
+          };
+          const qResponse = await api.post(`/api/v1/lms/quizzes/${savedQuiz.id}/questions`, qPayload);
+          const savedQ = qResponse.data;
+          savedQuestions.push({
+            id: String(savedQ.id),
+            questionText: savedQ.questionText,
+            questionType: savedQ.questionType,
+            options: savedQ.options ? JSON.parse(savedQ.options) : [],
+            correctAnswer: savedQ.correct ? Number(savedQ.correct) : 0
+          });
+        } catch (qErr) {
+          console.warn("Could not save quiz question to backend", qErr);
+        }
+      }
+
+      const formattedQuiz = {
+        id: String(savedQuiz.id),
+        title: savedQuiz.title,
+        start: savedQuiz.startDate || startDate || '2026-07-10T09:00',
+        end: savedQuiz.endDate || endDate || '2026-07-10T10:00',
+        duration: Number(savedQuiz.duration || totalDuration),
+        status: savedQuiz.status || 'Pending',
+        assignedClass: savedQuiz.assignedClass || quizClass,
+        assignedSection: savedQuiz.assignedSection || quizSection,
+        questions: savedQuestions.length > 0 ? savedQuestions : questions
+      };
+      setQuizzes([...quizzes, formattedQuiz]);
+    } catch (err) {
+      console.warn("Could not save quiz to backend database", err);
+      // Fallback
+      const newQuiz = {
+        id: 'q' + (quizzes.length + 1),
+        title: quizTitle.trim(),
+        start: startDate || '2026-07-10T09:00',
+        end: endDate || '2026-07-10T10:00',
+        duration: totalDuration,
+        status: 'Pending',
+        questions,
+        assignedClass: quizClass,
+        assignedSection: quizSection
+      };
+      setQuizzes([...quizzes, newQuiz]);
+    }
+
+    setActiveQuizBuilder(false);
+    setQuizTitle('');
+    setStartDate('');
+    setEndDate('');
+    setDurationHours(0);
+    setDurationMinutes(30);
+    setQuizClass('');
+    setQuizSection('');
+    setQuestions([]);
+  };
+
+  const handleReattemptAllow = (attemptId) => {
+    setQuizAttempts(quizAttempts.map(att => 
+      att.id === attemptId 
+        ? { ...att, allowedReattempt: true } 
+        : att
+    ));
+    alert("Re-attempt permission granted for the student.");
+  };
+
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const isTeacher = role === 'teacher' || role === 'admin';
+  const isStudent = role === 'student';
+  const isParent = role === 'parent';
+
+  return (
+    <WhiteCard 
+      title="Online Quizzes & Assessments"
+      actions={isTeacher && (
+        <button className="primary_btn btn_sm" onClick={() => setActiveQuizBuilder(true)}>
+          <Plus size={14} /> Create Quiz
+        </button>
+      )}
+    >
+      {/* Active Quiz Attempt Panel */}
+      {activeQuizAttempt && (
+        <div style={{ border: '2px solid var(--primary-color)', padding: '24px', borderRadius: '8px', background: '#fff', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '16px' }}>
+            <h4 style={{ fontWeight: 600, fontSize: '16px' }}>{activeQuizAttempt.title}</h4>
+            <div style={{ color: 'var(--danger)', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Clock size={16} /> Timer: {formatTime(quizTimer)}
+            </div>
+          </div>
+
+          {/* Navigation Panel */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px', background: '#f8f9fa', padding: '12px', borderRadius: '4px' }}>
+            {activeQuizAttempt.questions.map((q, i) => {
+              const isAnswered = selectedAnswers[q.id] !== undefined;
+              const isMarked = markedForReview.includes(i);
+              let btnClass = 'btn-secondary-outline';
+              if (currentQIndex === i) btnClass = 'primary_btn';
+              else if (isMarked) btnClass = 'btn-warning';
+              else if (isAnswered) btnClass = 'btn-success';
+
+              return (
+                <button 
+                  key={q.id} 
+                  className={btnClass} 
+                  style={{ width: '36px', height: '36px', padding: 0, borderRadius: '4px', fontSize: '13px' }}
+                  onClick={() => setCurrentQIndex(i)}
+                >
+                  {i + 1}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Question Render */}
+          {activeQuizAttempt.questions[currentQIndex] && (
+            <div style={{ marginBottom: '24px' }}>
+              <h5 style={{ fontWeight: 600, fontSize: '14.5px', marginBottom: '14px' }}>
+                Question {currentQIndex + 1}: {activeQuizAttempt.questions[currentQIndex].text}
+              </h5>
+
+              {/* Image based question support */}
+              {activeQuizAttempt.questions[currentQIndex].imageUrl && (
+                <div style={{ marginBottom: '14px', borderRadius: '4px', overflow: 'hidden', border: '1px solid #eee', maxWidth: '300px' }}>
+                  <img 
+                    src={activeQuizAttempt.questions[currentQIndex].imageUrl} 
+                    alt="Question illustration" 
+                    style={{ width: '100%', height: 'auto', display: 'block' }} 
+                  />
+                </div>
+              )}
+
+              {/* Single MCQ */}
+              {activeQuizAttempt.questions[currentQIndex].type === 'mcq-single' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {activeQuizAttempt.questions[currentQIndex].options.map((opt, oi) => (
+                    <label key={oi} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer' }}>
+                      <input 
+                        type="radio" 
+                        name={`q_${activeQuizAttempt.questions[currentQIndex].id}`}
+                        checked={selectedAnswers[activeQuizAttempt.questions[currentQIndex].id] === String(oi)}
+                        onChange={() => setSelectedAnswers({ ...selectedAnswers, [activeQuizAttempt.questions[currentQIndex].id]: String(oi) })}
+                      />
+                      {opt}
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {/* Multi MCQ */}
+              {activeQuizAttempt.questions[currentQIndex].type === 'mcq-multiple' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {activeQuizAttempt.questions[currentQIndex].options.map((opt, oi) => {
+                    const currentAns = selectedAnswers[activeQuizAttempt.questions[currentQIndex].id] || [];
+                    const isChecked = currentAns.includes(oi);
+                    return (
+                      <label key={oi} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isChecked}
+                          onChange={() => {
+                            let nextAns;
+                            if (isChecked) {
+                              nextAns = currentAns.filter(x => x !== oi);
+                            } else {
+                              nextAns = [...currentAns, oi];
+                            }
+                            setSelectedAnswers({ ...selectedAnswers, [activeQuizAttempt.questions[currentQIndex].id]: nextAns });
+                          }}
+                        />
+                        {opt}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Descriptive */}
+              {activeQuizAttempt.questions[currentQIndex].type === 'descriptive' && (
+                <textarea 
+                  className="form-control" 
+                  rows={4} 
+                  placeholder="Type your descriptive answer..."
+                  value={selectedAnswers[activeQuizAttempt.questions[currentQIndex].id] || ''}
+                  onChange={e => setSelectedAnswers({ ...selectedAnswers, [activeQuizAttempt.questions[currentQIndex].id]: e.target.value })}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Action Row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                type="button" 
+                className="btn-secondary-outline"
+                disabled={currentQIndex === 0}
+                onClick={() => setCurrentQIndex(prev => prev - 1)}
+              >
+                Previous
+              </button>
+              <button 
+                type="button" 
+                className="btn-secondary-outline"
+                disabled={currentQIndex === activeQuizAttempt.questions.length - 1}
+                onClick={() => setCurrentQIndex(prev => prev + 1)}
+              >
+                Next
+              </button>
+            </div>
+            
+            <button 
+              type="button" 
+              className="btn-warning"
+              onClick={() => {
+                if (markedForReview.includes(currentQIndex)) {
+                  setMarkedForReview(markedForReview.filter(x => x !== currentQIndex));
+                } else {
+                  setMarkedForReview([...markedForReview, currentQIndex]);
+                }
+              }}
+            >
+              {markedForReview.includes(currentQIndex) ? 'Unmark Review' : 'Mark for Review'}
+            </button>
+
+            <button 
+              type="button" 
+              className="primary_btn" 
+              onClick={submitQuizAnswers}
+            >
+              Submit Quiz
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Quiz Builder Panel */}
+      {activeQuizBuilder && (
+        <div style={{ background: '#f8f8ff', border: '1px solid #e8e4ff', padding: '20px', borderRadius: '6px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <h5 style={{ fontWeight: 600 }}>Quiz Creator</h5>
+            <button onClick={() => setActiveQuizBuilder(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>×</button>
+          </div>
+          <form onSubmit={handleSaveQuiz}>
+            <FormGroup label="Quiz Title" required={true}>
+              <input type="text" className="form-control" value={quizTitle} onChange={e => setQuizTitle(e.target.value)} placeholder="e.g. Linear Algebra Mock Test" required />
+            </FormGroup>
+            <div className="row">
+              <div className="col-6">
+                <FormGroup label="Start Date/Time" required={true}>
+                  <input type="datetime-local" className="form-control" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+                </FormGroup>
+              </div>
+              <div className="col-6">
+                <FormGroup label="End Date/Time" required={true}>
+                  <input type="datetime-local" className="form-control" value={endDate} onChange={e => setEndDate(e.target.value)} required />
+                </FormGroup>
+              </div>
+            </div>
+            <div className="row">
+              <div className="col-6">
+                <FormGroup label="Duration (Hours)" required={true}>
+                  <input type="number" className="form-control" value={durationHours} onChange={e => setDurationHours(e.target.value)} required min={0} />
+                </FormGroup>
+              </div>
+              <div className="col-6">
+                <FormGroup label="Duration (Minutes)" required={true}>
+                  <input type="number" className="form-control" value={durationMinutes} onChange={e => setDurationMinutes(e.target.value)} required min={0} max={59} />
+                </FormGroup>
+              </div>
+            </div>
+            {((Number(durationHours) * 60) + Number(durationMinutes)) > 0 && (
+              <div style={{ fontSize: '11px', color: '#7C32FF', marginTop: '-10px', marginBottom: '16px', fontWeight: 600, textAlign: 'left' }}>
+                ⏱️ Total Duration: {((Number(durationHours) * 60) + Number(durationMinutes))} mins ({durationHours} hr {durationMinutes} min)
+              </div>
+            )}
+
+            <div className="row">
+              <div className="col-6">
+                <FormGroup label="Assign to Class" required={true}>
+                  <select className="form-control" value={quizClass} onChange={e => setQuizClass(e.target.value)} required>
+                    <option value="">-- Choose Class --</option>
+                    <option value="Class 10">Class 10 (High School)</option>
+                    <option value="Class 11">Class 11 (Junior Year)</option>
+                    <option value="Class 12">Class 12 (Senior Year)</option>
+                    <option value="Class 9">Class 9 (Freshman)</option>
+                  </select>
+                </FormGroup>
+              </div>
+              <div className="col-6">
+                <FormGroup label="Assign to Section" required={true}>
+                  <select className="form-control" value={quizSection} onChange={e => setQuizSection(e.target.value)} required>
+                    <option value="">-- Choose Section --</option>
+                    <option value="Section A">Section A (Advanced)</option>
+                    <option value="Section B">Section B (General)</option>
+                    <option value="Section C">Section C (Standard)</option>
+                  </select>
+                </FormGroup>
+              </div>
+            </div>
+
+            {/* Questions Builder Section */}
+            <div style={{ border: '1px solid #e1e1f5', borderRadius: '4px', padding: '16px', background: '#fff', marginBottom: '16px' }}>
+              <h6 style={{ fontWeight: 600, marginBottom: '10px', fontSize: '12px' }}>Question Builder ({questions.length} Questions Added)</h6>
+              
+              <FormGroup label="Question Text">
+                {/* Rich Editor Manual Upload Toolbar */}
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', fontWeight: 700 }} onClick={() => setQText(prev => prev + ' **Bold Text**')}>B</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', fontStyle: 'italic' }} onClick={() => setQText(prev => prev + ' *Italic Text*')}>I</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', textDecoration: 'underline' }} onClick={() => setQText(prev => prev + ' <u>Underlined Text</u>')}>U</button>
+                  <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px', fontFamily: 'monospace' }} onClick={() => setQText(prev => prev + ' `code_here`')}>Code</button>
+                  <span style={{ fontSize: '11px', color: 'var(--text-light)', alignSelf: 'center', marginLeft: 'auto' }}>Rich formatting helper</span>
+                </div>
+                <input type="text" className="form-control" value={qText} onChange={e => setQText(e.target.value)} placeholder="Enter question..." />
+              </FormGroup>
+
+              {/* Image Based Question URL */}
+              <FormGroup label="Question Image URL (Optional for Image-Based Questions)">
+                <input type="text" className="form-control" value={qImageUrl} onChange={e => setQImageUrl(e.target.value)} placeholder="e.g. https://images.unsplash.com/photo-500..." />
+              </FormGroup>
+
+              <div className="row">
+                <div className="col-6">
+                  <FormGroup label="Question Type">
+                    <select className="form-control" value={qType} onChange={e => setQType(e.target.value)}>
+                      <option value="mcq-single">Single Choice MCQ</option>
+                      <option value="mcq-multiple">Multiple Choice MCQ</option>
+                      <option value="descriptive">Descriptive Answer</option>
+                    </select>
+                  </FormGroup>
+                </div>
+                <div className="col-6">
+                  <FormGroup label="Import Method (Simulated)">
+                    <select className="form-control">
+                      <option value="manual">Manual Entry (Default)</option>
+                      <option value="docx">DOCX File Parse</option>
+                      <option value="bank">Question Bank Fetch</option>
+                    </select>
+                  </FormGroup>
+                </div>
+              </div>
+
+              {qType.startsWith('mcq') && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                  {qOptions.map((opt, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600 }}>Option {String.fromCharCode(65 + idx)}:</span>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        value={opt} 
+                        onChange={e => {
+                          const nextOpts = [...qOptions];
+                          nextOpts[idx] = e.target.value;
+                          setQOptions(nextOpts);
+                        }} 
+                        placeholder={`Option ${idx + 1}`}
+                      />
+                    </div>
+                  ))}
+                  <FormGroup label="Correct Option Index (0-3)">
+                    <input type="number" className="form-control" value={qCorrect} onChange={e => setQCorrect(e.target.value)} min={0} max={3} />
+                  </FormGroup>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button type="button" className="btn-secondary-outline btn_sm" onClick={handleAddQuestion}>
+                  Add Question to Quiz
+                </button>
+                <button 
+                  type="button" 
+                  className="btn-secondary-outline btn_sm" 
+                  style={{ borderColor: '#7C32FF', color: '#7C32FF', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  onClick={() => {
+                    setShowAiGenerator(!showAiGenerator);
+                    setShowQBank(false);
+                  }}
+                >
+                  ✨ AI Question Generator
+                </button>
+                <button 
+                  type="button" 
+                  className="btn-secondary-outline btn_sm" 
+                  style={{ borderColor: 'var(--success)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  onClick={() => {
+                    setShowQBank(!showQBank);
+                    setShowAiGenerator(false);
+                  }}
+                >
+                  📂 Browse Question Bank
+                </button>
+              </div>
+
+              {/* Question Bank Browse Panel */}
+              {showQBank && (
+                <div style={{ border: '1px dashed var(--success)', padding: '16px', background: '#f8fdf9', borderRadius: '4px', marginTop: '14px' }}>
+                  <h6 style={{ fontWeight: 700, fontSize: '11px', color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
+                    📂 Question Bank (Repository Imports)
+                  </h6>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '180px', overflowY: 'auto', background: '#fff', padding: '10px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '12px' }}>
+                    {QUESTION_BANK_REPO.map((q) => {
+                      const isAdded = questions.some(existing => existing.text === q.text);
+                      return (
+                        <div key={q.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', borderBottom: '1px solid #eee', paddingBottom: '6px' }}>
+                          <div>
+                            <strong>{q.type.toUpperCase()}:</strong> {q.text}
+                          </div>
+                          <button 
+                            type="button" 
+                            className="btn_sm"
+                            disabled={isAdded}
+                            style={{ 
+                              padding: '2px 8px', 
+                              fontSize: '10px', 
+                              background: isAdded ? '#ddd' : 'var(--success)', 
+                              color: '#fff', 
+                              border: 'none', 
+                              borderRadius: '3px',
+                              cursor: isAdded ? 'not-allowed' : 'pointer'
+                            }}
+                            onClick={() => {
+                              const newQ = {
+                                id: 'q_qb_' + Date.now(),
+                                type: q.type,
+                                text: q.text,
+                                options: [...(q.options || [])],
+                                correct: q.correct
+                              };
+                              setQuestions([...questions, newQ]);
+                            }}
+                          >
+                            {isAdded ? 'Added' : 'Import'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* AI Generator Panel */}
+              {showAiGenerator && (
+                <div style={{ border: '1px dashed #7C32FF', padding: '16px', background: '#fafaff', borderRadius: '4px', marginTop: '14px' }}>
+                  <h6 style={{ fontWeight: 700, fontSize: '11px', color: '#7C32FF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
+                    ✨ AI Question Generation Engine (Dedicated Workspace)
+                  </h6>
+                  
+                  {generatedQuestions.length === 0 && !aiGenerating && (
+                    <>
+                      <div>
+                        <FormGroup label="Upload Source Document">
+                          <div style={{ position: 'relative' }}>
+                            <input
+                              type="file"
+                              id="ai-file-upload"
+                              accept=".pdf,.doc,.docx,.pptx,.ppt,.txt,.csv,.xlsx"
+                              style={{ display: 'none' }}
+                              onChange={(e) => {
+                                const file = e.target.files && e.target.files[0];
+                                if (file) {
+                                  setAiUploadedFile(file);
+                                  setAiUploadedFileName(file.name);
+                                  setAiFile(file.name);
+                                  // Auto-populate topic from filename (strip extension & underscores/dashes)
+                                  const namePart = file.name.replace(/\.[^.]+$/, '').replace(/[_\-]+/g, ' ');
+                                  const capitalized = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+                                  setAiTopicInput(capitalized);
+                                }
+                              }}
+                            />
+                            <div
+                              onClick={() => document.getElementById('ai-file-upload').click()}
+                              style={{
+                                border: aiUploadedFileName ? '1.5px solid #7C32FF' : '2px dashed #c0b3ee',
+                                borderRadius: '6px',
+                                padding: '12px 16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                cursor: 'pointer',
+                                background: aiUploadedFileName ? '#f3eeff' : '#fafaff',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              <span style={{ fontSize: '22px' }}>{aiUploadedFileName ? '📄' : '📁'}</span>
+                              <div style={{ flex: 1 }}>
+                                {aiUploadedFileName ? (
+                                  <>
+                                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#7C32FF' }}>{aiUploadedFileName}</div>
+                                    <div style={{ fontSize: '10px', color: '#888' }}>Click to replace file</div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#555' }}>Click to upload a document</div>
+                                    <div style={{ fontSize: '10px', color: '#999' }}>Supports PDF, DOCX, PPTX, TXT, CSV, XLSX</div>
+                                  </>
+                                )}
+                              </div>
+                              {aiUploadedFileName && (
+                                <button
+                                  type="button"
+                                  onClick={(ev) => { ev.stopPropagation(); setAiUploadedFile(null); setAiUploadedFileName(''); setAiFile(''); setAiTopicInput(''); }}
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999', fontSize: '16px', lineHeight: 1 }}
+                                >✕</button>
+                              )}
+                            </div>
+                          </div>
+                        </FormGroup>
+
+                        <div className="row">
+                          <div className="col-6">
+                            <FormGroup label="Topic Name">
+                              <input type="text" className="form-control" value={aiTopicInput} onChange={e => setAiTopicInput(e.target.value)} placeholder="e.g. Gravitational Laws" required />
+                            </FormGroup>
+                          </div>
+                          <div className="col-6">
+                            <FormGroup label="Bloom's Taxonomy Level">
+                              <select className="form-control" value={aiBloomLevelInput} onChange={e => setAiBloomLevelInput(e.target.value)}>
+                                <option value="Remember">Remember</option>
+                                <option value="Understand">Understand</option>
+                                <option value="Apply">Apply</option>
+                                <option value="Analyze">Analyze</option>
+                                <option value="Evaluate">Evaluate</option>
+                                <option value="Create">Create</option>
+                              </select>
+                            </FormGroup>
+                          </div>
+                        </div>
+
+                        <div className="row">
+                          <div className="col-4">
+                            <FormGroup label="Questions Count">
+                              <input type="number" className="form-control" min={1} max={10} value={aiCount} onChange={e => setAiCount(Number(e.target.value))} required />
+                            </FormGroup>
+                          </div>
+                          <div className="col-4">
+                            <FormGroup label="Difficulty Level">
+                              <select className="form-control" value={aiDifficulty} onChange={e => setAiDifficulty(e.target.value)}>
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                              </select>
+                            </FormGroup>
+                          </div>
+                          <div className="col-4">
+                            <FormGroup label="Question Type">
+                              <select className="form-control" value={aiQTypeInput} onChange={e => setAiQTypeInput(e.target.value)}>
+                                <option value="mcq-single">Single MCQ</option>
+                                <option value="mcq-multi">Multiple MCQ</option>
+                                <option value="descriptive">Descriptive</option>
+                                <option value="true-false">True / False</option>
+                                <option value="fill-blank">Fill in the Blank</option>
+                              </select>
+                            </FormGroup>
+                          </div>
+                        </div>
+                        
+                        <button type="button" onClick={handleAiGenerate} className="primary_btn btn_sm" style={{ background: 'linear-gradient(90deg, #7C32FF, #C738D8)', border: 'none', width: '100%', justifyContent: 'center' }}>
+                          Generate AI Questions
+                        </button>
+                      </div>
+
+                      {/* AI History Logs view */}
+                      <div style={{ marginTop: '14px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+                        <span style={{ fontSize: '11px', color: '#666', fontWeight: 'bold' }}>AI Generation Log History:</span>
+                        <div style={{ maxHeight: '110px', overflowY: 'auto', marginTop: '6px' }}>
+                          {aiHistoryLogs.map((logItem, idx) => (
+                            <div key={idx} style={{ fontSize: '10.5px', borderBottom: '1px solid #f0f0f0', paddingBottom: '4px', marginBottom: '4px', color: '#555' }}>
+                              🗓️ {new Date(logItem.createdAt).toLocaleDateString()} - <strong>{logItem.topic}</strong> (Count: {logItem.count}, Bloom: {logItem.bloomLevel}, Diff: {logItem.difficulty})
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* DOCX Parsing Option */}
+                      <div style={{ borderTop: '1px solid #eee', paddingTop: '12px', marginTop: '12px' }}>
+                        <h6 style={{ fontSize: '11px', fontWeight: 600, color: '#333' }}>Or Parse a DOCX Document:</h6>
+                        {docxSuccess ? (
+                          <div className="alert alert-success" style={{ padding: '8px 12px', fontSize: '11px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>Successfully parsed 2 questions from docx file!</span>
+                            <button type="button" onClick={() => setDocxSuccess(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input 
+                              type="file" 
+                              accept=".docx" 
+                              className="form-control" 
+                              style={{ fontSize: '11px', padding: '4px' }} 
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  setDocxParsing(true);
+                                  setTimeout(() => {
+                                    setDocxParsing(false);
+                                    setDocxSuccess(true);
+                                    // add two mock parsed questions
+                                    const parsed = [
+                                      { id: 'docx_' + Date.now() + '_1', type: 'mcq-single', text: 'What is the SI unit of gravitational potential?', options: ['Joule/kg', 'Joule', 'Newton/kg', 'Watt'], correct: 0 },
+                                      { id: 'docx_' + Date.now() + '_2', type: 'descriptive', text: 'Describe Kepler\'s laws of planetary motion briefly.' }
+                                    ];
+                                    setQuestions([...questions, ...parsed]);
+                                  }, 1500);
+                                }
+                              }}
+                            />
+                            {docxParsing && (
+                              <div className="spinner-border text-primary" role="status" style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }}></div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {aiGenerating && (
+                    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                      <div className="spinner-border text-primary mb-2" role="status" style={{ width: '24px', height: '24px', animation: 'spin 1s linear infinite' }}></div>
+                      <div style={{ fontSize: '12px', color: '#666', fontWeight: 600 }}>
+                        🤖 AI is analyzing file and auto-generating questions...
+                      </div>
+                    </div>
+                  )}
+
+                  {generatedQuestions.length > 0 && (
+                    <div>
+                      <h6 style={{ fontSize: '11.5px', fontWeight: 600, marginBottom: '10px' }}>AI Generated Questions Preview:</h6>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '200px', overflowY: 'auto', background: '#fff', padding: '10px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '12px' }}>
+                        {generatedQuestions.map((q, idx) => (
+                          <div key={q.id} style={{ fontSize: '12px', borderBottom: idx < generatedQuestions.length - 1 ? '1px solid #eee' : 'none', paddingBottom: '10px', marginBottom: idx < generatedQuestions.length - 1 ? '6px' : '0' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                              <input 
+                                type="checkbox" 
+                                checked={q.selected} 
+                                onChange={() => {
+                                  setGeneratedQuestions(generatedQuestions.map(x => x.id === q.id ? { ...x, selected: !x.selected } : x));
+                                }} 
+                                style={{ marginTop: '3px', flexShrink: 0 }}
+                              />
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 600, marginBottom: '4px' }}>Q{idx + 1}: {q.text}</div>
+                                <span style={{ fontSize: '10px', color: 'var(--primary-color)', fontWeight: 600, display: 'inline-block', marginBottom: '6px' }}>
+                                  {q.type.toUpperCase()} | {q.difficulty?.toUpperCase()} | {q.bloomLevel}
+                                </span>
+                                {/* Show answer choices for mcq/true-false/fill-blank */}
+                                {Array.isArray(q.options) && q.options.length > 0 && (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                    {q.options.map((opt, oi) => {
+                                      const isCorrect = q.type === 'mcq-multi'
+                                        ? Array.isArray(q.correct) && q.correct.includes(oi)
+                                        : q.correct === oi;
+                                      return (
+                                        <div key={oi} style={{
+                                          display: 'flex', alignItems: 'center', gap: '6px',
+                                          padding: '3px 8px', borderRadius: '3px',
+                                          background: isCorrect ? '#e8f8e8' : '#f9f9f9',
+                                          border: `1px solid ${isCorrect ? '#4caf50' : '#e0e0e0'}`,
+                                          fontSize: '11px'
+                                        }}>
+                                          <span style={{
+                                            width: '18px', height: '18px', borderRadius: q.type === 'mcq-multi' ? '3px' : '50%',
+                                            border: `2px solid ${isCorrect ? '#4caf50' : '#aaa'}`,
+                                            background: isCorrect ? '#4caf50' : 'transparent',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            flexShrink: 0
+                                          }}>
+                                            {isCorrect && <span style={{ color: '#fff', fontSize: '9px', lineHeight: 1 }}>✓</span>}
+                                          </span>
+                                          <span style={{ color: isCorrect ? '#2e7d32' : '#555', fontWeight: isCorrect ? 600 : 400 }}>{opt}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                                {q.explanation && (
+                                  <div style={{ marginTop: '5px', fontSize: '10.5px', color: '#777', fontStyle: 'italic' }}>
+                                    💡 {q.explanation}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                        <button type="button" className="btn-secondary-outline btn_sm" onClick={() => setGeneratedQuestions([])}>
+                          Discard
+                        </button>
+                        <button type="button" className="primary_btn btn_sm" style={{ background: 'linear-gradient(90deg, #7C32FF, #C738D8)', border: 'none' }} onClick={handleAddAiQuestions}>
+                          Add Selected to Quiz
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn-secondary-outline" onClick={() => setActiveQuizBuilder(false)}>Cancel</button>
+              <button type="submit" className="primary_btn" disabled={questions.length === 0}>Publish Quiz</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Faculty Evaluation Modal */}
+      {activeEvaluation && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '500px', padding: '24px' }}>
+            <h5 style={{ fontWeight: 600, marginBottom: '14px' }}>Evaluate Descriptive Answers</h5>
+            <p><strong>Student:</strong> {activeEvaluation.studentName}</p>
+            <div style={{ background: '#f8f9fa', padding: '12px', borderRadius: '4px', marginBottom: '16px', fontSize: '13px' }}>
+              <strong>Question: Explain the geometric meaning of the derivative...</strong>
+              <div style={{ marginTop: '8px', color: 'var(--text-dark)', fontStyle: 'italic' }}>
+                "{activeEvaluation.answers.q1_3 || '(No answer provided)'}"
+              </div>
+            </div>
+            <FormGroup label="Award Marks (Max 10)">
+              <input type="number" className="form-control" placeholder="e.g. 9" />
+            </FormGroup>
+            <FormGroup label="Remarks / Feedback">
+              <input type="text" className="form-control" placeholder="Well described." />
+            </FormGroup>
+            <div style={{ display: 'flex', justify: 'flex-end', gap: '10px', marginTop: '16px' }}>
+              <button type="button" className="btn-secondary-outline" onClick={() => setActiveEvaluation(null)}>Cancel</button>
+              <button type="button" className="primary_btn" onClick={() => {
+                setQuizAttempts(quizAttempts.map(att => 
+                  att.id === activeEvaluation.id 
+                    ? { ...att, score: 28, evaluated: true, remarks: 'Excellent analysis.' } 
+                    : att
+                ));
+                setActiveEvaluation(null);
+              }}>Submit Evaluation</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quizzes List */}
+      <div>
+        <h5 style={{ fontWeight: 600, marginBottom: '16px', fontSize: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Quizzes Schedules</h5>
+        {quizzes.map(q => {
+          const attempt = quizAttempts.find(a => a.quizId === q.id && a.studentName === 'Rahul Student');
+          const allAttempts = quizAttempts.filter(a => a.quizId === q.id);
+
+          return (
+            <div key={q.id} style={styles.quizCard}>
+              <div>
+                <h4 style={{ fontSize: '14.5px', fontWeight: 600 }}>{q.title}</h4>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+                  <span>Duration: <strong>{q.duration} Mins</strong></span>
+                  <span>Target: <strong style={{ color: 'var(--primary-color)' }}>{q.assignedClass || 'Class 10'} ({q.assignedSection || 'Section A'})</strong></span>
+                  <span>Start: <strong>{new Date(q.start).toLocaleString()}</strong></span>
+                  <span>Status: 
+                    <strong style={{ marginLeft: '4px', color: q.status === 'Published' ? 'var(--success)' : 'var(--warning)' }}>
+                      {q.status}
+                    </strong>
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                {/* Faculty Dashboard options */}
+                {isTeacher && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button className="btn-secondary-outline btn_sm" onClick={() => {
+                        setQuizzes(quizzes.map(qz => qz.id === q.id ? { ...qz, status: qz.status === 'Published' ? 'Withdrawn' : 'Published' } : qz));
+                      }}>
+                        {q.status === 'Published' ? 'Withdraw' : 'Publish'}
+                      </button>
+                    </div>
+                    {allAttempts.length > 0 && (
+                      <div style={{ marginTop: '4px' }}>
+                        {allAttempts.map(att => (
+                          <div key={att.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                            {!att.evaluated ? (
+                              <button className="btn-success btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => setActiveEvaluation(att)}>
+                                Evaluate {att.studentName}
+                              </button>
+                            ) : (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>
+                                <CheckCircle size={14} /> {att.studentName}: {att.score} pts (Evaluated)
+                              </div>
+                            )}
+                            <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => handleReattemptAllow(att.id)}>
+                              Allow Reattempt
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Student attempting options */}
+                {isStudent && (
+                  <>
+                    {attempt ? (
+                      <div style={{ textAlign: 'right' }}>
+                        <Badge type={attempt.evaluated ? 'success' : 'warning'}>
+                          {attempt.evaluated ? `Score: ${attempt.score} (Evaluated)` : 'Pending Grading'}
+                        </Badge>
+                        {attempt.allowedReattempt && (
+                          <button className="primary_btn btn_sm" style={{ marginLeft: '8px' }} onClick={() => setActiveQuizAttempt(q)}>
+                            Re-Attempt
+                          </button>
+                        )}
+                        {attempt.evaluated && (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: '6px' }}>
+                            <button 
+                              type="button" 
+                              className="btn-secondary-outline btn_sm" 
+                              style={{ padding: '2px 8px', fontSize: '11px' }} 
+                              onClick={() => setSelectedAttemptReport(attempt)}
+                            >
+                              View Detailed Report
+                            </button>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                              Remarks: "{attempt.remarks}"
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <button 
+                        className="primary_btn btn_sm"
+                        disabled={q.status !== 'Published'}
+                        onClick={() => setActiveQuizAttempt(q)}
+                      >
+                        <Play size={12} style={{ marginRight: '4px' }} /> Start Quiz
+                      </button>
+                    )}
+                  </>
+                )}
+
+                {/* Parent options */}
+                {isParent && (
+                  <div>
+                    {attempt ? (
+                      <Badge type={attempt.evaluated ? 'success' : 'warning'}>
+                        {attempt.evaluated ? `Rahul's Score: ${attempt.score}` : 'Submitted (Evaluating)'}
+                      </Badge>
+                    ) : (
+                      <Badge type="danger">Quiz Not Attempted</Badge>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Detailed Attempt Report Modal */}
+      {selectedAttemptReport && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '650px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '12px', marginBottom: '16px' }}>
+              <h5 style={{ fontWeight: 700, margin: 0 }}>Detailed Quiz Report</h5>
+              <button className="btn-secondary-outline btn_sm" style={{ padding: '2px 8px', fontSize: '14px' }} onClick={() => setSelectedAttemptReport(null)}>×</button>
+            </div>
+            
+            <div className="mb-4" style={{ display: 'flex', gap: '20px', fontSize: '13px' }}>
+              <div><strong>Student Name:</strong> {selectedAttemptReport.studentName}</div>
+              <div><strong>Final Score:</strong> <Badge type="success">{selectedAttemptReport.score} pts</Badge></div>
+              <div><strong>Status:</strong> Evaluated</div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {selectedAttemptReport.quizQuestions && selectedAttemptReport.quizQuestions.map((q, idx) => {
+                const answer = selectedAttemptReport.answers[q.id];
+                const isCorrect = q.type === 'mcq-single' ? Number(answer) === q.correct : true; // mock evaluation representation
+                
+                return (
+                  <div key={q.id} style={{ border: '1px solid #eee', borderRadius: '6px', padding: '14px', background: '#fcfcfc' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <span style={{ fontWeight: 600, fontSize: '13px' }}>Q{idx + 1}: {q.text}</span>
+                      <Badge type={isCorrect ? 'success' : 'danger'}>
+                        {isCorrect ? 'Correct' : 'Incorrect'}
+                      </Badge>
+                    </div>
+                    {q.imageUrl && (
+                      <div style={{ margin: '8px 0', maxWidth: '200px' }}>
+                        <img src={q.imageUrl} alt="Q-visual" style={{ width: '100%', borderRadius: '4px' }} />
+                      </div>
+                    )}
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div>Selected Answer: <strong style={{ color: isCorrect ? 'var(--success)' : 'var(--danger)' }}>
+                        {q.type.startsWith('mcq') && q.options ? q.options[answer] || 'Skipped' : answer || 'Skipped'}
+                      </strong></div>
+                      {q.type.startsWith('mcq') && !isCorrect && (
+                        <div>Correct Option: <strong>{q.options[q.correct]}</strong></div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </WhiteCard>
+  );
+}
+
+// ==========================================
+// MODULE 3: DISCUSSION FORUM TAB
+// ==========================================
+function DiscussionForumTab({ role, userName, forumGroups, setForumGroups, messages, setMessages }) {
+  const [selectedGroup, setSelectedGroup] = useState('fg1');
+  const [typedMessage, setTypedMessage] = useState('');
+  
+  // Faculty create group state
+  const [showGroupForm, setShowGroupForm] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  
+  // Attachments simulator
+  const [attachment, setAttachment] = useState('');
+  
+  // Membership & Notification states
+  const [showMemberManager, setShowMemberManager] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: "New discussion group 'Science Projects' was created by Faculty Mary.", time: '5m ago' },
+    { id: 2, text: "Rahul Student posted in 'Exam Prep 101'.", time: '12m ago' }
+  ]);
+
+  const USER_LIST = [
+    { name: 'Faculty John', role: 'teacher' },
+    { name: 'Faculty Mary', role: 'teacher' },
+    { name: 'Rahul Student', role: 'student' },
+    { name: 'Anjali Student', role: 'student' },
+    { name: 'Mr. Sharma Parent', role: 'parent' },
+    { name: 'Mrs. Gupta Parent', role: 'parent' }
+  ];
+
+  // Auto-fetch posts when group selection changes
+  useEffect(() => {
+    if (!selectedGroup) return;
+    if (selectedGroup.startsWith('fg')) return;
+
+    const fetchPosts = async () => {
+      try {
+        const res = await api.get(`/api/v1/lms/forums/${selectedGroup}/posts`);
+        const posts = res.data?.data || res.data || [];
+        const mapped = posts.map(p => ({
+          sender: p.senderName || 'Anonymous',
+          senderRole: p.senderRole || 'student',
+          text: p.text,
+          pinned: false
+        }));
+        setMessages(prev => ({ ...prev, [selectedGroup]: mapped }));
+      } catch (err) {
+        console.warn(`Could not load posts for forum group ${selectedGroup}`, err);
+      }
+    };
+
+    fetchPosts();
+  }, [selectedGroup]);
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!typedMessage.trim()) return;
+
+    const textToSend = typedMessage.trim() + (attachment ? ` [📎 Attachment: ${attachment}]` : '');
+
+    const newMsg = {
+      sender: userName,
+      senderRole: role,
+      text: textToSend,
+      timestamp: new Date().toISOString()
+    };
+
+    setMessages({
+      ...messages,
+      [selectedGroup]: [...(messages[selectedGroup] || []), newMsg]
+    });
+
+    setTypedMessage('');
+    setAttachment('');
+
+    if (!selectedGroup.startsWith('fg')) {
+      try {
+        const payload = {
+          forum: { id: Number(selectedGroup) },
+          senderName: userName,
+          senderRole: role,
+          text: textToSend
+        };
+        await api.post(`/api/v1/lms/forums/${selectedGroup}/posts`, payload);
+      } catch (err) {
+        console.warn("Could not save message to database", err);
+      }
+    }
+  };
+
+  const handleCreateGroup = async (e) => {
+    e.preventDefault();
+    if (!newGroupName.trim()) return;
+
+    try {
+      const payload = {
+        name: newGroupName.trim(),
+        createdBy: userName
+      };
+      const res = await api.post('/api/v1/lms/forums', payload);
+      const createdForum = res.data?.data || res.data;
+      if (createdForum && createdForum.id) {
+        const newGroup = {
+          id: String(createdForum.id),
+          name: createdForum.name,
+          members: [userName],
+          createdBy: createdForum.createdBy || userName
+        };
+        setForumGroups([...forumGroups, newGroup]);
+        setMessages({ ...messages, [String(createdForum.id)]: [] });
+        setSelectedGroup(String(createdForum.id));
+      }
+    } catch (err) {
+      console.warn("Could not create discussion group on database", err);
+      const newGroupId = 'fg' + (forumGroups.length + 1);
+      const newGroup = {
+        id: newGroupId,
+        name: newGroupName.trim(),
+        members: [userName],
+        createdBy: userName
+      };
+      setForumGroups([...forumGroups, newGroup]);
+      setMessages({ ...messages, [newGroupId]: [] });
+      setSelectedGroup(newGroupId);
+    }
+
+    setNewGroupName('');
+    setShowGroupForm(false);
+  };
+
+  const handleDeleteGroup = async (groupId) => {
+    if (!window.confirm("Are you sure you want to delete this discussion group?")) return;
+
+    if (!groupId.startsWith('fg')) {
+      try {
+        await api.delete(`/api/v1/lms/forums/${groupId}`);
+      } catch (err) {
+        console.warn(`Could not delete forum ${groupId} from database`, err);
+      }
+    }
+
+    setForumGroups(forumGroups.filter(g => g.id !== groupId));
+    if (selectedGroup === groupId) {
+      setSelectedGroup(forumGroups[0]?.id || '');
+    }
+  };
+
+  const isTeacher = role === 'teacher' || role === 'admin';
+  const isParent = role === 'parent';
+
+  return (
+    <WhiteCard 
+      title="LMS Discussion Forum"
+      actions={isTeacher && (
+        <button className="primary_btn btn_sm" onClick={() => setShowGroupForm(true)}>
+          <FolderPlus size={14} style={{ marginRight: '4px' }} /> Create Group
+        </button>
+      )}
+    >
+      {/* Create Group Form */}
+      {showGroupForm && (
+        <div style={{ padding: '16px', background: '#f8f8ff', border: '1px solid #e8e4ff', borderRadius: '6px', marginBottom: '20px' }}>
+          <form onSubmit={handleCreateGroup}>
+            <FormGroup label="Discussion Group Name" required={true}>
+              <input type="text" className="form-control" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} placeholder="e.g. Science Fair Projects group" required />
+            </FormGroup>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn-secondary-outline" onClick={() => setShowGroupForm(false)}>Cancel</button>
+              <button type="submit" className="primary_btn">Create Group</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Forum Interface Layout */}
+      <div className="row" style={{ minHeight: '400px' }}>
+        {/* Left Side: Groups List */}
+        <div className="col-4" style={{ borderRight: '1px solid var(--border-color)', paddingRight: '15px' }}>
+          {/* Notifications feed [RBAC] */}
+          {isTeacher && notifications.length > 0 && (
+            <div style={{ background: '#fffbeb', border: '1px solid #fef3c7', padding: '10px', borderRadius: '4px', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#d97706' }}>🔔 Forum Notifications</span>
+                <button type="button" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '10px', color: '#999' }} onClick={() => setNotifications([])}>Clear</button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {notifications.map(n => (
+                  <div key={n.id} style={{ fontSize: '10.5px', color: '#78350f', lineHeight: 1.3 }}>
+                    • {n.text}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <h6 style={{ fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '12px' }}>Groups</h6>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {forumGroups.map(g => (
+              <div 
+                key={g.id} 
+                onClick={() => setSelectedGroup(g.id)}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  background: selectedGroup === g.id ? 'rgba(124,50,255,0.06)' : '#fff',
+                  border: selectedGroup === g.id ? '1px solid rgba(124,50,255,0.2)' : '1px solid var(--border-color)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  transition: 'background 0.15s'
+                }}
+              >
+                <div style={{ fontSize: '13px', fontWeight: 600 }}>{g.name}</div>
+                {isTeacher && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleDeleteGroup(g.id); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '2px' }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Side: Chat Box */}
+        <div className="col-8" style={{ display: 'flex', flexDirection: 'column', height: '400px' }}>
+          {selectedGroup ? (
+            <>
+              {/* Chat Header */}
+              <div style={{ paddingBottom: '10px', borderBottom: '1px solid var(--border-color)', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <h5 style={{ fontWeight: 600, fontSize: '14px', margin: 0 }}>
+                    {forumGroups.find(g => g.id === selectedGroup)?.name}
+                  </h5>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    Members: {forumGroups.find(g => g.id === selectedGroup)?.members.join(', ')}
+                  </span>
+                  {isParent && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--warning)', fontSize: '11px', marginTop: '4px', fontWeight: 600 }}>
+                      <Info size={11} /> Parent Sandbox: Messages will not be directly visible to students (direct messaging disabled).
+                    </div>
+                  )}
+                </div>
+                {isTeacher && (
+                  <button 
+                    type="button"
+                    className="btn-secondary-outline btn_sm"
+                    style={{ fontSize: '11px', padding: '4px 8px' }}
+                    onClick={() => setShowMemberManager(!showMemberManager)}
+                  >
+                    Manage Members
+                  </button>
+                )}
+              </div>
+
+              {/* Member Manager Panel */}
+              {showMemberManager && isTeacher && (
+                <div style={{ background: '#fcfcfc', border: '1px solid #ddd', padding: '14px', borderRadius: '4px', marginBottom: '12px' }}>
+                  <h6 style={{ fontWeight: 600, fontSize: '12px', marginBottom: '8px' }}>Manage Group Members</h6>
+                  
+                  {/* Test case rules validation */}
+                  {(() => {
+                    const currentGroupObj = forumGroups.find(g => g.id === selectedGroup);
+                    if (!currentGroupObj) return null;
+                    const hasParents = currentGroupObj.members.some(m => USER_LIST.find(x => x.name === m)?.role === 'parent');
+                    const hasStudents = currentGroupObj.members.some(m => USER_LIST.find(x => x.name === m)?.role === 'student');
+                    
+                    return (
+                      <>
+                        {hasParents && (
+                          <div style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: 600, marginBottom: '8px' }}>
+                            ⚠️ Parent Communication Rules: Student members cannot be added to this group.
+                          </div>
+                        )}
+                        {hasStudents && (
+                          <div style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: 600, marginBottom: '8px' }}>
+                            ⚠️ Parent Communication Rules: Parent members cannot be added to this group.
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {USER_LIST.map(u => {
+                            const isMember = currentGroupObj.members.includes(u.name);
+                            const isBlocked = (u.role === 'student' && hasParents) || (u.role === 'parent' && hasStudents);
+                            
+                            return (
+                              <div 
+                                key={u.name} 
+                                style={{ 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  gap: '6px', 
+                                  fontSize: '11.5px', 
+                                  padding: '4px 8px', 
+                                  borderRadius: '20px', 
+                                  background: isMember ? 'rgba(124,50,255,0.08)' : '#f3f3f3',
+                                  border: isMember ? '1px solid var(--primary-color)' : '1px solid #ddd',
+                                  opacity: isBlocked ? 0.5 : 1
+                                }}
+                              >
+                                <span>{u.name} ({u.role.toUpperCase()})</span>
+                                {isMember ? (
+                                  <button 
+                                    type="button" 
+                                    style={{ border: 'none', background: 'none', color: 'var(--danger)', cursor: 'pointer', padding: 0, fontWeight: 700 }}
+                                    onClick={() => {
+                                      const nextMembers = currentGroupObj.members.filter(m => m !== u.name);
+                                      setForumGroups(forumGroups.map(g => g.id === selectedGroup ? { ...g, members: nextMembers } : g));
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                ) : (
+                                  <button 
+                                    type="button" 
+                                    disabled={isBlocked}
+                                    style={{ border: 'none', background: 'none', color: isBlocked ? '#999' : 'var(--primary-color)', cursor: isBlocked ? 'not-allowed' : 'pointer', padding: 0, fontWeight: 700 }}
+                                    onClick={() => {
+                                      const nextMembers = [...currentGroupObj.members, u.name];
+                                      setForumGroups(forumGroups.map(g => g.id === selectedGroup ? { ...g, members: nextMembers } : g));
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Pinned Messages Header Area */}
+              {(() => {
+                const groupMsgs = messages[selectedGroup] || [];
+                const pinnedMsgs = groupMsgs.filter(m => m.pinned);
+                if (pinnedMsgs.length === 0) return null;
+                return (
+                  <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '10px', borderRadius: '6px', marginBottom: '12px' }}>
+                    <h6 style={{ fontSize: '11px', color: '#dc2626', fontWeight: 'bold', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>📌 Pinned Announcements:</h6>
+                    {pinnedMsgs.map((pm, idx) => (
+                      <div key={idx} style={{ fontSize: '12.5px', color: '#991b1b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '6px 10px', borderRadius: '4px', marginBottom: '4px' }}>
+                        <span><strong>{pm.sender}:</strong> {pm.text}</span>
+                        {isTeacher && (
+                          <button type="button" className="btn-secondary-outline btn_sm" style={{ padding: '2px 6px', fontSize: '9px' }} onClick={() => {
+                            const updated = groupMsgs.map(m => m.text === pm.text ? { ...m, pinned: false } : m);
+                            setMessages({ ...messages, [selectedGroup]: updated });
+                          }}>Unpin</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              {/* Message List */}
+              <div style={{ flex: 1, overflowY: 'auto', paddingRight: '6px', marginBottom: '14px' }}>
+                {(messages[selectedGroup] || []).map((m, idx) => {
+                  const isMe = m.sender === userName;
+                  return (
+                    <div 
+                      key={idx} 
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: isMe ? 'flex-end' : 'flex-start',
+                        marginBottom: '12px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '2px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          {m.sender} ({m.senderRole.toUpperCase()}) {m.pinned && '📌'}
+                        </span>
+                        {isTeacher && (
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <button type="button" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '10px', color: 'var(--primary-color)', padding: 0 }} onClick={() => {
+                              const updated = (messages[selectedGroup] || []).map((msg, i) => i === idx ? { ...msg, pinned: !msg.pinned } : msg);
+                              setMessages({ ...messages, [selectedGroup]: updated });
+                            }}>{m.pinned ? 'Unpin' : 'Pin'}</button>
+                            <button type="button" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '10px', color: 'var(--danger)', padding: 0 }} onClick={() => {
+                              const updated = (messages[selectedGroup] || []).filter((_, i) => i !== idx);
+                              setMessages({ ...messages, [selectedGroup]: updated });
+                            }}>Delete</button>
+                          </div>
+                        )}
+                      </div>
+                      <div 
+                        style={{
+                          padding: '10px 14px',
+                          borderRadius: '8px',
+                          fontSize: '13px',
+                          maxWidth: '85%',
+                          color: isMe ? '#fff' : 'var(--text-dark)',
+                          background: isMe ? 'var(--primary-gradient)' : '#f1f1f1'
+                        }}
+                      >
+                        {m.text}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Chat Input form */}
+              <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={typedMessage} 
+                  onChange={e => setTypedMessage(e.target.value)} 
+                  placeholder="Type your message..." 
+                  required
+                />
+                
+                {/* Faculty Only: Attachments option [RBAC] */}
+                {isTeacher && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <input 
+                      type="file" 
+                      id="forumFile"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setAttachment(e.target.files[0].name);
+                        }
+                      }}
+                    />
+                    <button 
+                      type="button" 
+                      className="btn-secondary-outline btn_sm" 
+                      style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', padding: '6px 10px' }}
+                      onClick={() => document.getElementById('forumFile').click()}
+                    >
+                      <UploadCloud size={13} /> {attachment ? 'Change File' : 'Upload File'}
+                    </button>
+                    {attachment && (
+                      <span style={{ fontSize: '11px', color: 'var(--text-light)', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        📎 {attachment}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <button type="submit" className="primary_btn" style={{ padding: '9px 15px' }}>
+                  <Send size={15} />
+                </button>
+              </form>
+            </>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
+              Select a group to start discussing.
+            </div>
+          )}
+        </div>
+      </div>
+    </WhiteCard>
+  );
+}
+
+// ==========================================
+// MODULE 4: STUDENT PROGRESS TRACKING TAB
+// ==========================================
+function ProgressTrackingTab({ role, submissions = [], assignments = [] }) {
+  const [selectedStudent, setSelectedStudent] = useState('Rahul Student');
+  const [metricView, setMetricView] = useState('Monthly'); // 'Monthly' or 'Semester'
+
+  const isTeacher = role === 'teacher' || role === 'admin';
+  const isParent = role === 'parent';
+
+  // Toggle dynamic chart data array based on Monthly/Semester performance view selector
+  const attendanceData = metricView === 'Monthly' 
+    ? MOCK_ANALYTICS.attendance 
+    : [
+        { month: 'Semester 1 Avg', percent: 93 },
+        { month: 'Semester 2 Avg', percent: 97 }
+      ];
+
+  const behaviorData = metricView === 'Monthly' 
+    ? MOCK_ANALYTICS.behavior 
+    : [
+        { week: 'Sem 1 Avg', score: 4.4 },
+        { week: 'Sem 2 Avg', score: 4.8 }
+      ];
+
+  // Dynamically map submissions for selected student
+  const dynamicHistory = submissions
+    .filter(s => s.studentName === selectedStudent)
+    .map(s => {
+      const a = assignments.find(assign => assign.id === s.assignmentId);
+      const title = a ? a.title : 'Assignment';
+      const max = a ? a.maxMarks : 100;
+      const dueDate = a ? new Date(a.dueDate) : new Date();
+      const submittedDate = s.submittedAt ? new Date(s.submittedAt) : new Date();
+      return {
+        assignment: title,
+        date: s.submittedAt ? s.submittedAt.split('T')[0] : 'N/A',
+        status: s.graded ? 'Graded' : 'Submitted (Pending Review)',
+        marks: s.graded ? `${s.marks}/${max}` : `- / ${max}`,
+        onTime: submittedDate <= dueDate
+      };
+    });
+
+  const baseHistory = [
+    { assignment: 'Gravitational Laws Essay', date: '2026-07-02', status: 'Graded', marks: '88/100', onTime: true },
+    { assignment: 'Redox Reactions Lab', date: '2026-06-25', status: 'Graded', marks: '45/50', onTime: true },
+    { assignment: 'Thermodynamics Worksheet', date: '2026-06-18', status: 'Late Submitted', marks: '32/50', onTime: false },
+    { assignment: 'Calculus Derivatives Mock', date: '2026-06-10', status: 'Graded', marks: '96/100', onTime: true }
+  ];
+
+  const submissionHistory = [...dynamicHistory, ...baseHistory];
+
+  const strengths = ['Mathematical Formulation', 'Problem Solving Speed', 'Conceptual Clarity in Physics'];
+  const weakAreas = ['Detailed Essay Structuring', 'Scribble notes readability', 'Organic Chemistry formulas'];
+  const participationIndex = '8.8 / 10 (Very Active)';
+  const facultyRemarks = 'Rahul displays outstanding logical and reasoning skills in sciences. He responds frequently to discussion questions and completes peer evaluations early. Recommend focus on writing structured proofs and formatting code comments.';
+
+  return (
+    <WhiteCard title={isParent ? "Eriberto's Progress Tracker" : "Class Progress Analytics"}>
+      {/* Parent-Student Relationship Mapping Indicator */}
+      {isParent && (
+        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '12px 16px', borderRadius: '6px', marginBottom: '20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+          <div style={{ fontSize: '13px', color: '#166534', fontWeight: 600 }}>
+            🔗 Database Relation Verified (`parent_student_mappings` table):
+          </div>
+          <div style={{ fontSize: '12px', background: '#dcfce7', color: '#15803d', padding: '4px 10px', borderRadius: '20px', fontWeight: 700 }}>
+            Kieran (Parent) ↔ Eriberto (Student)
+          </div>
+        </div>
+      )}
+
+      {/* Top Filter and Selectors */}
+      <div style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', background: '#fcfcfc', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+        {isTeacher && (
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '13.5px' }}>
+            <strong>Viewing Student:</strong>
+            <select className="form-control" style={{ width: '180px', padding: '4px 8px' }} value={selectedStudent} onChange={e => setSelectedStudent(e.target.value)}>
+              <option value="Rahul Student">Rahul Student (Roll 1)</option>
+              <option value="Sneha Rao">Sneha Rao (Roll 4)</option>
+              <option value="Arjun Singh">Arjun Singh (Roll 12)</option>
+            </select>
+          </div>
+        )}
+        {!isTeacher && <div style={{ fontSize: '13.5px' }}>Logged in as: <strong>{isParent ? 'Kieran (Parent)' : 'Rahul Student'}</strong></div>}
+
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontSize: '12.5px', color: '#666' }}>Performance View:</span>
+          <div className="btn-group" style={{ display: 'flex', border: '1px solid #7C32FF', borderRadius: '4px', overflow: 'hidden' }}>
+            <button 
+              type="button" 
+              style={{ padding: '4px 12px', fontSize: '12px', cursor: 'pointer', border: 'none', background: metricView === 'Monthly' ? '#7C32FF' : '#fff', color: metricView === 'Monthly' ? '#fff' : '#7C32FF' }}
+              onClick={() => setMetricView('Monthly')}
+            >
+              Monthly
+            </button>
+            <button 
+              type="button" 
+              style={{ padding: '4px 12px', fontSize: '12px', cursor: 'pointer', border: 'none', background: metricView === 'Semester' ? '#7C32FF' : '#fff', color: metricView === 'Semester' ? '#fff' : '#7C32FF' }}
+              onClick={() => setMetricView('Semester')}
+            >
+              Semester-wise
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Grid of analytics charts */}
+      <div className="row">
+        {/* Quiz Scores Over Time */}
+        <div className="col-12 col-lg-6 mb-4">
+          <div style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '4px', background: '#fff' }}>
+            <h6 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '12px' }}>Quiz Performance Trend</h6>
+            <div style={{ width: '100%' }}>
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={MOCK_ANALYTICS.quizScores}>
+                  <defs>
+                    <linearGradient id="colorStudent" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#7C32FF" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#7C32FF" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Legend />
+                  <Area type="monotone" dataKey="studentScore" name="Student Score" stroke="#7C32FF" fillOpacity={1} fill="url(#colorStudent)" />
+                  <Area type="monotone" dataKey="classAvg" name="Class Average" stroke="#C738D8" fillOpacity={0.1} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Exams Results */}
+        <div className="col-12 col-lg-6 mb-4">
+          <div style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '4px', background: '#fff' }}>
+            <h6 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '12px' }}>Major Exams Performance</h6>
+            <div style={{ width: '100%' }}>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={MOCK_ANALYTICS.examGrades}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="student" name="Student Grade" fill="#7C32FF" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="avg" name="Class Average" fill="#4d79ff" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Attendance */}
+        <div className="col-12 col-lg-6 mb-4">
+          <div style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '4px', background: '#fff' }}>
+            <h6 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '12px' }}>Attendance Analytics ({metricView} aggregation)</h6>
+            <div style={{ width: '100%' }}>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={attendanceData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis domain={[80, 100]} />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="percent" name="Attendance %" stroke="#23c277" strokeWidth={2} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Behavior Scores */}
+        <div className="col-12 col-lg-6 mb-4">
+          <div style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '4px', background: '#fff' }}>
+            <h6 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '12px' }}>Behavior Index ({metricView} aggregation)</h6>
+            <div style={{ width: '100%' }}>
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={behaviorData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="week" />
+                  <YAxis domain={[0, 5]} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="score" name="Behavior Index" stroke="#ffba00" fill="#fff5d6" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Extra Tracking Details (Participation, Strengths, Remarks, Submission History) */}
+      <div className="row" style={{ marginTop: '16px' }}>
+        {/* Participation and Strengths Cards */}
+        <div className="col-12 col-lg-6 mb-4">
+          <div style={{ border: '1px solid var(--border-color)', padding: '16px', borderRadius: '4px', background: '#fbfbff', height: '100%' }}>
+            <h6 style={{ fontWeight: 700, fontSize: '13px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              🎯 Personal Competencies
+              <span className="badge badge-purple" style={{ fontSize: '11px' }}>Participation: {participationIndex}</span>
+            </h6>
+
+            <div style={{ marginBottom: '14px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 'bold', textTransform: 'uppercase' }}>👍 Strong Subjects & Areas:</span>
+              <ul style={{ fontSize: '12px', color: '#333', paddingLeft: '20px', margin: '4px 0 0 0' }}>
+                {strengths.map((str, idx) => <li key={idx} style={{ marginBottom: '2px' }}>{str}</li>)}
+              </ul>
+            </div>
+
+            <div style={{ marginBottom: '14px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: 'bold', textTransform: 'uppercase' }}>⚠️ Weak Subjects & Focus Areas:</span>
+              <ul style={{ fontSize: '12px', color: '#333', paddingLeft: '20px', margin: '4px 0 0 0' }}>
+                {weakAreas.map((w, idx) => <li key={idx} style={{ marginBottom: '2px' }}>{w}</li>)}
+              </ul>
+            </div>
+
+            <div style={{ borderTop: '1px solid #eee', paddingTop: '10px', marginTop: '10px' }}>
+              <span style={{ fontSize: '11.5px', color: '#666', fontWeight: 'bold' }}>💬 Faculty Remarks:</span>
+              <p style={{ fontSize: '12px', color: '#444', fontStyle: 'italic', margin: '4px 0 0 0', lineHeight: '1.4' }}>
+                "{facultyRemarks}"
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Detailed Submission History */}
+        <div className="col-12 col-lg-6 mb-4">
+          <div style={{ border: '1px solid var(--border-color)', padding: '16px', borderRadius: '4px', background: '#fff', height: '100%' }}>
+            <h6 style={{ fontWeight: 700, fontSize: '13px', marginBottom: '12px' }}>📁 Detailed Homework Submission History</h6>
+            
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #eee', background: '#fafafa', textAlign: 'left' }}>
+                    <th style={{ padding: '6px' }}>Assignment</th>
+                    <th style={{ padding: '6px' }}>Date</th>
+                    <th style={{ padding: '6px' }}>Status</th>
+                    <th style={{ padding: '6px' }}>Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {submissionHistory.map((sub, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                      <td style={{ padding: '6px', fontWeight: 600 }}>{sub.assignment}</td>
+                      <td style={{ padding: '6px', color: '#666' }}>{sub.date}</td>
+                      <td style={{ padding: '6px' }}>
+                        <span style={{ color: sub.onTime ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>
+                          {sub.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '6px', fontWeight: 700 }}>{sub.marks}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </WhiteCard>
+  );
+}

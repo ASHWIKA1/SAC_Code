@@ -52,4 +52,30 @@ public class StudentAttendance extends BaseEntity {
     private Integer activeStatus = 1;
     @Column(name = "school_id")
     private String schoolId;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("className")
+    public String getClassName() {
+        return classRecord != null ? classRecord.getClassName() : null;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("sectionName")
+    public String getSectionName() {
+        return section != null ? section.getSectionName() : null;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("date")
+    public LocalDate getDate() {
+        return attendanceDate;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("className")
+    public void setClassName(String className) {}
+
+    @com.fasterxml.jackson.annotation.JsonProperty("sectionName")
+    public void setSectionName(String sectionName) {}
+
+    @com.fasterxml.jackson.annotation.JsonProperty("date")
+    public void setDate(LocalDate date) {
+        this.attendanceDate = date;
+    }
 }

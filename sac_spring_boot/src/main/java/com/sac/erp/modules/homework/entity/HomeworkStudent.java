@@ -26,6 +26,26 @@ public class HomeworkStudent extends BaseEntity {
     private String marks;
     private String file;
 
+    @Column(name = "feedback_file")
+    private String feedbackFile;
+
+    @Column(name = "submission_link")
+    private String submissionLink;
+
+    @Column(name = "student_notes")
+    private String studentNotes;
+
+    private String feedback;
+
+    @Column(name = "rubric_accuracy")
+    private Integer rubricAccuracy;
+
+    @Column(name = "rubric_completeness")
+    private Integer rubricCompleteness;
+
+    @Column(name = "rubric_presentation")
+    private Integer rubricPresentation;
+
     @Column(name = "active_status")
     private Integer activeStatus = 1;
     @Column(name = "school_id")

@@ -41,9 +41,11 @@ public class HomeworkController {
     public ResponseEntity<HomeworkStudent> submitHomework(
             @RequestParam Long homeworkId,
             @RequestParam Long studentId,
-            @RequestParam String file) {
+            @RequestParam String file,
+            @RequestParam(required = false) String submissionLink,
+            @RequestParam(required = false) String studentNotes) {
         log.info("REST request student: {} submits homework task: {}", studentId, homeworkId);
-        return ResponseEntity.ok(homeworkService.submitHomework(homeworkId, studentId, file));
+        return ResponseEntity.ok(homeworkService.submitHomework(homeworkId, studentId, file, submissionLink, studentNotes));
     }
 
     @PostMapping("/evaluate")
@@ -51,14 +53,26 @@ public class HomeworkController {
             @RequestParam Long homeworkId,
             @RequestParam Long studentId,
             @RequestParam String marks,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String feedbackFile,
+            @RequestParam(required = false) String feedback,
+            @RequestParam(required = false) Integer rubricAccuracy,
+            @RequestParam(required = false) Integer rubricCompleteness,
+            @RequestParam(required = false) Integer rubricPresentation) {
         log.info("REST request teacher evaluates student: {} for task: {}", studentId, homeworkId);
-        return ResponseEntity.ok(homeworkService.evaluateHomework(homeworkId, studentId, marks, status));
+        return ResponseEntity.ok(homeworkService.evaluateHomework(homeworkId, studentId, marks, status, feedbackFile, feedback, rubricAccuracy, rubricCompleteness, rubricPresentation));
     }
 
     @GetMapping("/submissions/{homeworkId}")
     public ResponseEntity<List<HomeworkStudent>> getSubmissions(@PathVariable Long homeworkId) {
         log.info("REST request to get submissions list for task: {}", homeworkId);
         return ResponseEntity.ok(homeworkService.getSubmissionsByHomework(homeworkId));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteHomework(@PathVariable Long id) {
+        log.info("REST request to delete homework task: {}", id);
+        homeworkService.deleteHomework(id);
+        return ResponseEntity.noContent().build();
     }
 }

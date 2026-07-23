@@ -69,4 +69,30 @@ public class MarkStore extends BaseEntity {
     private Integer activeStatus = 1;
     @Column(name = "school_id")
     private String schoolId;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("studentName")
+    public String getStudentName() {
+        return student != null ? student.getFullName() : null;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("subjectName")
+    public String getSubjectName() {
+        return subject != null ? subject.getSubjectName() : null;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("marks")
+    public Double getMarks() {
+        return totalMarks;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("studentName")
+    public void setStudentName(String studentName) {}
+
+    @com.fasterxml.jackson.annotation.JsonProperty("subjectName")
+    public void setSubjectName(String subjectName) {}
+
+    @com.fasterxml.jackson.annotation.JsonProperty("marks")
+    public void setMarks(Double marks) {
+        this.totalMarks = marks;
+    }
 }
