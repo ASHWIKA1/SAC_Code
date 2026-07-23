@@ -80,3 +80,35 @@ CREATE TABLE IF NOT EXISTS student_assignment_submissions (
     KEY idx_student_assignment_submissions_student_id (student_id),
     KEY idx_student_assignment_submissions_assignment_id (assignment_id)
 );
+
+-- ==========================================
+-- DEMO DATA FOR LMS USER MEDIA MODULE
+-- ==========================================
+
+-- Demo Data for Users (Faculty and Students)
+INSERT IGNORE INTO users (id, name, email, password_hash, role, created_at, updated_at, updated_by, is_deleted) VALUES
+(1, 'Rahul Student', 'rahul@student.sac', '$2a$10$abcdefghijklmnopqrstuv', 'Student', NOW(), NOW(), 1, 0),
+(2, 'Sneha Rao', 'sneha@student.sac', '$2a$10$abcdefghijklmnopqrstuv', 'Student', NOW(), NOW(), 1, 0),
+(3, 'Arjun Singh', 'arjun@student.sac', '$2a$10$abcdefghijklmnopqrstuv', 'Student', NOW(), NOW(), 1, 0),
+(101, 'School Admin', 'teacher@school.sac', '$2a$10$abcdefghijklmnopqrstuv', 'Faculty', NOW(), NOW(), 1, 0);
+
+-- Demo Data for Media Types
+INSERT IGNORE INTO media_types (id, institute_id, name, created_at, updated_at, updated_by, is_deleted) VALUES
+(1, 1, 'PDF Handout', NOW(), NOW(), 101, 0),
+(2, 1, 'Lecture Video', NOW(), NOW(), 101, 0),
+(3, 1, 'Slides', NOW(), NOW(), 101, 0);
+
+-- Demo Data for Media Content
+INSERT IGNORE INTO media_content (id, institute_id, title, media_type_id, created_at, updated_at, updated_by, is_deleted) VALUES
+(1, 1, 'Physics Lab Guide', 1, NOW(), NOW(), 101, 0),
+(2, 1, 'Introduction to Binary Trees', 2, NOW(), NOW(), 101, 0);
+
+-- Demo Data for Student Media tracking
+INSERT IGNORE INTO student_media_content (id, institute_id, user_id, media_content_id, accessed_date, created_at, updated_at, updated_by, is_deleted) VALUES
+(1, 1, 1, 1, CURRENT_TIMESTAMP, NOW(), NOW(), 1, 0),
+(2, 1, 2, 2, CURRENT_TIMESTAMP, NOW(), NOW(), 2, 0);
+
+-- Demo Data for Student Assignment Submissions (user-media side tracking)
+INSERT IGNORE INTO student_assignment_submissions (id, institute_id, student_id, assignment_id, submission_file_path, submission_file_name, submission_link, student_notes, submitted_date, status_id, marks_obtained, feedback_file_path, feedback_file_name, rubric_accuracy, rubric_completeness, rubric_presentation, created_at, updated_at, updated_by, is_deleted) VALUES
+(1, 1, 1, 1, 'gravitation_report.pdf', 'gravitation_report.pdf', 'https://github.com/rahul/gravitation', 'My Lab report is attached. Answers are solved.', NOW(), 2, 45.00, 'graded_feedback.pdf', 'graded_feedback.pdf', 9, 9, 9, NOW(), NOW(), 101, 0),
+(2, 1, 2, 2, 'bst_index.js', 'bst_index.js', 'https://github.com/sneha/bst', 'BST completed. Attached is index.js.', NOW(), 1, NULL, NULL, NULL, NULL, NULL, NULL, NOW(), NOW(), 2, 0);
