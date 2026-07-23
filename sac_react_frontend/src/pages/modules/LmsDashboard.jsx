@@ -623,7 +623,8 @@ function CourseManagementTab({
   const [liveDate, setLiveDate] = useState('');
   const [liveDur, setLiveDur] = useState(60);
   const [liveUrl, setLiveUrl] = useState('https://meet.google.com/abc-defg-hij');
-  const [liveCourse, setLiveCourse] = useState('c1');
+  const [liveCourse, setLiveCourse] = useState('');
+  const [liveCustomCourseName, setLiveCustomCourseName] = useState('');
 
   // Recording upload state
   const [recordingModal, setRecordingModal] = useState(null);
@@ -929,9 +930,29 @@ function CourseManagementTab({
     e.preventDefault();
     if (!liveTitle.trim()) return;
 
+    let finalCourseId = liveCourse;
+    if (liveCourse === 'custom') {
+      if (!liveCustomCourseName.trim()) {
+        alert('Please enter a custom course name.');
+        return;
+      }
+      const newCourseId = 'c_custom_' + (courses.length + 1);
+      const newCourse = {
+        id: newCourseId,
+        name: liveCustomCourseName.trim(),
+        subject: 'General',
+        class: 'Class XI'
+      };
+      setCourses([...courses, newCourse]);
+      finalCourseId = newCourseId;
+    } else if (!liveCourse) {
+      alert('Please choose a course.');
+      return;
+    }
+
     const newLive = {
       id: 'lc' + (liveClasses.length + 1),
-      courseId: liveCourse,
+      courseId: finalCourseId,
       title: liveTitle.trim(),
       dateTime: liveDate || '2026-07-06T10:00',
       duration: Number(liveDur),
@@ -943,6 +964,8 @@ function CourseManagementTab({
     setLiveClasses([newLive, ...liveClasses]);
     setShowLiveForm(false);
     setLiveTitle('');
+    setLiveCourse('');
+    setLiveCustomCourseName('');
   };
 
   // Handle Recording Upload
@@ -1810,9 +1833,23 @@ function CourseManagementTab({
               <form onSubmit={handleScheduleLive}>
                 <FormGroup label="Course" required={true}>
                   <select className="form-control" value={liveCourse} onChange={e => setLiveCourse(e.target.value)}>
+                    <option value="">choose course</option>
                     {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    <option value="custom">custom course</option>
                   </select>
                 </FormGroup>
+                {liveCourse === 'custom' && (
+                  <FormGroup label="Custom Course Name" required={true}>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      value={liveCustomCourseName} 
+                      onChange={e => setLiveCustomCourseName(e.target.value)} 
+                      placeholder="Enter custom course..." 
+                      required 
+                    />
+                  </FormGroup>
+                )}
                 <FormGroup label="Lecture Title" required={true}>
                   <input type="text" className="form-control" value={liveTitle} onChange={e => setLiveTitle(e.target.value)} placeholder="e.g. Weekly Doubts Clearing Seminar" required />
                 </FormGroup>
