@@ -1139,6 +1139,53 @@ export default function VendorManagement() {
         )}
       </div>
 
+      {useMocks && (
+        <div style={{
+          background: '#fffbeb',
+          border: '1px solid #fef3c7',
+          borderRadius: 8,
+          padding: '16px 20px',
+          marginBottom: 20,
+          color: '#b45309',
+          fontSize: 13,
+          lineHeight: '1.5',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+        }}>
+          <strong>⚠️ Session Note: Mock Sandbox Mode Active</strong>
+          <p style={{ margin: '6px 0 12px 0' }}>
+            To save and view data in your local MySQL Workbench database, you must sign out of the demo session and log in using the real database administrator account:
+          </p>
+          <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginBottom: 16 }}>
+            <div><strong>Username:</strong> <code style={{ background: '#fef3c7', padding: '2px 6px', borderRadius: 4, marginLeft: 4 }}>admin</code></div>
+            <div><strong>Password:</strong> <code style={{ background: '#fef3c7', padding: '2px 6px', borderRadius: 4, marginLeft: 4 }}>password</code></div>
+          </div>
+          <button 
+            type="button"
+            onClick={() => {
+              localStorage.removeItem('sac_token');
+              localStorage.removeItem('sac_user');
+              const basename = window.location.port === '5173' ? '' : '/testing_of_sac';
+              window.location.href = basename + '/login';
+            }}
+            style={{
+              padding: '8px 16px',
+              background: '#b45309',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: 12,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6
+            }}
+          >
+            🔒 Sign Out & Redirect to Login Page
+          </button>
+        </div>
+      )}
+
       {/* Tabs area */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 24, borderBottom: '1px solid #ddd', paddingBottom: 10 }}>
         {TABS.map(t => (
