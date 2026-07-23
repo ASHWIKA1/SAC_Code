@@ -2870,8 +2870,8 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
 
   const submitQuizAnswers = async () => {
     const payload = {
-      quizId: Number(activeQuizAttempt.id),
-      studentId: 1, // Rahul Student
+      quiz: { id: Number(activeQuizAttempt.id) },
+      studentId: 2, // Rahul Student (user_id 2 in users table)
       score: 100, // standard complete score
       evaluated: 1,
       remarks: 'Well done on completing the quiz within the time limit!',
