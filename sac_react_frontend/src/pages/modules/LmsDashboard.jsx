@@ -598,6 +598,8 @@ function CourseManagementTab({
   const [showSubmitModal, setShowSubmitModal] = useState(null); // stores active assignment for student
   const [showSubmissionsPopup, setShowSubmissionsPopup] = useState(null); // stores active assignment for submissions list popup
   const [deleteConfirmAssignment, setDeleteConfirmAssignment] = useState(null); // stores assignment to delete
+  const [submissionSearch, setSubmissionSearch] = useState('');
+  const [submissionFilter, setSubmissionFilter] = useState('all'); // 'all' | 'submitted' | 'pending'
   
   // Resource/Content Upload States
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -2083,74 +2085,137 @@ function CourseManagementTab({
       )}
 
       {/* 5. Submissions List Popup Modal */}
-      {showSubmissionsPopup && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9998 }}>
-          <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '640px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h5 style={{ fontWeight: 600, marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Submissions for: {showSubmissionsPopup.title}</span>
-              <button 
-                type="button" 
-                className="btn-secondary-outline btn_sm"
-                onClick={() => setShowSubmissionsPopup(null)}
-              >
-                Close
-              </button>
-            </h5>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Below is the list of student submissions. You can open their attachments and grade their work.
-            </p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {submissions.filter(s => s.assignmentId === showSubmissionsPopup.id).length === 0 ? (
-                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px', border: '1px dashed #ccc', borderRadius: '6px' }}>
-                  No submissions uploaded yet.
-                </div>
-              ) : (
-                submissions.filter(s => s.assignmentId === showSubmissionsPopup.id).map(s => (
-                  <div key={s.id} style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '6px', background: '#fcfcfc', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <strong style={{ fontSize: '13.5px' }}>{s.studentName}</strong>
-                      <span className={`badge ${s.graded ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: '11px' }}>
-                        {s.graded ? `Graded: ${s.marks}/${showSubmissionsPopup.maxMarks}` : 'Pending Grade'}
-                      </span>
-                    </div>
-                    
-                    <div style={{ fontSize: '12.5px', color: '#444' }}>
-                      <strong>Submitted Notes:</strong> "{s.submissionText || s.studentNotes || 'No notes provided'}"
-                    </div>
+      {showSubmissionsPopup && (() => {
+        // Enrolled students list
+        const enrolledStudents = [
+          { id: 1, name: 'Rahul Student' },
+          { id: 2, name: 'Sneha Rao' },
+          { id: 3, name: 'Arjun Singh' }
+        ];
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', borderTop: '1px solid #eee', paddingTop: '8px', marginTop: '4px' }}>
-                      <div style={{ display: 'flex', gap: '14px', fontSize: '12px' }}>
-                        {s.fileUrl && (
-                          <div>
-                            📁 Document: <a href={`#file-${s.fileUrl}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline', fontWeight: 600 }}>{s.fileUrl}</a>
-                          </div>
-                        )}
-                        {s.submissionLink && (
-                          <div>
-                            🔗 Link: <a href={s.submissionLink} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline', fontWeight: 600 }}>GitHub/Drive Link</a>
+        // Map students to submissions
+        const studentSubmissionList = enrolledStudents.map(student => {
+          const sub = submissions.find(s => s.assignmentId === showSubmissionsPopup.id && s.studentName === student.name);
+          return {
+            studentName: student.name,
+            submission: sub,
+            submitted: !!sub
+          };
+        });
+
+        // Filter student list by search and status
+        const filteredList = studentSubmissionList.filter(item => {
+          const matchesSearch = item.studentName.toLowerCase().includes(submissionSearch.toLowerCase());
+          const matchesFilter = submissionFilter === 'all' 
+            ? true 
+            : submissionFilter === 'submitted' 
+              ? item.submitted 
+              : !item.submitted;
+          return matchesSearch && matchesFilter;
+        });
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9998 }}>
+            <div style={{ background: '#fff', borderRadius: '8px', width: '100%', maxWidth: '640px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
+              <h5 style={{ fontWeight: 600, marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Submissions for: {showSubmissionsPopup.title}</span>
+                <button 
+                  type="button" 
+                  className="btn-secondary-outline btn_sm"
+                  onClick={() => {
+                    setShowSubmissionsPopup(null);
+                    setSubmissionSearch('');
+                    setSubmissionFilter('all');
+                  }}
+                >
+                  Close
+                </button>
+              </h5>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                Below is the list of student submissions. You can open their attachments and grade their work.
+              </p>
+
+              {/* Search and Filter Row */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="🔍 Search student name..." 
+                    value={submissionSearch} 
+                    onChange={e => setSubmissionSearch(e.target.value)} 
+                  />
+                </div>
+                <div style={{ width: '180px' }}>
+                  <select 
+                    className="form-control" 
+                    value={submissionFilter} 
+                    onChange={e => setSubmissionFilter(e.target.value)}
+                  >
+                    <option value="all">Show All Students</option>
+                    <option value="submitted">Submitted Only</option>
+                    <option value="pending">Not Submitted Only</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {filteredList.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px', border: '1px dashed #ccc', borderRadius: '6px' }}>
+                    No matching students or submissions found.
+                  </div>
+                ) : (
+                  filteredList.map(item => {
+                    const s = item.submission;
+                    return (
+                      <div key={item.studentName} style={{ border: '1px solid var(--border-color)', padding: '14px', borderRadius: '6px', background: item.submitted ? '#fcfcfc' : '#fcf8f8', opacity: item.submitted ? 1 : 0.8 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong style={{ fontSize: '13.5px' }}>{item.studentName}</strong>
+                          <span className={`badge ${item.submitted ? (s.graded ? 'badge-success' : 'badge-warning') : 'badge-danger'}`} style={{ fontSize: '11px' }}>
+                            {item.submitted ? (s.graded ? `Graded: ${s.marks}/${showSubmissionsPopup.maxMarks}` : 'Pending Grade') : 'Not Submitted'}
+                          </span>
+                        </div>
+                        
+                        <div style={{ fontSize: '12.5px', color: '#444', marginTop: '8px' }}>
+                          <strong>Submitted Notes:</strong> "{item.submitted ? (s.submissionText || s.studentNotes || 'No notes provided') : 'No work submitted yet.'}"
+                        </div>
+
+                        {item.submitted && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', borderTop: '1px solid #eee', paddingTop: '8px', marginTop: '8px' }}>
+                            <div style={{ display: 'flex', gap: '14px', fontSize: '12px' }}>
+                              {s.fileUrl && (
+                                <div>
+                                  📁 Document: <a href={`#file-${s.fileUrl}`} style={{ color: 'var(--primary-color)', textDecoration: 'underline', fontWeight: 600 }}>{s.fileUrl}</a>
+                                </div>
+                              )}
+                              {s.submissionLink && (
+                                <div>
+                                  🔗 Link: <a href={s.submissionLink} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline', fontWeight: 600 }}>GitHub/Drive Link</a>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <button 
+                              className="primary_btn btn_sm" 
+                              style={{ padding: '4px 10px', fontSize: '11px' }}
+                              onClick={() => {
+                                setShowGradingModal(s);
+                                setShowSubmissionsPopup(null);
+                              }}
+                            >
+                              {s.graded ? 'Edit Grade / Review' : 'Grade Submission'}
+                            </button>
                           </div>
                         )}
                       </div>
-                      
-                      <button 
-                        className="primary_btn btn_sm" 
-                        style={{ padding: '4px 10px', fontSize: '11px' }}
-                        onClick={() => {
-                          setShowGradingModal(s);
-                          setShowSubmissionsPopup(null);
-                        }}
-                      >
-                        {s.graded ? 'Edit Grade / Review' : 'Grade Submission'}
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmAssignment && (
