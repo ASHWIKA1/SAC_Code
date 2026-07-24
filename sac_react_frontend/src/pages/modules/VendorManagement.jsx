@@ -65,7 +65,7 @@ export default function VendorManagement() {
 
       const [vRes, dRes, nRes, mRes, aRes, cRes, prRes, poRes, delRes, grnRes, payRes, audRes, perfRes, dashRes] = await Promise.all([
         fetchOrMock(api.get('/api/v1/vendors'), MOCK_VENDORS),
-        fetchOrMock(api.get('/api/v1/vendors/documents/expired'), MOCK_DOCUMENTS),
+        fetchOrMock(api.get('/api/v1/vendors/documents'), MOCK_DOCUMENTS),
         fetchOrMock(api.get('/api/v1/vendors/ndas/active'), MOCK_NDAS),
         fetchOrMock(api.get('/api/v1/vendors/mous/active'), MOCK_MOUS),
         fetchOrMock(api.get('/api/v1/vendors/agreements/active'), MOCK_AGREEMENTS),

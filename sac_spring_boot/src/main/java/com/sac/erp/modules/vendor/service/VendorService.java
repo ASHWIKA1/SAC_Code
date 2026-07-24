@@ -19,7 +19,7 @@ public interface VendorService {
     VendorDocument uploadDocument(VendorDocumentDto dto, String schoolId, Long userId);
     List<VendorDocument> getDocumentsByVendor(Long vendorId, String schoolId);
     VendorDocument verifyDocument(Long id, String status, String remarks, String schoolId, String username);
-    List<VendorDocument> getExpiredDocuments(String schoolId);
+    List<VendorDocument> getAllDocuments(String schoolId);
 
     // NDA Management
     NdaAgreement createNda(NdaAgreementDto dto, String schoolId, Long userId);

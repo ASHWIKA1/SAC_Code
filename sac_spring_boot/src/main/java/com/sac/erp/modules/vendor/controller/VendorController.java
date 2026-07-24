@@ -88,10 +88,10 @@ public class VendorController {
         return ResponseEntity.ok(vendorService.verifyDocument(id, status, remarks, schoolId, "Admin"));
     }
 
-    @GetMapping("/documents/expired")
-    public ResponseEntity<List<VendorDocument>> getExpiredDocs() {
+    @GetMapping("/documents")
+    public ResponseEntity<List<VendorDocument>> getAllDocs() {
         String schoolId = TenantContext.getCurrentTenant();
-        return ResponseEntity.ok(vendorService.getExpiredDocuments(schoolId));
+        return ResponseEntity.ok(vendorService.getAllDocuments(schoolId));
     }
 
     // NDA

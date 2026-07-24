@@ -194,10 +194,8 @@ public class VendorServiceImpl implements VendorService {
     }
 
     @Override
-    public List<VendorDocument> getExpiredDocuments(String schoolId) {
-        return vendorDocumentRepository.findBySchoolIdAndIsDeleted(schoolId, 0).stream()
-                .filter(d -> d.getExpiryDate() != null && d.getExpiryDate().isBefore(LocalDate.now()))
-                .toList();
+    public List<VendorDocument> getAllDocuments(String schoolId) {
+        return vendorDocumentRepository.findBySchoolIdAndIsDeleted(schoolId, 0);
     }
 
     @Override
