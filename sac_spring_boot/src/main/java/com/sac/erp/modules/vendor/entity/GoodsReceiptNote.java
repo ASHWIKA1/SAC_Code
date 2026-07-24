@@ -18,7 +18,7 @@ public class GoodsReceiptNote extends BaseEntity {
     @Column(name = "grn_number", nullable = false, unique = true)
     private String grnNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "po_id", nullable = false)
     private PurchaseOrder purchaseOrder;
 

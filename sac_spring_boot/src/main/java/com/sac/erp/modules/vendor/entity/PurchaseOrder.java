@@ -20,7 +20,7 @@ public class PurchaseOrder extends BaseEntity {
     @Column(name = "po_number", nullable = false, unique = true)
     private String poNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vendor_id", nullable = false)
     private Vendor vendor;
 

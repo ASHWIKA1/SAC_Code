@@ -17,7 +17,7 @@ public class PurchaseAgreement extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vendor_id", nullable = false)
     private Vendor vendor;
 

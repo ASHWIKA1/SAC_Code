@@ -19,11 +19,11 @@ public class VendorPayment extends BaseEntity {
     @Column(name = "invoice_number", nullable = false)
     private String invoiceNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vendor_id", nullable = false)
     private Vendor vendor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "po_id")
     private PurchaseOrder purchaseOrder;
 
