@@ -45,6 +45,4 @@ public class User {
     @Column(name = "device_token")
     private String deviceToken;
 
-    @Column(name = "usertype")
-    private String usertype;
 }
