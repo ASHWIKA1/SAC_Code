@@ -46,7 +46,12 @@ export default function AssignmentSubmission() {
             { id: '1', name: 'Computer Science (CS-101)' },
             { id: '2', name: 'Advanced Mathematics (MATH-302)' },
             { id: '3', name: 'Mechanical Engineering (ME-205)' },
-            { id: '4', name: 'General Physics (PHY-110)' }
+            { id: '4', name: 'General Physics (PHY-110)' },
+            { id: '5', name: 'Chemistry Class XII - Organic Chemistry' },
+            { id: '6', name: 'Biology Class X - Genetics & Evolution' },
+            { id: '7', name: 'English Class IX - Grammar & Literature' },
+            { id: '8', name: 'History Class X - Modern World History' },
+            { id: '9', name: 'Geography Class IX - Physical Geography' }
           ]);
         }
       } finally {
@@ -104,6 +109,26 @@ export default function AssignmentSubmission() {
               { id: '401', name: 'Classical Mechanics' },
               { id: '402', name: 'Electromagnetism' },
               { id: '403', name: 'Quantum Optics' }
+            ],
+            '5': [
+              { id: '501', name: 'Organic Reactions' },
+              { id: '502', name: 'Polymers & Biomolecules' }
+            ],
+            '6': [
+              { id: '601', name: 'Mendelian Genetics' },
+              { id: '602', name: 'Evolutionary Theories' }
+            ],
+            '7': [
+              { id: '701', name: 'Tenses & Clauses' },
+              { id: '702', name: 'Shakespearean Plays' }
+            ],
+            '8': [
+              { id: '801', name: 'World War Alliance' },
+              { id: '802', name: 'Industrial Revolution' }
+            ],
+            '9': [
+              { id: '901', name: 'Atmospheric Layers' },
+              { id: '902', name: 'Ocean Currents' }
             ]
           };
           setSubjects(mockSubjectsMap[selectedCourse] || []);
