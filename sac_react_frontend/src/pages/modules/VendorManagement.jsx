@@ -138,53 +138,75 @@ export default function VendorManagement() {
       setForm({});
       fetchAllData();
     } catch (err) {
-      // Offline fallback simulations
-      const newRecord = { ...payload, id: Date.now() };
-      if (showModal === 'vendor') {
-        newRecord.vendorCode = 'VEND-' + Math.floor(Math.random() * 9000 + 1000);
-        newRecord.status = 'Active';
-        setVendors(prev => [newRecord, ...prev]);
-      } else if (showModal === 'doc') setDocuments(prev => [newRecord, ...prev]);
-      else if (showModal === 'nda') setNdas(prev => [newRecord, ...prev]);
-      else if (showModal === 'mou') setMous(prev => [newRecord, ...prev]);
-      else if (showModal === 'agreement') setAgreements(prev => [newRecord, ...prev]);
-      else if (showModal === 'consultant') {
-        newRecord.consultantIdStr = 'CONS-' + Math.floor(Math.random() * 9000 + 1000);
-        setConsultants(prev => [newRecord, ...prev]);
-      }
-      else if (showModal === 'pr') {
-        newRecord.requestNumber = 'PR-' + Math.floor(Math.random() * 9000 + 1000);
-        newRecord.approvalStatus = 'Pending';
-        setPurchaseRequests(prev => [newRecord, ...prev]);
-      } else if (showModal === 'po') {
-        newRecord.poNumber = 'PO-' + Math.floor(Math.random() * 9000 + 1000);
-        newRecord.poStatus = 'Draft';
-        newRecord.revisionNumber = 0;
-        setPurchaseOrders(prev => [newRecord, ...prev]);
-      } else if (showModal === 'grn') {
-        newRecord.grnNumber = 'GRN-' + Math.floor(Math.random() * 9000 + 1000);
-        setGrns(prev => [newRecord, ...prev]);
-      } else if (showModal === 'payment') {
-        newRecord.paymentRequestStatus = 'Pending Approval';
-        newRecord.paymentStatus = 'Unpaid';
-        setPayments(prev => [newRecord, ...prev]);
-      } else if (showModal === 'delivery') {
-        newRecord.deliveryStatus = 'Shipped';
-        const foundPo = purchaseOrders.find(p => p.id === Number(payload.poId));
-        newRecord.purchaseOrder = foundPo ? { poNumber: foundPo.poNumber } : { poNumber: `PO-${payload.poId}` };
-        setDeliveries(prev => [newRecord, ...prev]);
-      } else if (showModal === 'perf') {
-        newRecord.overallRating = ((Number(payload.deliveryPerformance) + Number(payload.qualityRating) + Number(payload.pricing)) / 3).toFixed(2);
-        newRecord.ratingLevel = newRecord.overallRating >= 4.5 ? 'Excellent' : newRecord.overallRating >= 3.5 ? 'Good' : 'Average';
-        const foundVendor = vendors.find(v => v.id === Number(payload.vendorId));
-        newRecord.vendor = foundVendor ? { vendorName: foundVendor.vendorName } : { vendorName: `Vendor #${payload.vendorId}` };
-        setPerformances(prev => [newRecord, ...prev]);
-      }
+      console.error("ERP Backend Save Failed:", err);
+      const isNetworkError = !err.response;
+      if (useMocks || isNetworkError) {
+        // Offline fallback simulations
+        const newRecord = { ...payload, id: Date.now() };
+        if (showModal === 'vendor') {
+          newRecord.vendorCode = 'VEND-' + Math.floor(Math.random() * 9000 + 1000);
+          newRecord.status = 'Active';
+          setVendors(prev => [newRecord, ...prev]);
+        } else if (showModal === 'doc') setDocuments(prev => [newRecord, ...prev]);
+        else if (showModal === 'nda') setNdas(prev => [newRecord, ...prev]);
+        else if (showModal === 'mou') setMous(prev => [newRecord, ...prev]);
+        else if (showModal === 'agreement') setAgreements(prev => [newRecord, ...prev]);
+        else if (showModal === 'consultant') {
+          newRecord.consultantIdStr = 'CONS-' + Math.floor(Math.random() * 9000 + 1000);
+          setConsultants(prev => [newRecord, ...prev]);
+        }
+        else if (showModal === 'pr') {
+          newRecord.requestNumber = 'PR-' + Math.floor(Math.random() * 9000 + 1000);
+          newRecord.approvalStatus = 'Pending';
+          setPurchaseRequests(prev => [newRecord, ...prev]);
+        } else if (showModal === 'po') {
+          newRecord.poNumber = 'PO-' + Math.floor(Math.random() * 9000 + 1000);
+          newRecord.poStatus = 'Draft';
+          newRecord.revisionNumber = 0;
+          setPurchaseOrders(prev => [newRecord, ...prev]);
+        } else if (showModal === 'grn') {
+          newRecord.grnNumber = 'GRN-' + Math.floor(Math.random() * 9000 + 1000);
+          setGrns(prev => [newRecord, ...prev]);
+        } else if (showModal === 'payment') {
+          newRecord.paymentRequestStatus = 'Pending Approval';
+          newRecord.paymentStatus = 'Unpaid';
+          setPayments(prev => [newRecord, ...prev]);
+        } else if (showModal === 'delivery') {
+          newRecord.deliveryStatus = 'Shipped';
+          const foundPo = purchaseOrders.find(p => p.id === Number(payload.poId));
+          newRecord.purchaseOrder = foundPo ? { poNumber: foundPo.poNumber } : { poNumber: `PO-${payload.poId}` };
+          setDeliveries(prev => [newRecord, ...prev]);
+        } else if (showModal === 'perf') {
+          newRecord.overallRating = ((Number(payload.deliveryPerformance) + Number(payload.qualityRating) + Number(payload.pricing)) / 3).toFixed(2);
+          newRecord.ratingLevel = newRecord.overallRating >= 4.5 ? 'Excellent' : newRecord.overallRating >= 3.5 ? 'Good' : 'Average';
+          const foundVendor = vendors.find(v => v.id === Number(payload.vendorId));
+          newRecord.vendor = foundVendor ? { vendorName: foundVendor.vendorName } : { vendorName: `Vendor #${payload.vendorId}` };
+          setPerformances(prev => [newRecord, ...prev]);
+        }
 
-      setAlert({ type: 'success', msg: 'Simulated record creation locally!' });
-      setTimeout(() => setAlert(null), 3000);
-      setShowModal(null);
-      setForm({});
+        setAlert({ type: 'warning', msg: 'Offline Mode: Saved locally in Sandbox Simulation.' });
+        setTimeout(() => setAlert(null), 3000);
+        setShowModal(null);
+        setForm({});
+      } else {
+        // Real backend rejected the write request
+        let errorMsg = 'Failed to save to database: ';
+        if (err.response?.data) {
+          if (typeof err.response.data === 'string') {
+            errorMsg += err.response.data;
+          } else if (err.response.data.message) {
+            errorMsg += err.response.data.message;
+          } else if (err.response.data.error) {
+            errorMsg += err.response.data.error;
+          } else {
+            errorMsg += JSON.stringify(err.response.data);
+          }
+        } else {
+          errorMsg += err.message;
+        }
+        setAlert({ type: 'danger', msg: errorMsg });
+        setTimeout(() => setAlert(null), 8000);
+      }
     } finally {
       setLoading(false);
     }
