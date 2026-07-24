@@ -443,7 +443,7 @@ export default function VendorManagement() {
       }>
         <DataTable
           columns={[
-            { label: 'Vendor ID', key: 'vendorId' },
+            { label: 'Vendor ID', render: r => r.vendor?.vendorCode || r.vendor?.id || r.vendorId || 'N/A' },
             { label: 'Document Type', key: 'documentType' },
             { label: 'Doc Number', key: 'documentNumber' },
             { label: 'Expiry Date', key: 'expiryDate' },
