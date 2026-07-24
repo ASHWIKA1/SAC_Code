@@ -29,13 +29,13 @@ public class StudentAssignment {
     @Column(name = "submitted_date")
     private LocalDateTime submittedDate;
 
-    @Column(name = "created_date", insertable = false, updatable = false)
+    @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdDate;
 
-    @Column(name = "updated_date", insertable = false, updatable = false)
+    @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedDate;
 
-    @Column(name = "updated_by_user")
+    @Column(name = "updated_by")
     private Long updatedByUser;
 
     @Column(name = "is_deleted")
@@ -46,4 +46,10 @@ public class StudentAssignment {
 
     @Column(name = "submission_text", columnDefinition = "TEXT")
     private String submissionText;
+
+    @Transient
+    private Integer score;
+
+    @Transient
+    private String remarks;
 }

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Getter
 @Setter
 @Entity
@@ -14,6 +16,7 @@ public class LmsQuizQuestion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiz_id", nullable = false)
     private LmsQuiz quiz;

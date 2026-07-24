@@ -231,38 +231,38 @@ export default function LmsDashboard() {
       }
 
       try {
-        // 2. Fetch Homeworks (Assignments)
-        const hwRes = await api.get('/api/v1/homework');
+        // 2. Fetch LMS Assignments
+        const hwRes = await api.get('/api/v1/lms/assignments');
         const hwData = hwRes.data?.data || hwRes.data || [];
         if (active && hwData.length > 0) {
           const formattedHws = hwData.map((hw) => ({
             id: String(hw.id),
-            courseId: String(hw.classId),
-            title: hw.title || hw.description?.split('\n')[0] || `Homework Task ${hw.id}`,
-            description: hw.description || 'No description provided.',
-            dueDate: hw.submissionDate || '2026-07-20',
-            maxMarks: hw.maxMarks || 100,
+            courseId: String(hw.courseId),
+            title: hw.title || hw.instructions?.split('\n')[0] || `Assignment Task ${hw.id}`,
+            description: hw.instructions || 'No instructions provided.',
+            dueDate: hw.submitDate ? hw.submitDate.split('T')[0] : '2026-07-20',
+            maxMarks: hw.totalMarks || 100,
             submissionsCount: 0
           }));
           setAssignments(formattedHws);
 
-          // Fetch submissions for loaded homeworks
+          // Fetch submissions for loaded assignments
           for (let hw of formattedHws) {
             try {
-              const subRes = await api.get(`/api/v1/homework/submissions/${hw.id}`);
+              const subRes = await api.get(`/api/v1/lms/assignments/${hw.id}/submissions`);
               const subData = subRes.data?.data || subRes.data || [];
               if (active && subData.length > 0) {
                 const formattedSubs = subData.map(sub => ({
                   id: String(sub.id),
-                  assignmentId: String(sub.homeworkId),
+                  assignmentId: String(sub.assignment?.id || hw.id),
                   studentName: sub.studentId === 1 ? 'Rahul Student' : `Student ID ${sub.studentId}`,
-                  submissionText: sub.file ? `Submitted file: ${sub.file}` : 'Completed homework submission.',
-                  fileUrl: sub.file || 'homework_work.pdf',
-                  submittedAt: new Date().toISOString(),
-                  marks: sub.marks ? Number(sub.marks) : null,
-                  rubric: sub.marks ? { accuracy: sub.rubricAccuracy || 9, completeness: sub.rubricCompleteness || 9, presentation: sub.rubricPresentation || 9 } : null,
-                  feedback: sub.feedback || 'Constructive feedback published.',
-                  graded: !!sub.marks
+                  submissionText: sub.submissionText || 'Completed assignment submission.',
+                  fileUrl: sub.fileUrl || 'assignment_work.pdf',
+                  submittedAt: sub.submittedDate ? sub.submittedDate.split('T')[0] : new Date().toISOString().split('T')[0],
+                  marks: sub.score !== null && sub.score !== undefined ? Number(sub.score) : null,
+                  rubric: sub.score !== null && sub.score !== undefined ? { accuracy: 9, completeness: 9, presentation: 9 } : null,
+                  feedback: sub.remarks || 'Constructive feedback published.',
+                  graded: sub.score !== null && sub.score !== undefined
                 }));
 
                 // Update submissions list
@@ -280,7 +280,7 @@ export default function LmsDashboard() {
           }
         }
       } catch (err) {
-        console.warn("Could not load real homeworks from backend, using fallbacks.");
+        console.warn("Could not load real assignments from backend, using fallbacks.");
       }
 
       // 3. Fetch LMS Media Content (Course Resources)
@@ -851,38 +851,32 @@ function CourseManagementTab({
 
     const payload = {
       id: editingAssignmentId ? Number(editingAssignmentId) : null,
-      classId: isNaN(Number(courseVal)) ? 1 : Number(courseVal),
-      sectionId: 1,
+      courseId: isNaN(Number(courseVal)) ? 1 : Number(courseVal),
       subjectId: 1,
       title: newTitle.trim(),
-      description: `${newTitle.trim()}\n${newDesc.trim()}`,
-      submissionDate: dueDate || new Date().toISOString().split('T')[0],
-      maxMarks: Number(maxMarks),
+      instructions: newDesc.trim(),
+      submitDate: (dueDate || new Date().toISOString().split('T')[0]) + 'T23:59:59',
+      totalMarks: Number(maxMarks),
       passingMarks: Number(passingMarks),
       assignmentType: assignmentType,
       allowedFileTypes: allowedFileTypes,
       maxFileSize: Number(maxFileSize),
-      allowLateSubmission: allowLateSub,
-      portalMode: portalMode,
-      schoolClass: schoolClass,
-      schoolSection: schoolSection === 'custom' ? customGroupName.trim() : schoolSection,
-      schoolTerm: schoolTerm,
-      schoolGradingScale: schoolGradingScale,
-      parentSignatureRequired: parentSignatureRequired,
-      statusId: assignmentStatus === 'Published' ? 2 : 1,
-      activeStatus: 1
+      allowLateSubmission: allowLateSub ? 1 : 0,
+      batch: newBatch,
+      semester: newSemester,
+      status: { id: assignmentStatus === 'Published' ? 2 : 1 }
     };
 
     try {
-      const response = await api.post('/api/v1/homework', payload);
+      const response = await api.post('/api/v1/lms/assignments', payload);
       const savedHw = response.data;
       const formattedHw = {
         id: String(savedHw.id),
-        courseId: String(savedHw.classId),
+        courseId: String(savedHw.courseId),
         title: savedHw.title || newTitle.trim(),
-        description: savedHw.description || newDesc.trim(),
-        dueDate: savedHw.submissionDate || dueDate || '2026-07-30',
-        maxMarks: Number(savedHw.maxMarks || maxMarks),
+        description: savedHw.instructions || newDesc.trim(),
+        dueDate: savedHw.submitDate ? savedHw.submitDate.split('T')[0] : dueDate || '2026-07-30',
+        maxMarks: Number(savedHw.totalMarks || maxMarks),
         subject: subjectVal,
         batch: newBatch,
         semester: newSemester,
@@ -1008,7 +1002,7 @@ function CourseManagementTab({
 
     // Call real backend submit API
     try {
-      await api.post(`/api/v1/homework/submit?homeworkId=${assignmentId}&studentId=1&file=${subFile}&submissionLink=${encodeURIComponent(subLink)}&studentNotes=${encodeURIComponent(subText)}`);
+      await api.post(`/api/v1/lms/assignments/submit?assignmentId=${assignmentId}&studentId=1&fileUrl=${subFile}&submissionText=${encodeURIComponent(subText || subLink)}`);
     } catch (err) {
       console.warn("Backend submit failed, running local simulator.", err);
     }
@@ -1052,9 +1046,8 @@ function CourseManagementTab({
     const maxVal = assignments.find(a => a.id === showGradingModal.assignmentId)?.maxMarks || 100;
     const finalMarks = calculateTotalMarks(maxVal);
 
-    // Call real backend evaluate API
     try {
-      await api.post(`/api/v1/homework/evaluate?homeworkId=${showGradingModal.assignmentId}&studentId=1&marks=${finalMarks}&status=C&feedbackFile=${gradeFeedbackFile}&feedback=${encodeURIComponent(gradeFeedback)}&rubricAccuracy=${rubricAccuracy}&rubricCompleteness=${rubricCompleteness}&rubricPresentation=${rubricPresentation}`);
+      await api.post(`/api/v1/lms/assignments/evaluate?studentAssignmentId=${showGradingModal.id}&score=${finalMarks}&remarks=${encodeURIComponent(gradeFeedback)}&needsResubmission=0`);
     } catch (err) {
       console.warn("Backend evaluate failed, running local simulator.", err);
     }
@@ -2632,7 +2625,7 @@ function CourseManagementTab({
                 onClick={async () => {
                   if (!deleteConfirmAssignment.id.startsWith('hw')) {
                     try {
-                      await api.delete(`/api/v1/homework/${deleteConfirmAssignment.id}`);
+                      await api.delete(`/api/v1/lms/assignments/${deleteConfirmAssignment.id}`);
                     } catch (err) {
                       console.warn("Could not delete assignment task from database", err);
                     }
@@ -3011,6 +3004,25 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
       return;
     }
 
+    // Automatically add currently typed question if any
+    let finalQuestions = [...questions];
+    if (qText.trim()) {
+      const activeQ = {
+        id: 'q_' + Date.now(),
+        type: qType,
+        text: qText.trim(),
+        options: qType.startsWith('mcq') ? [...qOptions] : [],
+        correct: qType === 'mcq-single' ? Number(qCorrect) : qCorrect,
+        imageUrl: qImageUrl.trim() || null
+      };
+      finalQuestions.push(activeQ);
+    }
+
+    if (finalQuestions.length === 0) {
+      alert("Please add at least one question to the quiz.");
+      return;
+    }
+
     const payload = {
       title: quizTitle.trim(),
       startDate: startDate ? new Date(startDate).toISOString() : new Date().toISOString(),
@@ -3026,7 +3038,7 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
       const savedQuiz = response.data;
       
       const savedQuestions = [];
-      for (let q of questions) {
+      for (let q of finalQuestions) {
         try {
           const qPayload = {
             questionText: q.text,
@@ -3058,7 +3070,7 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
         status: savedQuiz.status || 'Pending',
         assignedClass: savedQuiz.assignedClass || quizClass,
         assignedSection: savedQuiz.assignedSection || quizSection,
-        questions: savedQuestions.length > 0 ? savedQuestions : questions
+        questions: savedQuestions.length > 0 ? savedQuestions : finalQuestions
       };
       setQuizzes([...quizzes, formattedQuiz]);
     } catch (err) {
@@ -3071,7 +3083,7 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
         end: endDate || '2026-07-10T10:00',
         duration: totalDuration,
         status: 'Pending',
-        questions,
+        questions: finalQuestions,
         assignedClass: quizClass,
         assignedSection: quizSection
       };
@@ -3087,6 +3099,9 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
     setQuizClass('');
     setQuizSection('');
     setQuestions([]);
+    setQText('');
+    setQImageUrl('');
+    setQOptions(['', '', '', '']);
   };
 
   const handleReattemptAllow = (attemptId) => {
@@ -3738,7 +3753,7 @@ function QuizAssessmentTab({ role, quizzes, setQuizzes, quizAttempts, setQuizAtt
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button type="button" className="btn-secondary-outline" onClick={() => setActiveQuizBuilder(false)}>Cancel</button>
-              <button type="submit" className="primary_btn" disabled={questions.length === 0}>Publish Quiz</button>
+              <button type="submit" className="primary_btn" disabled={questions.length === 0 && !qText.trim()}>Publish Quiz</button>
             </div>
           </form>
         </div>
@@ -4420,20 +4435,154 @@ function ProgressTrackingTab({ role, submissions = [], assignments = [] }) {
   const isTeacher = role === 'teacher' || role === 'admin';
   const isParent = role === 'parent';
 
-  // Toggle dynamic chart data array based on Monthly/Semester performance view selector
-  const attendanceData = metricView === 'Monthly' 
-    ? MOCK_ANALYTICS.attendance 
-    : [
+  const STUDENT_DATA_MAP = {
+    'Rahul Student': {
+      quizScores: [
+        { name: 'Quiz 1', classAvg: 78, studentScore: 85 },
+        { name: 'Quiz 2', classAvg: 65, studentScore: 72 },
+        { name: 'Quiz 3', classAvg: 80, studentScore: 92 },
+        { name: 'Quiz 4', classAvg: 72, studentScore: 68 }
+      ],
+      examGrades: [
+        { name: 'Unit Test I', max: 50, avg: 38, student: 42 },
+        { name: 'Midterm', max: 100, avg: 74, student: 84 },
+        { name: 'Unit Test II', max: 50, avg: 41, student: 46 }
+      ],
+      attendanceMonthly: [
+        { month: 'Jan', percent: 95 },
+        { month: 'Feb', percent: 92 },
+        { month: 'Mar', percent: 96 },
+        { month: 'Apr', percent: 89 },
+        { month: 'May', percent: 94 },
+        { month: 'Jun', percent: 98 }
+      ],
+      attendanceSemester: [
         { month: 'Semester 1 Avg', percent: 93 },
         { month: 'Semester 2 Avg', percent: 97 }
-      ];
-
-  const behaviorData = metricView === 'Monthly' 
-    ? MOCK_ANALYTICS.behavior 
-    : [
+      ],
+      behaviorMonthly: [
+        { week: 'W1', score: 4.5 },
+        { week: 'W2', score: 4.8 },
+        { week: 'W3', score: 4.2 },
+        { week: 'W4', score: 4.9 }
+      ],
+      behaviorSemester: [
         { week: 'Sem 1 Avg', score: 4.4 },
         { week: 'Sem 2 Avg', score: 4.8 }
-      ];
+      ],
+      strengths: ['Mathematical Formulation', 'Problem Solving Speed', 'Conceptual Clarity in Physics'],
+      weakAreas: ['Detailed Essay Structuring', 'Scribble notes readability', 'Organic Chemistry formulas'],
+      participationIndex: '8.8 / 10 (Very Active)',
+      facultyRemarks: 'Rahul displays outstanding logical and reasoning skills in sciences. He responds frequently to discussion questions and completes peer evaluations early. Recommend focus on writing structured proofs and formatting code comments.',
+      baseHistory: [
+        { assignment: 'Gravitational Laws Essay', date: '2026-07-02', status: 'Graded', marks: '88/100', onTime: true },
+        { assignment: 'Redox Reactions Lab', date: '2026-06-25', status: 'Graded', marks: '45/50', onTime: true },
+        { assignment: 'Thermodynamics Worksheet', date: '2026-06-18', status: 'Late Submitted', marks: '32/50', onTime: false },
+        { assignment: 'Calculus Derivatives Mock', date: '2026-06-10', status: 'Graded', marks: '96/100', onTime: true }
+      ]
+    },
+    'Sneha Rao': {
+      quizScores: [
+        { name: 'Quiz 1', classAvg: 78, studentScore: 90 },
+        { name: 'Quiz 2', classAvg: 65, studentScore: 88 },
+        { name: 'Quiz 3', classAvg: 80, studentScore: 85 },
+        { name: 'Quiz 4', classAvg: 72, studentScore: 94 }
+      ],
+      examGrades: [
+        { name: 'Unit Test I', max: 50, avg: 38, student: 48 },
+        { name: 'Midterm', max: 100, avg: 74, student: 92 },
+        { name: 'Unit Test II', max: 50, avg: 41, student: 47 }
+      ],
+      attendanceMonthly: [
+        { month: 'Jan', percent: 98 },
+        { month: 'Feb', percent: 97 },
+        { month: 'Mar', percent: 99 },
+        { month: 'Apr', percent: 96 },
+        { month: 'May', percent: 98 },
+        { month: 'Jun', percent: 100 }
+      ],
+      attendanceSemester: [
+        { month: 'Semester 1 Avg', percent: 97 },
+        { month: 'Semester 2 Avg', percent: 99 }
+      ],
+      behaviorMonthly: [
+        { week: 'W1', score: 4.9 },
+        { week: 'W2', score: 5.0 },
+        { week: 'W3', score: 4.8 },
+        { week: 'W4', score: 5.0 }
+      ],
+      behaviorSemester: [
+        { week: 'Sem 1 Avg', score: 4.9 },
+        { week: 'Sem 2 Avg', score: 4.95 }
+      ],
+      strengths: ['Organic Chemistry synthesis', 'Anatomical Diagrams', 'Biology Concept Retention'],
+      weakAreas: ['Physics Calculus applications', 'Calculus derivative speed', 'Lab instrument calibration'],
+      participationIndex: '9.6 / 10 (Excellent)',
+      facultyRemarks: 'Sneha is an exceptionally bright and active student, showing absolute mastery in Biology and Organic Chemistry. She is always helping peers. She can improve by practicing more numerical problems in Physics.',
+      baseHistory: [
+        { assignment: 'Gravitational Laws Essay', date: '2026-07-02', status: 'Graded', marks: '94/100', onTime: true },
+        { assignment: 'Redox Reactions Lab', date: '2026-06-25', status: 'Graded', marks: '48/50', onTime: true },
+        { assignment: 'Thermodynamics Worksheet', date: '2026-06-18', status: 'Graded', marks: '44/50', onTime: true },
+        { assignment: 'Calculus Derivatives Mock', date: '2026-06-10', status: 'Graded', marks: '82/100', onTime: true }
+      ]
+    },
+    'Arjun Singh': {
+      quizScores: [
+        { name: 'Quiz 1', classAvg: 78, studentScore: 70 },
+        { name: 'Quiz 2', classAvg: 65, studentScore: 60 },
+        { name: 'Quiz 3', classAvg: 80, studentScore: 74 },
+        { name: 'Quiz 4', classAvg: 72, studentScore: 65 }
+      ],
+      examGrades: [
+        { name: 'Unit Test I', max: 50, avg: 38, student: 34 },
+        { name: 'Midterm', max: 100, avg: 74, student: 68 },
+        { name: 'Unit Test II', max: 50, avg: 41, student: 36 }
+      ],
+      attendanceMonthly: [
+        { month: 'Jan', percent: 88 },
+        { month: 'Feb', percent: 85 },
+        { month: 'Mar', percent: 90 },
+        { month: 'Apr', percent: 82 },
+        { month: 'May', percent: 88 },
+        { month: 'Jun', percent: 89 }
+      ],
+      attendanceSemester: [
+        { month: 'Semester 1 Avg', percent: 85 },
+        { month: 'Semester 2 Avg', percent: 88 }
+      ],
+      behaviorMonthly: [
+        { week: 'W1', score: 3.8 },
+        { week: 'W2', score: 4.0 },
+        { week: 'W3', score: 3.5 },
+        { week: 'W4', score: 4.1 }
+      ],
+      behaviorSemester: [
+        { week: 'Sem 1 Avg', score: 3.7 },
+        { week: 'Sem 2 Avg', score: 3.9 }
+      ],
+      strengths: ['Creative Essay Writing', 'History Facts Recall', 'English Literature Analysis'],
+      weakAreas: ['Algebraic simplification', 'Physics mechanical calculations', 'Chemistry stoichiometry'],
+      participationIndex: '7.2 / 10 (Moderate)',
+      facultyRemarks: 'Arjun displays excellent potential in literary subjects and creative writing. However, he struggles with quantitative methods and scientific numericals. He needs consistent practice and should attend remedial sessions for Math and Physics.',
+      baseHistory: [
+        { assignment: 'Gravitational Laws Essay', date: '2026-07-03', status: 'Graded', marks: '75/100', onTime: true },
+        { assignment: 'Redox Reactions Lab', date: '2026-06-26', status: 'Graded', marks: '36/50', onTime: true },
+        { assignment: 'Thermodynamics Worksheet', date: '2026-06-20', status: 'Graded', marks: '28/50', onTime: true },
+        { assignment: 'Calculus Derivatives Mock', date: '2026-06-12', status: 'Late Submitted', marks: '58/100', onTime: false }
+      ]
+    }
+  };
+
+  const studentData = STUDENT_DATA_MAP[selectedStudent] || STUDENT_DATA_MAP['Rahul Student'];
+
+  // Toggle dynamic chart data array based on Monthly/Semester performance view selector
+  const attendanceData = metricView === 'Monthly' 
+    ? studentData.attendanceMonthly 
+    : studentData.attendanceSemester;
+
+  const behaviorData = metricView === 'Monthly' 
+    ? studentData.behaviorMonthly 
+    : studentData.behaviorSemester;
 
   // Dynamically map submissions for selected student
   const dynamicHistory = submissions
@@ -4453,19 +4602,12 @@ function ProgressTrackingTab({ role, submissions = [], assignments = [] }) {
       };
     });
 
-  const baseHistory = [
-    { assignment: 'Gravitational Laws Essay', date: '2026-07-02', status: 'Graded', marks: '88/100', onTime: true },
-    { assignment: 'Redox Reactions Lab', date: '2026-06-25', status: 'Graded', marks: '45/50', onTime: true },
-    { assignment: 'Thermodynamics Worksheet', date: '2026-06-18', status: 'Late Submitted', marks: '32/50', onTime: false },
-    { assignment: 'Calculus Derivatives Mock', date: '2026-06-10', status: 'Graded', marks: '96/100', onTime: true }
-  ];
+  const submissionHistory = [...dynamicHistory, ...studentData.baseHistory];
 
-  const submissionHistory = [...dynamicHistory, ...baseHistory];
-
-  const strengths = ['Mathematical Formulation', 'Problem Solving Speed', 'Conceptual Clarity in Physics'];
-  const weakAreas = ['Detailed Essay Structuring', 'Scribble notes readability', 'Organic Chemistry formulas'];
-  const participationIndex = '8.8 / 10 (Very Active)';
-  const facultyRemarks = 'Rahul displays outstanding logical and reasoning skills in sciences. He responds frequently to discussion questions and completes peer evaluations early. Recommend focus on writing structured proofs and formatting code comments.';
+  const strengths = studentData.strengths;
+  const weakAreas = studentData.weakAreas;
+  const participationIndex = studentData.participationIndex;
+  const facultyRemarks = studentData.facultyRemarks;
 
   return (
     <WhiteCard title={isParent ? "Eriberto's Progress Tracker" : "Class Progress Analytics"}>
@@ -4524,7 +4666,7 @@ function ProgressTrackingTab({ role, submissions = [], assignments = [] }) {
             <h6 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '12px' }}>Quiz Performance Trend</h6>
             <div style={{ width: '100%' }}>
               <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={MOCK_ANALYTICS.quizScores}>
+                <AreaChart data={studentData.quizScores}>
                   <defs>
                     <linearGradient id="colorStudent" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#7C32FF" stopOpacity={0.8}/>
@@ -4550,7 +4692,7 @@ function ProgressTrackingTab({ role, submissions = [], assignments = [] }) {
             <h6 style={{ fontWeight: 600, fontSize: '13px', marginBottom: '12px' }}>Major Exams Performance</h6>
             <div style={{ width: '100%' }}>
               <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={MOCK_ANALYTICS.examGrades}>
+                <BarChart data={studentData.examGrades}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />

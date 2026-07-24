@@ -115,7 +115,7 @@ public class LmsServiceImpl implements LmsService {
 
     @Override
     @Transactional
-    public StudentAssignment submitAssignment(Long assignmentId, Long studentId) {
+    public StudentAssignment submitAssignment(Long assignmentId, Long studentId, String fileUrl, String submissionText) {
         AssignmentDetails assignment = assignmentDetailsRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment details not found"));
 
@@ -125,6 +125,8 @@ public class LmsServiceImpl implements LmsService {
         sub.setAssignment(assignment);
         sub.setStudentId(studentId);
         sub.setSubmittedDate(LocalDateTime.now());
+        sub.setFileUrl(fileUrl);
+        sub.setSubmissionText(submissionText);
         sub.setIsDeleted(0);
 
         AssignmentStatus status = assignmentStatusRepository.findByStatusNameIgnoreCase("Submitted")
@@ -142,7 +144,14 @@ public class LmsServiceImpl implements LmsService {
     @Override
     @Transactional(readOnly = true)
     public List<StudentAssignment> getSubmissionsByAssignment(Long assignmentId) {
-        return studentAssignmentRepository.findByAssignmentIdAndIsDeleted(assignmentId, 0);
+        List<StudentAssignment> submissions = studentAssignmentRepository.findByAssignmentIdAndIsDeleted(assignmentId, 0);
+        for (StudentAssignment sub : submissions) {
+            assignmentEvaluationRepository.findByStudentAssignmentId(sub.getId()).ifPresent(eval -> {
+                sub.setScore(eval.getScore());
+                sub.setRemarks(eval.getRemarks());
+            });
+        }
+        return submissions;
     }
 
     @Override
@@ -196,6 +205,15 @@ public class LmsServiceImpl implements LmsService {
         studentAssignmentRepository.save(sub);
 
         return assignmentEvaluationRepository.save(eval);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAssignment(Long id) {
+        AssignmentDetails assignment = assignmentDetailsRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Assignment not found"));
+        assignment.setIsDeleted(1);
+        assignmentDetailsRepository.save(assignment);
     }
 
     @Override

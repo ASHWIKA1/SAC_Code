@@ -39,7 +39,7 @@ public class AssignmentDetails {
     @Column(name = "updated_date", insertable = false, updatable = false)
     private LocalDateTime updatedDate;
 
-    @Column(name = "updated_by_user")
+    @Column(name = "updated_by")
     private Long updatedByUser;
 
     @Column(name = "is_deleted")

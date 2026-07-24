@@ -16,9 +16,10 @@ public interface LmsService {
     List<AssignmentDetails> getAllAssignments();
     List<AssignmentDetails> getAssignmentsByCourse(Long courseId);
     AssignmentDetails createAssignment(AssignmentDetails assignment);
-    StudentAssignment submitAssignment(Long assignmentId, Long studentId);
+    StudentAssignment submitAssignment(Long assignmentId, Long studentId, String fileUrl, String submissionText);
     List<StudentAssignment> getSubmissionsByAssignment(Long assignmentId);
     StudentAssignmentReview reviewSubmission(Long studentAssignmentId, String remarks, Long facultyId);
+    void deleteAssignment(Long id);
 
     // Enhanced operations
     AssignmentEvaluation evaluateAssignment(Long studentAssignmentId, Integer score, String remarks, Integer needsResubmission);

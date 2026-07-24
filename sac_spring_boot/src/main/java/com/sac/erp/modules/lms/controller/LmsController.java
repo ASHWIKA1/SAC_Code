@@ -70,9 +70,18 @@ public class LmsController {
     @PostMapping("/assignments/submit")
     public ResponseEntity<StudentAssignment> submitAssignment(
             @RequestParam Long assignmentId,
-            @RequestParam Long studentId) {
+            @RequestParam Long studentId,
+            @RequestParam(required = false) String fileUrl,
+            @RequestParam(required = false) String submissionText) {
         log.info("REST request to submit LMS Assignment {} for student {}", assignmentId, studentId);
-        return ResponseEntity.ok(lmsService.submitAssignment(assignmentId, studentId));
+        return ResponseEntity.ok(lmsService.submitAssignment(assignmentId, studentId, fileUrl, submissionText));
+    }
+
+    @DeleteMapping("/assignments/{id}")
+    public ResponseEntity<Void> deleteAssignment(@PathVariable Long id) {
+        log.info("REST request to delete LMS Assignment: {}", id);
+        lmsService.deleteAssignment(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/assignments/{assignmentId}/submissions")
