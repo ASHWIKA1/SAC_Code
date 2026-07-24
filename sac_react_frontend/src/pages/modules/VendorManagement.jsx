@@ -23,6 +23,7 @@ export default function VendorManagement() {
   const [useMocks, setUseMocks] = useState(false);
   const [alert, setAlert] = useState(null);
   const [vendors, setVendors] = useState([]);
+  const [vendorsList, setVendorsList] = useState([]); // Advanced filtering table view
   const [documents, setDocuments] = useState([]);
   const [ndas, setNdas] = useState([]);
   const [mous, setMous] = useState([]);
@@ -37,6 +38,32 @@ export default function VendorManagement() {
   const [performances, setPerformances] = useState([]);
   const [dashboardData, setDashboardData] = useState(null);
 
+  // Advanced Filters State
+  const [showFilterPanel, setShowFilterPanel] = useState(true);
+  const [filters, setFilters] = useState({
+    vendorCode: '',
+    vendorName: '',
+    vendorType: '',
+    companyName: '',
+    vendorCategory: '',
+    gstNumber: '',
+    panNumber: '',
+    email: '',
+    mobile: '',
+    city: '',
+    state: '',
+    country: '',
+    startDate: '',
+    endDate: '',
+    status: '',
+  });
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+  const [sortBy, setSortBy] = useState('id');
+  const [sortDir, setSortDir] = useState('desc');
+
   // Form Modals
   const [showModal, setShowModal] = useState(null); // 'vendor', 'doc', 'nda', 'mou', 'agreement', 'consultant', 'pr', 'po', 'delivery', 'grn', 'payment', 'perf'
   const [form, setForm] = useState({});
@@ -44,6 +71,47 @@ export default function VendorManagement() {
   const [detailItem, setDetailItem] = useState(null);
 
   // --- API INTEGRATION ---
+  const fetchVendorsList = async (pageIdx = page, currentFilters = appliedFilters, sorting = { sortBy, sortDir }) => {
+    setLoading(true);
+    try {
+      const params = {
+        page: pageIdx,
+        size: 10,
+        sortBy: sorting.sortBy,
+        direction: sorting.sortDir,
+      };
+      Object.keys(currentFilters).forEach(k => {
+        if (currentFilters[k]) params[k] = currentFilters[k];
+      });
+
+      const res = await api.get('/api/v1/vendors/filter', { params });
+      if (res && res.data) {
+        setVendorsList(res.data.content || []);
+        setTotalPages(res.data.totalPages || 1);
+        setTotalElements(res.data.totalElements || 0);
+        setUseMocks(false);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch filtered vendors from database. Falling back to mock dataset.", err);
+      let filtered = [...MOCK_VENDORS];
+      Object.keys(currentFilters).forEach(key => {
+        const val = currentFilters[key];
+        if (val) {
+          filtered = filtered.filter(item => {
+            const itemVal = item[key];
+            return itemVal && String(itemVal).toLowerCase().includes(String(val).toLowerCase());
+          });
+        }
+      });
+      setVendorsList(filtered);
+      setTotalPages(1);
+      setTotalElements(filtered.length);
+      setUseMocks(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchAllData = async () => {
     setLoading(true);
     try {
@@ -81,6 +149,7 @@ export default function VendorManagement() {
       ]);
 
       setVendors(vRes.data);
+      setVendorsList(vRes.data);
       setDocuments(dRes.data);
       setNdas(nRes.data);
       setMous(mRes.data);
@@ -107,6 +176,21 @@ export default function VendorManagement() {
   useEffect(() => {
     fetchAllData();
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'registration') return;
+    const timer = setTimeout(() => {
+      setAppliedFilters(filters);
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [filters, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'registration') {
+      fetchVendorsList(page, appliedFilters, { sortBy, sortDir });
+    }
+  }, [page, appliedFilters, sortBy, sortDir, activeTab]);
 
   // Form Submit
   const handleSave = async (e) => {
@@ -147,6 +231,7 @@ export default function VendorManagement() {
           newRecord.vendorCode = 'VEND-' + Math.floor(Math.random() * 9000 + 1000);
           newRecord.status = 'Active';
           setVendors(prev => [newRecord, ...prev]);
+          setVendorsList(prev => [newRecord, ...prev]);
         } else if (showModal === 'doc') setDocuments(prev => [newRecord, ...prev]);
         else if (showModal === 'nda') setNdas(prev => [newRecord, ...prev]);
         else if (showModal === 'mou') setMous(prev => [newRecord, ...prev]);
@@ -404,35 +489,188 @@ export default function VendorManagement() {
     );
   };
 
+  const handleReset = () => {
+    setFilters({
+      vendorCode: '',
+      vendorName: '',
+      vendorType: '',
+      companyName: '',
+      vendorCategory: '',
+      gstNumber: '',
+      panNumber: '',
+      email: '',
+      mobile: '',
+      city: '',
+      state: '',
+      country: '',
+      startDate: '',
+      endDate: '',
+      status: '',
+    });
+    setAppliedFilters({});
+    setPage(0);
+  };
+
   const renderVendors = () => {
     return (
-      <WhiteCard title="Vendor Directory" actions={
-        <button className="primary_btn" onClick={() => { setForm({}); setShowModal('vendor'); }}>+ Register Vendor</button>
-      }>
-        <div style={{ marginBottom: 16, display: 'flex', gap: 10 }}>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search vendor name, code, contact..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ maxWidth: 300 }}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {/* Advanced Filters Panel */}
+        <WhiteCard title="Advanced Search & Filters" actions={
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="primary_btn" onClick={() => setShowFilterPanel(!showFilterPanel)}>
+              {showFilterPanel ? 'Hide Filters' : 'Show Filters'}
+            </button>
+            <button className="primary_btn" style={{ background: '#4b5563' }} onClick={handleReset}>Reset</button>
+            <button className="primary_btn" style={{ background: '#10b981' }} onClick={() => handleExport('vendor')}>Export CSV</button>
+          </div>
+        }>
+          {showFilterPanel && (
+            <form onSubmit={(e) => { e.preventDefault(); setAppliedFilters(filters); setPage(0); }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 15 }}>
+              <FormGroup label="Vendor Code">
+                <input type="text" className="form-control" value={filters.vendorCode} onChange={e => setFilters(prev => ({...prev, vendorCode: e.target.value}))} placeholder="Search code..." />
+              </FormGroup>
+              <FormGroup label="Vendor Name">
+                <input type="text" className="form-control" value={filters.vendorName} onChange={e => setFilters(prev => ({...prev, vendorName: e.target.value}))} placeholder="Search name..." />
+              </FormGroup>
+              <FormGroup label="Vendor Type">
+                <select className="form-control" value={filters.vendorType} onChange={e => setFilters(prev => ({...prev, vendorType: e.target.value}))}>
+                  <option value="">All Types</option>
+                  <option value="Supplier">Supplier</option>
+                  <option value="Service Provider">Service Provider</option>
+                  <option value="Consultant">Consultant</option>
+                  <option value="Contractor">Contractor</option>
+                  <option value="Software Vendor">Software/SaaS Vendor</option>
+                  <option value="IT Hardware Vendor">IT Hardware</option>
+                  <option value="Office & Stationery Supplies">Office & Stationery</option>
+                  <option value="Logistics & Transport">Logistics & Transport</option>
+                  <option value="Facility & Maintenance">Facility & Maintenance</option>
+                  <option value="Others">Others</option>
+                </select>
+              </FormGroup>
+              <FormGroup label="Company Name">
+                <input type="text" className="form-control" value={filters.companyName} onChange={e => setFilters(prev => ({...prev, companyName: e.target.value}))} placeholder="Search company..." />
+              </FormGroup>
+              <FormGroup label="Vendor Category">
+                <select className="form-control" value={filters.vendorCategory} onChange={e => setFilters(prev => ({...prev, vendorCategory: e.target.value}))}>
+                  <option value="">All Categories</option>
+                  <option value="Preferred">Preferred</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Under Review">Under Review</option>
+                  <option value="Probationary">Probationary</option>
+                </select>
+              </FormGroup>
+              <FormGroup label="GST Number">
+                <input type="text" className="form-control" value={filters.gstNumber} onChange={e => setFilters(prev => ({...prev, gstNumber: e.target.value}))} placeholder="GST..." />
+              </FormGroup>
+              <FormGroup label="PAN Number">
+                <input type="text" className="form-control" value={filters.panNumber} onChange={e => setFilters(prev => ({...prev, panNumber: e.target.value}))} placeholder="PAN..." />
+              </FormGroup>
+              <FormGroup label="Email">
+                <input type="text" className="form-control" value={filters.email} onChange={e => setFilters(prev => ({...prev, email: e.target.value}))} placeholder="Email..." />
+              </FormGroup>
+              <FormGroup label="Mobile Number">
+                <input type="text" className="form-control" value={filters.mobile} onChange={e => setFilters(prev => ({...prev, mobile: e.target.value}))} placeholder="Mobile..." />
+              </FormGroup>
+              <FormGroup label="City">
+                <select className="form-control" value={filters.city} onChange={e => setFilters(prev => ({...prev, city: e.target.value}))}>
+                  <option value="">All Cities</option>
+                  <option value="Chicago">Chicago</option>
+                  <option value="New York">New York</option>
+                  <option value="San Francisco">San Francisco</option>
+                  <option value="London">London</option>
+                  <option value="Delhi">Delhi</option>
+                  <option value="Mumbai">Mumbai</option>
+                  <option value="Bangalore">Bangalore</option>
+                </select>
+              </FormGroup>
+              <FormGroup label="State">
+                <select className="form-control" value={filters.state} onChange={e => setFilters(prev => ({...prev, state: e.target.value}))}>
+                  <option value="">All States</option>
+                  <option value="Illinois">Illinois</option>
+                  <option value="California">California</option>
+                  <option value="New York">New York</option>
+                  <option value="Delhi">Delhi</option>
+                  <option value="Maharashtra">Maharashtra</option>
+                  <option value="Karnataka">Karnataka</option>
+                </select>
+              </FormGroup>
+              <FormGroup label="Country">
+                <select className="form-control" value={filters.country} onChange={e => setFilters(prev => ({...prev, country: e.target.value}))}>
+                  <option value="">All Countries</option>
+                  <option value="United States">United States</option>
+                  <option value="India">India</option>
+                  <option value="United Kingdom">United Kingdom</option>
+                </select>
+              </FormGroup>
+              <FormGroup label="Reg. Start Date">
+                <input type="date" className="form-control" value={filters.startDate} onChange={e => setFilters(prev => ({...prev, startDate: e.target.value}))} />
+              </FormGroup>
+              <FormGroup label="Reg. End Date">
+                <input type="date" className="form-control" value={filters.endDate} onChange={e => setFilters(prev => ({...prev, endDate: e.target.value}))} />
+              </FormGroup>
+              <FormGroup label="Status">
+                <select className="form-control" value={filters.status} onChange={e => setFilters(prev => ({...prev, status: e.target.value}))}>
+                  <option value="">All Statuses</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                  <option value="Pending Approval">Pending Approval</option>
+                  <option value="Suspended">Suspended</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </FormGroup>
+              <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+                <button type="submit" className="primary_btn" style={{ padding: '8px 24px' }}>Apply Filters</button>
+              </div>
+            </form>
+          )}
+        </WhiteCard>
+
+        {/* Vendors Directory Card */}
+        <WhiteCard title="Registered Vendors" actions={
+          <button className="primary_btn" onClick={() => { setForm({}); setShowModal('vendor'); }}>+ Register Vendor</button>
+        }>
+          <DataTable
+            columns={[
+              { label: 'Code', key: 'vendorCode' },
+              { label: 'Name', key: 'vendorName' },
+              { label: 'Company', key: 'companyName' },
+              { label: 'Type', key: 'vendorType' },
+              { label: 'Contact Person', key: 'contactPerson' },
+              { label: 'Email', key: 'email' },
+              { label: 'Mobile', key: 'mobile' },
+              { label: 'Status', render: r => <Badge type={r.status === 'Active' ? 'success' : r.status === 'Pending Approval' ? 'warning' : 'danger'}>{r.status}</Badge> }
+            ]}
+            data={vendorsList}
           />
-        </div>
-        <DataTable
-          columns={[
-            { label: 'Code', key: 'vendorCode' },
-            { label: 'Name', key: 'vendorName' },
-            { label: 'Company', key: 'companyName' },
-            { label: 'Type', key: 'vendorType' },
-            { label: 'Contact Person', key: 'contactPerson' },
-            { label: 'Email', key: 'email' },
-            { label: 'Mobile', key: 'mobile' },
-            { label: 'Status', render: r => <Badge type={r.status === 'Active' ? 'success' : 'warning'}>{r.status}</Badge> }
-          ]}
-          data={filterList(vendors)}
-        />
-      </WhiteCard>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, borderTop: '1px solid #eee', paddingTop: 15 }}>
+              <div style={{ fontSize: 13, color: '#666' }}>
+                Showing page <strong>{page + 1}</strong> of <strong>{totalPages}</strong> ({totalElements} total records)
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button 
+                  className="primary_btn" 
+                  style={{ background: page === 0 ? '#d1d5db' : '#7C32FF', cursor: page === 0 ? 'not-allowed' : 'pointer', padding: '6px 12px', fontSize: 12 }} 
+                  disabled={page === 0} 
+                  onClick={() => setPage(p => p - 1)}
+                >
+                  Previous
+                </button>
+                <button 
+                  className="primary_btn" 
+                  style={{ background: page === totalPages - 1 ? '#d1d5db' : '#7C32FF', cursor: page === totalPages - 1 ? 'not-allowed' : 'pointer', padding: '6px 12px', fontSize: 12 }} 
+                  disabled={page === totalPages - 1} 
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </WhiteCard>
+      </div>
     );
   };
 

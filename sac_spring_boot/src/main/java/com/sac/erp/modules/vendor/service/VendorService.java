@@ -15,6 +15,13 @@ public interface VendorService {
     Page<Vendor> searchVendors(String search, Pageable pageable, String schoolId);
     void deleteVendor(Long id, String schoolId, Long userId);
 
+    org.springframework.data.domain.Page<Vendor> filterVendors(
+            String vendorCode, String vendorName, String vendorType, String companyName,
+            String vendorCategory, String gstNumber, String panNumber, String email,
+            String mobile, String city, String state, String country,
+            java.time.LocalDate startDate, java.time.LocalDate endDate, String status,
+            org.springframework.data.domain.Pageable pageable, String schoolId);
+
     // Vendor Documents
     VendorDocument uploadDocument(VendorDocumentDto dto, String schoolId, Long userId);
     List<VendorDocument> getDocumentsByVendor(Long vendorId, String schoolId);

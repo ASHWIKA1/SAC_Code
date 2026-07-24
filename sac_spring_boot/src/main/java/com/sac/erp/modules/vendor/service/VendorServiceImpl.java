@@ -151,6 +151,23 @@ public class VendorServiceImpl implements VendorService {
     }
 
     @Override
+    public org.springframework.data.domain.Page<Vendor> filterVendors(
+            String vendorCode, String vendorName, String vendorType, String companyName,
+            String vendorCategory, String gstNumber, String panNumber, String email,
+            String mobile, String city, String state, String country,
+            LocalDate startDate, LocalDate endDate, String status,
+            org.springframework.data.domain.Pageable pageable, String schoolId) {
+        
+        var spec = VendorSpecification.filterVendors(
+                vendorCode, vendorName, vendorType, companyName,
+                vendorCategory, gstNumber, panNumber, email,
+                mobile, city, state, country,
+                startDate, endDate, status, schoolId
+        );
+        return vendorRepository.findAll(spec, pageable);
+    }
+
+    @Override
     public VendorDocument uploadDocument(VendorDocumentDto dto, String schoolId, Long userId) {
         Vendor v = getVendorById(dto.getVendorId(), schoolId);
         VendorDocument doc = new VendorDocument();

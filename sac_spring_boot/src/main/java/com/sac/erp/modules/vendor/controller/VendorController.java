@@ -37,6 +37,38 @@ public class VendorController {
         return ResponseEntity.ok(vendorService.searchVendors(search, PageRequest.of(page, size, sort), schoolId));
     }
 
+    @GetMapping("/filter")
+    public ResponseEntity<Page<Vendor>> filterVendors(
+            @RequestParam(required = false) String vendorCode,
+            @RequestParam(required = false) String vendorName,
+            @RequestParam(required = false) String vendorType,
+            @RequestParam(required = false) String companyName,
+            @RequestParam(required = false) String vendorCategory,
+            @RequestParam(required = false) String gstNumber,
+            @RequestParam(required = false) String panNumber,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String mobile,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate startDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate endDate,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+
+        String schoolId = TenantContext.getCurrentTenant();
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        PageRequest pageable = PageRequest.of(page, size, sort);
+        return ResponseEntity.ok(vendorService.filterVendors(
+                vendorCode, vendorName, vendorType, companyName,
+                vendorCategory, gstNumber, panNumber, email,
+                mobile, city, state, country,
+                startDate, endDate, status, pageable, schoolId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Vendor> getVendor(@PathVariable Long id) {
         String schoolId = TenantContext.getCurrentTenant();

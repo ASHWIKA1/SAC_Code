@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface VendorRepository extends JpaRepository<Vendor, Long> {
+public interface VendorRepository extends JpaRepository<Vendor, Long>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<Vendor> {
 
     List<Vendor> findBySchoolIdAndIsDeleted(String schoolId, Integer isDeleted);
 
