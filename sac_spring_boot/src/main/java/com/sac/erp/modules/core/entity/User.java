@@ -14,7 +14,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "full_name")
+    @Column(name = "name")
     private String name;
 
     @Column(unique = true)
@@ -26,11 +26,11 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "phone_number")
+    @Column(name = "phone")
     private String phone;
 
-    @Column(name = "is_administrator", columnDefinition = "varchar(3) default 'no'")
-    private String isAdministrator = "no";
+    @Column(name = "is_administrator")
+    private Boolean isAdministrator = false;
 
     @Column(name = "active_status")
     private Integer activeStatus = 1;
