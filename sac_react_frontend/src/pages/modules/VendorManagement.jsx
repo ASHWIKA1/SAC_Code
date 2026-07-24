@@ -1411,29 +1411,7 @@ export default function VendorManagement() {
         )}
       </div>
 
-      {/* Tabs area */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 24, borderBottom: '1px solid #ddd', paddingBottom: 10 }}>
-        {TABS.map(t => (
-          <button
-            key={t.value}
-            onClick={() => setActiveTab(t.value)}
-            style={{
-              padding: '8px 16px',
-              border: 'none',
-              background: activeTab === t.value ? 'linear-gradient(90deg, #7c3aed, #ec4899)' : '#fff',
-              color: activeTab === t.value ? '#fff' : '#666',
-              borderRadius: 4,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              boxShadow: activeTab === t.value ? '0 4px 12px rgba(124,58,237,0.3)' : '0 1px 3px rgba(0,0,0,0.05)',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+
 
       {/* Page Content area */}
       <div style={{ minHeight: 400 }}>
