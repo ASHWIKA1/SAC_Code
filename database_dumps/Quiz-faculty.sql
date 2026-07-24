@@ -69,9 +69,9 @@ CREATE TABLE IF NOT EXISTS quiz_questions_mapping (
 -- ==========================================
 
 -- Demo Data for Quizzes
-INSERT IGNORE INTO quizzes (id, title, start_date_time, end_date_time, duration_minutes, status_id, created_at, updated_at, updated_by, is_deleted) VALUES
-(1, 'Midterm Physics Quiz', NOW(), DATE_ADD(NOW(), INTERVAL 2 DAY), 30, 2, NOW(), NOW(), 101, 0),
-(2, 'Data Structures MCQ', NOW(), DATE_ADD(NOW(), INTERVAL 5 DAY), 45, 2, NOW(), NOW(), 101, 0);
+INSERT IGNORE INTO quizzes (id, title, start_date_time, end_date_time, duration_minutes, status, created_at, updated_at, updated_by, is_deleted) VALUES
+(1, 'Midterm Physics Quiz', NOW(), DATE_ADD(NOW(), INTERVAL 2 DAY), 30, 'published', NOW(), NOW(), 101, 0),
+(2, 'Data Structures MCQ', NOW(), DATE_ADD(NOW(), INTERVAL 5 DAY), 45, 'published', NOW(), NOW(), 101, 0);
 
 -- Demo Data for Question Bank
 INSERT IGNORE INTO question_bank (id, question_text, question_type, import_method, created_at, updated_at, updated_by, is_deleted) VALUES
