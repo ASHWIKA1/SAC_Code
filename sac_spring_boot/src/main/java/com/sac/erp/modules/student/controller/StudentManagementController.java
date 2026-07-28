@@ -40,4 +40,10 @@ public class StudentManagementController {
         log.info("REST request to get Student : {}", id);
         return ResponseEntity.ok(studentService.getStudentById(id));
     }
+
+    @PostMapping("/{id}/toggle-status")
+    public ResponseEntity<Student> toggleStatus(@PathVariable Long id) {
+        log.info("REST request to toggle active status for Student : {}", id);
+        return ResponseEntity.ok(studentService.toggleStudentSuspension(id));
+    }
 }

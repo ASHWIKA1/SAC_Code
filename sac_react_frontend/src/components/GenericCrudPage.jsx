@@ -36,20 +36,57 @@ export default function GenericCrudPage({
 
   const handleDelete = (row) => {
     if (!window.confirm(`Delete this record?`)) return;
-    setData(prev => prev.filter(r => r.id !== row.id));
-    if (apiPath) api.delete(`${apiPath}/${row.id}`).catch(() => {});
-    setAlert({ type: 'success', msg: 'Record deleted successfully.' });
-    setTimeout(() => setAlert(null), 3000);
+    if (apiPath) {
+      setLoading(true);
+      api.delete(`${apiPath}/${row.id}`)
+        .then(() => {
+          setData(prev => prev.filter(r => r.id !== row.id));
+          setAlert({ type: 'success', msg: 'Record deleted successfully.' });
+          setTimeout(() => setAlert(null), 3000);
+        })
+        .catch((err) => {
+          console.error("Delete failed:", err);
+          setAlert({ type: 'danger', msg: 'Failed to delete record. Please check database connectivity.' });
+          setTimeout(() => setAlert(null), 5000);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setData(prev => prev.filter(r => r.id !== row.id));
+      setAlert({ type: 'success', msg: 'Record deleted successfully.' });
+      setTimeout(() => setAlert(null), 3000);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
-    const save = editing
-      ? api.put(`${apiPath}/${editing.id}`, form).catch(() => {})
-      : api.post(apiPath, form).catch(() => {});
+    if (apiPath) {
+      const apiCall = editing
+        ? api.put(`${apiPath}/${editing.id}`, form)
+        : api.post(apiPath, form);
 
-    save.finally(() => {
+      apiCall
+        .then((r) => {
+          const responseData = r.data?.data || r.data || {};
+          const newRecord = { ...form, ...responseData };
+          if (editing) {
+            setData(prev => prev.map(r => r.id === editing.id ? newRecord : r));
+          } else {
+            setData(prev => [newRecord, ...prev]);
+          }
+          setAlert({ type: 'success', msg: `Record ${editing ? 'updated' : 'created'} successfully.` });
+          setTimeout(() => setAlert(null), 3000);
+          closeForm();
+        })
+        .catch((err) => {
+          console.error("Save failed:", err);
+          setAlert({ type: 'danger', msg: `Failed to save record. Check connection.` });
+          setTimeout(() => setAlert(null), 5000);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
       const newRecord = { ...form, id: editing?.id || Date.now() };
       if (editing) {
         setData(prev => prev.map(r => r.id === editing.id ? newRecord : r));
@@ -60,7 +97,23 @@ export default function GenericCrudPage({
       setTimeout(() => setAlert(null), 3000);
       setLoading(false);
       closeForm();
-    });
+    }
+  };
+
+  const handleToggleStatus = (row) => {
+    setLoading(true);
+    api.post(`${apiPath}/${row.id}/toggle-status`)
+      .then((res) => {
+        setData(prev => prev.map(r => r.id === row.id ? { ...r, activeStatus: res.data.activeStatus } : r));
+        setAlert({ type: 'success', msg: `Student status successfully updated.` });
+        setTimeout(() => setAlert(null), 3000);
+      })
+      .catch((err) => {
+        console.error("Status toggle failed:", err);
+        setAlert({ type: 'danger', msg: 'Failed to update student status.' });
+        setTimeout(() => setAlert(null), 5000);
+      })
+      .finally(() => setLoading(false));
   };
 
   // Build full columns with edit/delete actions
@@ -71,6 +124,14 @@ export default function GenericCrudPage({
       label: 'Action',
       render: (row) => (
         <>
+          {apiPath?.includes('students') && (
+            <ActionBtn 
+              type={row.activeStatus === 1 ? 'delete' : 'success'} 
+              icon={row.activeStatus === 1 ? 'ti-na' : 'ti-check'} 
+              title={row.activeStatus === 1 ? 'Suspend Student' : 'Activate Student'} 
+              onClick={() => handleToggleStatus(row)} 
+            />
+          )}
           <ActionBtn type="view"   icon="ti-eye"    title="View"   onClick={() => {}} />
           <ActionBtn type="edit"   icon="ti-pencil" title="Edit"   onClick={() => openEdit(row)} />
           <ActionBtn type="delete" icon="ti-trash"  title="Delete" onClick={() => handleDelete(row)} />
