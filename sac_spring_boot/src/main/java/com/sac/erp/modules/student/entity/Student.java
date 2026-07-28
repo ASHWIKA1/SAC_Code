@@ -63,4 +63,8 @@ public class Student extends BaseEntity {
 
     @Column(name = "parent_id")
     private Long parentId;
+
+    public String getFullName() {
+        return (firstName != null ? firstName : "") + (lastName != null ? " " + lastName : "");
+    }
 }

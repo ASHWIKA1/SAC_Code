@@ -14,6 +14,7 @@ public class StudentGroup extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @com.fasterxml.jackson.annotation.JsonProperty("name")
     @Column(name = "`group`", nullable = false) // Note backticks because group is a reserved keyword in MySQL
     private String groupName;
 
