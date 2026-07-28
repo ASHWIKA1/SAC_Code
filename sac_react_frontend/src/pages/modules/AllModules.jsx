@@ -1462,24 +1462,8 @@ export function VisitorsPage() {
   />;
 }
 
-export function CanteenPage() {
-  return <GenericCrudPage
-    title="Canteen Management" breadcrumbs={[{ label: 'Modules' }, { label: 'Canteen' }]}
-    apiPath="/api/v1/canteen/items"
-    addLabel="Add Food Item"
-    columns={[
-      { label: 'Food Name', key: 'name' },
-      { label: 'Price (₹)', key: 'price' },
-      { label: 'Stock Status', render: r => <Badge type={r.stock > 0 ? 'success' : 'danger'}>{r.stock > 0 ? 'In Stock' : 'Out of Stock'}</Badge> }
-    ]}
-    formFields={[
-      { key: 'name', label: 'Food Item Name', required: true },
-      { key: 'price', label: 'Price (₹)', type: 'number', required: true },
-      { key: 'stock', label: 'Initial Stock', type: 'number', required: true }
-    ]}
-    mockData={[{ id: 1, name: 'Veg Sandwich', price: 40, stock: 50 }, { id: 2, name: 'Mango Juice', price: 25, stock: 30 }]}
-  />;
-}
+export { default as CanteenPage } from './CanteenPage';
+
 
 function SimpleSettingsPage({ title }) {
   return (

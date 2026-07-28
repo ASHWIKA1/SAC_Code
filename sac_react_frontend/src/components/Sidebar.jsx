@@ -287,7 +287,16 @@ const ADMIN_MENU = [
       { label: 'Clubs & Activities', icon: 'ti-flag', path: '/modules/clubs' },
       { label: 'User Forum', icon: 'ti-comment', path: '/modules/forum' },
       { label: 'Visitors', icon: 'ti-eye', path: '/communicate/visitors' },
-      { label: 'Canteen', icon: 'ti-cup', path: '/modules/canteen' },
+      {
+        label: 'Canteen', icon: 'ti-cup', children: [
+          { label: 'Dashboard', path: '/modules/canteen/dashboard' },
+          { label: 'POS Terminal', path: '/modules/canteen/pos' },
+          { label: 'Student Wallets', path: '/modules/canteen/wallets' },
+          { label: 'Menu Items', path: '/modules/canteen/items' },
+          { label: 'Categories', path: '/modules/canteen/categories' },
+          { label: 'Transactions', path: '/modules/canteen/transactions' }
+        ]
+      },
     ]
   },
   // ── SYSTEM SETTINGS ──

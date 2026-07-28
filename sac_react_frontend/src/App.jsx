@@ -311,7 +311,13 @@ export default function App() {
           <Route path="modules/alumni" element={<AlumniPage />} />
           <Route path="modules/clubs" element={<ClubsPage />} />
           <Route path="modules/forum" element={<UserForumPage />} />
-          <Route path="modules/canteen" element={<CanteenPage />} />
+          <Route path="modules/canteen" element={<Navigate to="/modules/canteen/dashboard" replace />} />
+          <Route path="modules/canteen/dashboard" element={<CanteenPage active="dashboard" />} />
+          <Route path="modules/canteen/pos" element={<CanteenPage active="pos" />} />
+          <Route path="modules/canteen/wallets" element={<CanteenPage active="wallets" />} />
+          <Route path="modules/canteen/items" element={<CanteenPage active="items" />} />
+          <Route path="modules/canteen/categories" element={<CanteenPage active="categories" />} />
+          <Route path="modules/canteen/transactions" element={<CanteenPage active="transactions" />} />
 
           {/* System Settings */}
           <Route path="settings/general" element={<GeneralSettingsPage />} />
