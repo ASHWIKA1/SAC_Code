@@ -39,12 +39,7 @@ CREATE TABLE IF NOT EXISTS assignments_details(
     is_deleted INT DEFAULT 0,
 
     -- Foreign Keys
-    FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT,
-    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
-    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE SET NULL,
-    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL,
-    FOREIGN KEY (semester_id) REFERENCES semesters(id) ON DELETE SET NULL,
-    FOREIGN KEY (batch_id) REFERENCES batches(id) ON DELETE SET NULL
+    FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS student_assignment (
@@ -65,8 +60,7 @@ CREATE TABLE IF NOT EXISTS student_assignment (
     -- Foreign Keys
     FOREIGN KEY (assignment_id) REFERENCES assignments_details(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT,
-    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (status_id) REFERENCES assignment_statuses(id) ON DELETE RESTRICT
 );
 
 -- Student Assignment Review / Grading Table
@@ -87,8 +81,7 @@ CREATE TABLE IF NOT EXISTS student_assignment_review (
     is_deleted INT DEFAULT 0,
 
     -- Foreign Keys
-    FOREIGN KEY (student_assignment_id) REFERENCES student_assignment(id) ON DELETE CASCADE,
-    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (student_assignment_id) REFERENCES student_assignment(id) ON DELETE CASCADE
 );
 
 -- ==========================================
@@ -101,15 +94,15 @@ INSERT IGNORE INTO assignment_statuses (id, status_name, created_at, updated_at,
 (2, 'Graded', NOW(), NOW(), 101, 0);
 
 -- Demo Data for Assignment Details (Newtonian Gravitation Lab and BST)
-INSERT IGNORE INTO assignments_details (id, course_id, subject_id, semester_id, batch_id, title, instructions, start_date, end_date, submit_date, max_marks, passing_marks, assignment_type, allowed_file_types, max_file_size, allow_late_submission, portal_mode, school_class, school_section, school_term, school_grading_scale, parent_signature_required, status_id, created_at, updated_at, updated_by, is_deleted) VALUES
-(1, NULL, NULL, NULL, NULL, 'Newtonian Gravitation Lab', 'Solve problems 1-10 on planetary mechanics.', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), DATE_ADD(NOW(), INTERVAL 7 DAY), 50, 20, 'Written Essay', 'pdf, zip, docx', 10, 1, 'School', 'Class XI', 'Physics Class XI - Mechanics', 'Term I', 'Marks', 0, 1, NOW(), NOW(), 101, 0),
-(2, NULL, NULL, NULL, NULL, 'Binary Search Trees Implementation', 'Implement BST insertion, deletion, and traversal in JS/Java.', NOW(), DATE_ADD(NOW(), INTERVAL 5 DAY), DATE_ADD(NOW(), INTERVAL 5 DAY), 100, 40, 'Written Essay', 'pdf, zip, docx', 10, 1, 'School', 'Class XI', 'Computer Science - Data Structures', 'Term I', 'Marks', 0, 1, NOW(), NOW(), 101, 0);
+INSERT IGNORE INTO assignments_details (id, course_id, subject_id, title, instructions, submit_date, total_marks, passing_marks, assignment_type, allowed_file_types, max_file_size, allow_late_submission, status_id, created_at, updated_at, updated_by, is_deleted) VALUES
+(1, 1, 1, 'Newtonian Gravitation Lab', 'Solve problems 1-10 on planetary mechanics.', DATE_ADD(NOW(), INTERVAL 7 DAY), 50, 20, 'Written Essay', 'pdf, zip, docx', 10, 1, 1, NOW(), NOW(), 101, 0),
+(2, 1, 2, 'Binary Search Trees Implementation', 'Implement BST insertion, deletion, and traversal in JS/Java.', DATE_ADD(NOW(), INTERVAL 5 DAY), 100, 40, 'Written Essay', 'pdf, zip, docx', 10, 1, 1, NOW(), NOW(), 101, 0);
 
 -- Demo Data for Student Assignment
-INSERT IGNORE INTO student_assignment (id, assignment_id, student_id, status_id, submitted_date, submission_file_path, submission_file_name, submission_link, student_notes, created_at, updated_at, updated_by, is_deleted) VALUES
-(1, 1, 1, 2, NOW(), 'gravitation_report.pdf', 'gravitation_report.pdf', 'https://github.com/rahul/gravitation', 'My Lab report is attached. Answers are solved.', NOW(), NOW(), 1, 0),
-(2, 2, 2, 1, NOW(), 'bst_index.js', 'bst_index.js', 'https://github.com/sneha/bst', 'BST completed. Attached is index.js.', NOW(), NOW(), 2, 0);
+INSERT IGNORE INTO student_assignment (id, assignment_id, student_id, status_id, submitted_date, file_url, submission_text, created_at, updated_at, updated_by, is_deleted) VALUES
+(1, 1, 1, 2, NOW(), 'gravitation_report.pdf', 'My Lab report is attached. Answers are solved.', NOW(), NOW(), 1, 0),
+(2, 2, 2, 1, NOW(), 'bst_index.js', 'BST completed. Attached is index.js.', NOW(), NOW(), 2, 0);
 
 -- Demo Data for Student Assignment Review / Grading
-INSERT IGNORE INTO student_assignment_review (id, student_assignment_id, remarks, marks_obtained, feedback_file_path, feedback_file_name, rubric_accuracy, rubric_completeness, rubric_presentation, review_date, created_at, updated_at, updated_by, is_deleted) VALUES
-(1, 1, 'Excellent analysis of force equations!', 45.00, 'graded_feedback.pdf', 'graded_feedback.pdf', 9, 9, 9, CURRENT_TIMESTAMP, NOW(), NOW(), 101, 0);
+INSERT IGNORE INTO student_assignment_review (id, student_assignment_id, remarks, faculty_id, review_date, created_at, updated_at, updated_by, is_deleted) VALUES
+(1, 1, 'Excellent analysis of force equations!', 101, CURRENT_TIMESTAMP, NOW(), NOW(), 101, 0);

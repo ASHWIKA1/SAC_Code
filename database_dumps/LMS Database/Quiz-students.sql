@@ -44,25 +44,11 @@ CREATE TABLE IF NOT EXISTS student_quiz_responses (
     UNIQUE KEY idx_attempt_question (quiz_attempt_id, question_id)
 );
 
--- ==========================================
--- DEMO DATA FOR LMS QUIZ STUDENT ATTEMPTS
--- ==========================================
-
--- Demo Data for Quiz Attempts
-INSERT IGNORE INTO quiz_attempts (id, quiz_id, user_id, attempt_number, started_at, submitted_at, score_achieved, faculty_remarks, is_allowed_reattempt, reattempt_granted_by, created_at, updated_at, updated_by, is_deleted) VALUES
-(1, 1, 1, 1, CURRENT_TIMESTAMP, NOW(), 1.00, 'Good attempt.', 0, NULL, NOW(), NOW(), 1, 0),
-(2, 2, 2, 1, CURRENT_TIMESTAMP, NOW(), 1.00, 'Well done.', 0, NULL, NOW(), NOW(), 2, 0);
-
--- Demo Data for Student Quiz Responses
-INSERT IGNORE INTO student_quiz_responses (id, quiz_attempt_id, quiz_question_mapping_id, answer_text, is_answer_correct, selected_option, user_action, marks_obtained, obtained_negative_marks, time_spent_seconds, created_at, updated_at, updated_by, is_deleted) VALUES
-(1, 1, 1001, NULL, 1, '0', NULL, 1, 0, 45, NOW(), NOW(), 1, 0),
-(2, 2, 1002, NULL, 1, '1', NULL, 1, 0, 65, NOW(), NOW(), 2, 0);
-
 -- View Upcoming Quizzes
 SELECT * FROM quizzes 
-WHERE start_date_time > NOW() AND status = 'published'; 
+WHERE start_date_time > NOW() AND status_id = 2; 
 
 -- Analytics: Find out which questions took students the longest time to process
-SELECT quiz_question_mapping_id, AVG(time_spent_seconds) as avg_time 
+SELECT question_id, AVG(time_spent_seconds) as avg_time 
 FROM student_quiz_responses 
-GROUP BY quiz_question_mapping_id;
+GROUP BY question_id;
