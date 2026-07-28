@@ -10,4 +10,5 @@ import java.util.List;
 public interface SubjectRepository extends JpaRepository<Subject, Long> {
     List<Subject> findByActiveStatus(Integer activeStatus);
     java.util.Optional<Subject> findBySubjectName(String subjectName);
+    List<Subject> findByCourseId(Long courseId);
 }

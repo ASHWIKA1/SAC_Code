@@ -72,7 +72,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
 
                     if (permissions == null) {
-                        permissions = menuPermissionService.getPermissionsForUser(username);
+                        try {
+                            permissions = menuPermissionService.getPermissionsForUser(username);
+                        } catch (Exception ex) {
+                            log.warn("Could not load database permissions for user {}: {}", username, ex.getMessage());
+                            permissions = List.of();
+                        }
                     }
 
                     boolean isSuperAdmin = "SUPERADMIN".equalsIgnoreCase(role);

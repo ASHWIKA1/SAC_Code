@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface StaffRepository extends JpaRepository<Staff, Long> {
     List<Staff> findByActiveStatus(Integer activeStatus);
+    java.util.Optional<Staff> findByUserId(Long userId);
 }

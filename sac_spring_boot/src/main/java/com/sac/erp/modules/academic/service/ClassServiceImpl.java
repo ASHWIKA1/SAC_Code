@@ -39,7 +39,8 @@ public class ClassServiceImpl implements ClassService {
         classRecord.setClassName(dto.getClassName());
         classRecord.setPassMark(dto.getPassMark());
         classRecord.setActiveStatus(dto.getActiveStatus() != null ? dto.getActiveStatus() : 1);
-        classRecord.setAcademicId(dto.getAcademicId());
+        classRecord.setAcademicId(dto.getAcademicId() != null ? dto.getAcademicId() : 1L);
+        classRecord.setSchoolId(dto.getSchoolId() != null ? String.valueOf(dto.getSchoolId()) : "1");
 
         ClassRecord saved = classRepository.save(classRecord);
         return convertToDto(saved);
@@ -56,7 +57,10 @@ public class ClassServiceImpl implements ClassService {
         if (dto.getActiveStatus() != null) {
             classRecord.setActiveStatus(dto.getActiveStatus());
         }
-        classRecord.setAcademicId(dto.getAcademicId());
+        classRecord.setAcademicId(dto.getAcademicId() != null ? dto.getAcademicId() : 1L);
+        if (dto.getSchoolId() != null) {
+            classRecord.setSchoolId(String.valueOf(dto.getSchoolId()));
+        }
 
         ClassRecord updated = classRepository.save(classRecord);
         return convertToDto(updated);
@@ -77,6 +81,13 @@ public class ClassServiceImpl implements ClassService {
         dto.setPassMark(entity.getPassMark());
         dto.setActiveStatus(entity.getActiveStatus());
         dto.setAcademicId(entity.getAcademicId());
+        if (entity.getSchoolId() != null) {
+            try {
+                dto.setSchoolId(Long.parseLong(entity.getSchoolId()));
+            } catch (NumberFormatException e) {
+                dto.setSchoolId(1L);
+            }
+        }
         return dto;
     }
 }

@@ -36,6 +36,17 @@ CREATE TABLE IF NOT EXISTS generated_questions (
     FOREIGN KEY (history_id) REFERENCES ai_question_history(id) ON DELETE CASCADE
 );
 
+-- Create Discussion Groups Table
+CREATE TABLE IF NOT EXISTS discussion_groups (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    group_name VARCHAR(100) NOT NULL,
+    created_by_faculty INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_deleted TINYINT(1) DEFAULT 0 COMMENT '1 = Trashed from UI list',
+    
+    FOREIGN KEY (created_by_faculty) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Create Group Members Table
 CREATE TABLE IF NOT EXISTS group_members (
     group_id INT NOT NULL,

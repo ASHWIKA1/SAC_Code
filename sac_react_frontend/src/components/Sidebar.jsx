@@ -50,7 +50,7 @@ const ADMIN_MENU = [
     section: 'lms_navigation', label: 'LMS Navigation',
     items: [
       { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
-      { label: 'Online Quizzes', icon: 'ti-medal', path: '/lms/quizzes' },
+      { label: 'Online Quizzes', icon: 'ti-trophy', path: '/lms/quizzes' },
       { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
       { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
@@ -251,6 +251,31 @@ const ADMIN_MENU = [
       },
     ]
   },
+  // ── VENDOR MANAGEMENT ──
+  {
+    section: 'vendor_section', label: 'Vendor Management',
+    items: [
+      {
+        label: 'Vendor Management', icon: 'ti-briefcase', children: [
+          { label: 'Dashboard', path: '/vendor/dashboard' },
+          { label: 'Vendor Registration', path: '/vendor/registration' },
+          { label: 'Vendor Documents', path: '/vendor/documents' },
+          { label: 'NDA Management', path: '/vendor/nda' },
+          { label: 'MOU Management', path: '/vendor/mou' },
+          { label: 'Agreement Management', path: '/vendor/agreements' },
+          { label: 'Consultant Management', path: '/vendor/consultants' },
+          { label: 'Purchase Request', path: '/vendor/purchase-request' },
+          { label: 'Purchase Order', path: '/vendor/purchase-order' },
+          { label: 'Delivery Tracking', path: '/vendor/delivery-tracking' },
+          { label: 'Goods Receipt Note', path: '/vendor/grn' },
+          { label: 'Vendor Performance', path: '/vendor/performance' },
+          { label: 'Vendor Payment', path: '/vendor/payment' },
+          { label: 'Reports', path: '/vendor/reports' },
+          { label: 'Audit Logs', path: '/vendor/audit-logs' },
+        ]
+      }
+    ]
+  },
   // ── COMMUNICATE ──
   {
     section: 'communicate_section', label: 'Communicate',
@@ -418,7 +443,7 @@ const TEACHER_MENU = [
     section: 'lms_navigation', label: 'LMS Navigation',
     items: [
       { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
-      { label: 'Online Quizzes', icon: 'ti-medal', path: '/lms/quizzes' },
+      { label: 'Online Quizzes', icon: 'ti-trophy', path: '/lms/quizzes' },
       { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
       { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
@@ -447,7 +472,7 @@ const STUDENT_MENU = [
     section: 'lms_navigation', label: 'LMS Navigation',
     items: [
       { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
-      { label: 'Online Quizzes', icon: 'ti-medal', path: '/lms/quizzes' },
+      { label: 'Online Quizzes', icon: 'ti-trophy', path: '/lms/quizzes' },
       { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
       { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
@@ -471,7 +496,7 @@ const PARENT_MENU = [
     section: 'lms_navigation', label: 'LMS Navigation',
     items: [
       { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
-      { label: 'Online Quizzes', icon: 'ti-medal', path: '/lms/quizzes' },
+      { label: 'Online Quizzes', icon: 'ti-trophy', path: '/lms/quizzes' },
       { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
       { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]

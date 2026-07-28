@@ -28,13 +28,13 @@ public class LmsQuiz {
     private Integer duration;
 
     @Column(nullable = false)
-    private String status = "Pending";
+    private Integer status = 1;
 
     @Column(name = "assigned_class", nullable = false)
-    private String assignedClass;
+    private Integer assignedClass;
 
     @Column(name = "assigned_section", nullable = false)
-    private String assignedSection;
+    private Integer assignedSection;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;

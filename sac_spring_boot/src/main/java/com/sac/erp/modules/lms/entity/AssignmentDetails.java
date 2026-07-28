@@ -15,10 +15,10 @@ public class AssignmentDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "course_id", nullable = false)
+    @Column(name = "course_id", nullable = true)
     private Long courseId;
 
-    @Column(name = "subject_id", nullable = false)
+    @Column(name = "subject_id", nullable = true)
     private Long subjectId;
 
     @Column(nullable = false)
