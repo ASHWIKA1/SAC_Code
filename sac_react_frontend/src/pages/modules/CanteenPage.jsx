@@ -14,6 +14,16 @@ export default function CanteenPage({ active }) {
   const activeTab = active || 'dashboard';
   const setActiveTab = (tabId) => navigate(`/modules/canteen/${tabId}`);
 
+  const tabTitles = {
+    dashboard: 'Canteen Dashboard',
+    pos: 'POS Terminal',
+    wallets: 'Student Wallets',
+    items: 'Menu Items',
+    categories: 'Food & Meal Categories',
+    transactions: 'Transaction History'
+  };
+  const currentTitle = tabTitles[activeTab] || 'Canteen Management';
+
   const [stats, setStats] = useState({
     todayRevenue: 0,
     completedOrders: 0,
@@ -367,8 +377,8 @@ export default function CanteenPage({ active }) {
         }
       `}</style>
       <PageHeader 
-        title="Canteen Management" 
-        breadcrumbs={[{ label: 'Modules' }, { label: 'Canteen' }]}
+        title={currentTitle} 
+        breadcrumbs={[{ label: 'Modules' }, { label: 'Canteen' }, { label: currentTitle }]}
       />
 
       {/* Main Tab Workspace */}
