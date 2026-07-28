@@ -98,6 +98,21 @@ export default function GenericCrudPage({
       setLoading(false);
       closeForm();
     }
+
+  const handleToggleStatus = (row) => {
+    setLoading(true);
+    api.post(`${apiPath}/${row.id}/toggle-status`)
+      .then((res) => {
+        setData(prev => prev.map(r => r.id === row.id ? { ...r, activeStatus: res.data.activeStatus } : r));
+        setAlert({ type: 'success', msg: `Student status successfully updated.` });
+        setTimeout(() => setAlert(null), 3000);
+      })
+      .catch((err) => {
+        console.error("Status toggle failed:", err);
+        setAlert({ type: 'danger', msg: 'Failed to update student status.' });
+        setTimeout(() => setAlert(null), 5000);
+      })
+      .finally(() => setLoading(false));
   };
 
   // Build full columns with edit/delete actions
@@ -108,6 +123,14 @@ export default function GenericCrudPage({
       label: 'Action',
       render: (row) => (
         <>
+          {apiPath?.includes('students') && (
+            <ActionBtn 
+              type={row.activeStatus === 1 ? 'delete' : 'success'} 
+              icon={row.activeStatus === 1 ? 'ti-na' : 'ti-check'} 
+              title={row.activeStatus === 1 ? 'Suspend Student' : 'Activate Student'} 
+              onClick={() => handleToggleStatus(row)} 
+            />
+          )}
           <ActionBtn type="view"   icon="ti-eye"    title="View"   onClick={() => {}} />
           <ActionBtn type="edit"   icon="ti-pencil" title="Edit"   onClick={() => openEdit(row)} />
           <ActionBtn type="delete" icon="ti-trash"  title="Delete" onClick={() => handleDelete(row)} />
