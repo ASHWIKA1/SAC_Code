@@ -1263,7 +1263,6 @@ function CanteenWallets({ wallets, fetchWallets, categories, items }) {
     </div>
   );
 }
-}
 
 /* ==========================================
    SUB-COMPONENT: MENU ITEMS
