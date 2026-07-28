@@ -98,6 +98,7 @@ export default function GenericCrudPage({
       setLoading(false);
       closeForm();
     }
+  };
 
   const handleToggleStatus = (row) => {
     setLoading(true);
