@@ -16,6 +16,7 @@ public interface LmsService {
     List<AssignmentDetails> getAllAssignments();
     List<AssignmentDetails> getAssignmentsByCourse(Long courseId);
     AssignmentDetails createAssignment(AssignmentDetails assignment);
+    AssignmentDetails updateAssignment(Long id, AssignmentDetails assignment);
     StudentAssignment submitAssignment(Long assignmentId, Long studentId, String fileUrl, String submissionText);
     List<StudentAssignment> getSubmissionsByAssignment(Long assignmentId);
     StudentAssignmentReview reviewSubmission(Long studentAssignmentId, String remarks, Long facultyId);
@@ -51,4 +52,5 @@ public interface LmsService {
 
     void deleteMediaContent(Long id);
     void deleteForum(Long id);
+    void rewardMilestone(Long studentId, String milestoneName, java.math.BigDecimal amount);
 }

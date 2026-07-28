@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.math.BigDecimal;
 
 import java.util.List;
 
@@ -65,6 +66,12 @@ public class LmsController {
     public ResponseEntity<AssignmentDetails> createAssignment(@RequestBody AssignmentDetails assignment) {
         log.info("REST request to create LMS Assignment: {}", assignment.getTitle());
         return ResponseEntity.ok(lmsService.createAssignment(assignment));
+    }
+
+    @PutMapping("/assignments/{id}")
+    public ResponseEntity<AssignmentDetails> updateAssignment(@PathVariable Long id, @RequestBody AssignmentDetails assignment) {
+        log.info("REST request to update LMS Assignment: {}", id);
+        return ResponseEntity.ok(lmsService.updateAssignment(id, assignment));
     }
 
     @PostMapping("/assignments/submit")
@@ -257,5 +264,15 @@ public class LmsController {
         log.info("REST request to delete discussion forum: {}", id);
         lmsService.deleteForum(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/students/{studentId}/reward-milestone")
+    public ResponseEntity<Void> rewardMilestone(
+            @PathVariable Long studentId,
+            @RequestParam String milestoneName,
+            @RequestParam BigDecimal amount) {
+        log.info("REST request to issue LMS milestone reward to student: {}", studentId);
+        lmsService.rewardMilestone(studentId, milestoneName, amount);
+        return ResponseEntity.ok().build();
     }
 }
