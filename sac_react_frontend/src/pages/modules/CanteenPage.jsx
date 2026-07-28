@@ -1635,90 +1635,109 @@ function CanteenCategories({ categories, fetchCategories }) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="canteen-row">
       {/* Category List */}
-      <div className="lg:col-span-2 space-y-4">
-        <h3 className="text-sm font-bold text-gray-900 uppercase">Food & Meal Categories</h3>
+      <div className="canteen-col-8" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <h4 style={{ margin: 0, fontWeight: 700, textTransform: 'uppercase', fontSize: '13px', color: '#555' }}>Food & Meal Categories</h4>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="canteen-row">
           {categories.map(cat => (
-            <div key={cat.id} className="bg-white rounded border border-gray-200 p-5 shadow-sm space-y-3 relative group">
-              <button 
-                onClick={() => deleteCategory(cat.id)}
-                className="absolute top-4 right-4 p-1 rounded-full text-gray-400 hover:text-red-500 hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="h-4 w-4" />
-              </button>
+            <div key={cat.id} className="canteen-col-6">
+              <div className="white_card" style={{ padding: '15px', position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button 
+                  onClick={() => deleteCategory(cat.id)}
+                  style={{
+                    position: 'absolute', top: '12px', right: '12px', background: 'none', border: 'none',
+                    fontSize: '16px', color: '#999', cursor: 'pointer', transition: 'color 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.color = '#ef5f5f'}
+                  onMouseOut={(e) => e.currentTarget.style.color = '#999'}
+                >
+                  &times;
+                </button>
 
-              <div className="space-y-1">
-                <h4 className="font-bold text-gray-900 text-sm">{cat.name}</h4>
-                <p className="text-xs text-gray-500">{cat.description || 'No description provided.'}</p>
-              </div>
-
-              {cat.startTime && (
-                <div className="flex items-center gap-1.5 text-[11px] text-purple-600 bg-purple-50 px-2 py-1 rounded w-max font-bold border border-purple-100">
-                  <Clock className="h-3.5 w-3.5" />
-                  Available: {cat.startTime.substring(0, 5)} - {cat.endTime.substring(0, 5)}
+                <div>
+                  <h4 style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 600, color: '#333' }}>{cat.name}</h4>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#777' }}>{cat.description || 'No description provided.'}</p>
                 </div>
-              )}
+
+                {cat.startTime && (
+                  <div style={{
+                    marginTop: 'auto', display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    fontSize: '11px', fontWeight: 600, color: 'var(--primary-color)',
+                    background: '#fcfaff', border: '1px solid #f3eeff', padding: '3px 8px', borderRadius: '4px', width: 'max-content'
+                  }}>
+                    <span className="ti-time" />
+                    Available: {cat.startTime.substring(0, 5)} - {cat.endTime.substring(0, 5)}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
       {/* Category Form */}
-      <WhiteCard title="Add Meal Category">
-        <form onSubmit={handleSave} className="space-y-4 text-xs">
-          <div className="space-y-1">
-            <label className="font-bold text-gray-600 block">CATEGORY NAME</label>
-            <input 
-              type="text" 
-              placeholder="e.g. Breakfast, Snacks"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full border rounded px-3 py-2 focus:outline-none focus:border-purple-600 bg-white"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="font-bold text-gray-600 block">DESCRIPTION</label>
-            <textarea 
-              placeholder="Meal category details..."
-              value={desc}
-              onChange={e => setDesc(e.target.value)}
-              className="w-full border rounded px-3 py-2 focus:outline-none focus:border-purple-600 bg-white"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="font-bold text-gray-600 block">START TIME</label>
+      <div className="canteen-col-4">
+        <WhiteCard title="Add Meal Category">
+          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="canteen-form-group">
+              <label>CATEGORY NAME</label>
               <input 
-                type="time" 
-                value={startTime}
-                onChange={e => setStartTime(e.target.value)}
-                className="w-full border rounded px-3 py-2 focus:outline-none focus:border-purple-600 bg-white"
+                type="text" 
+                placeholder="e.g. Breakfast, Snacks"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                className="canteen-form-control"
               />
             </div>
-            <div className="space-y-1">
-              <label className="font-bold text-gray-600 block">END TIME</label>
-              <input 
-                type="time" 
-                value={endTime}
-                onChange={e => setEndTime(e.target.value)}
-                className="w-full border rounded px-3 py-2 focus:outline-none focus:border-purple-600 bg-white"
+
+            <div className="canteen-form-group">
+              <label>DESCRIPTION</label>
+              <textarea 
+                placeholder="Meal category details..."
+                value={desc}
+                onChange={e => setDesc(e.target.value)}
+                className="canteen-form-control"
+                style={{ height: '60px' }}
               />
             </div>
-          </div>
 
-          <button 
-            type="submit"
-            className="primary_btn w-full py-2.5 text-xs font-bold"
-          >
-            Create Category
-          </button>
-        </form>
-      </WhiteCard>
+            <div className="canteen-row">
+              <div className="canteen-col-6">
+                <div className="canteen-form-group">
+                  <label>START TIME</label>
+                  <input 
+                    type="time" 
+                    value={startTime}
+                    onChange={e => setStartTime(e.target.value)}
+                    className="canteen-form-control"
+                  />
+                </div>
+              </div>
+              <div className="canteen-col-6">
+                <div className="canteen-form-group">
+                  <label>END TIME</label>
+                  <input 
+                    type="time" 
+                    value={endTime}
+                    onChange={e => setEndTime(e.target.value)}
+                    className="canteen-form-control"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button 
+              type="submit"
+              className="primary_btn"
+              style={{ justifyContent: 'center', padding: '10px' }}
+            >
+              Create Category
+            </button>
+          </form>
+        </WhiteCard>
+      </div>
     </div>
   );
 }
@@ -1749,29 +1768,28 @@ function CanteenTransactions({ transactions, fetchTransactions, wallets, items }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <span className="ti-search absolute left-3 top-3 text-gray-400 text-xs" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+        <div className="pos-search-wrapper" style={{ marginBottom: 0 }}>
+          <span className="ti-search" />
           <input 
             type="text" 
             placeholder="Search Student ID or notes..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-4 py-1.5 w-full border border-gray-200 rounded focus:outline-none focus:border-purple-600 bg-white"
+            className="canteen-form-control"
+            style={{ width: '250px' }}
           />
         </div>
 
-        <div className="flex gap-2">
+        <div style={{ display: 'inline-flex', gap: '8px' }}>
           {['all', 'purchase', 'recharge', 'refund'].map(type => (
             <button 
               key={type}
               onClick={() => setFilterType(type)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded capitalize transition-colors ${
-                filterType === type ? 'bg-purple-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`canteen-cat-btn ${filterType === type ? 'active' : ''}`}
             >
-              {type}s
+              {type.toUpperCase()}S
             </button>
           ))}
         </div>
@@ -1788,30 +1806,29 @@ function CanteenTransactions({ transactions, fetchTransactions, wallets, items }
                 <th>Amount</th>
                 <th>Balance After</th>
                 <th>Date</th>
-                <th className="text-right">Receipt</th>
+                <th style={{ textAlign: 'right' }}>Receipt</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(t => (
                 <tr key={t.id}>
-                  <td className="font-mono text-xs font-bold text-gray-500">#{t.id}</td>
-                  <td className="font-semibold text-gray-900">Student #{t.studentId}</td>
+                  <td style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 'bold' }}>#{t.id}</td>
+                  <td style={{ fontWeight: 600 }}>Student #{t.studentId}</td>
                   <td>
                     <Badge type={t.type === 'purchase' ? 'purple' : t.type === 'recharge' ? 'success' : 'danger'}>
                       {t.type}
                     </Badge>
                   </td>
-                  <td className={`font-bold ${
-                    t.type === 'purchase' ? 'text-gray-900' : 'text-emerald-600'
-                  }`}>
+                  <td style={{ fontWeight: 700, color: t.type === 'purchase' ? '#333' : '#10B981' }}>
                     ₹{parseFloat(t.amount).toFixed(2)}
                   </td>
-                  <td className="text-gray-500">₹{parseFloat(t.balanceAfter).toFixed(2)}</td>
-                  <td className="text-gray-400 text-xs">{new Date(t.createdAt).toLocaleString()}</td>
-                  <td className="text-right">
+                  <td style={{ color: '#555' }}>₹{parseFloat(t.balanceAfter).toFixed(2)}</td>
+                  <td style={{ color: '#777', fontSize: '11px' }}>{new Date(t.createdAt).toLocaleString()}</td>
+                  <td style={{ textAlign: 'right' }}>
                     <button 
                       onClick={() => setActiveTxDetail(t)}
-                      className="text-xs font-bold text-purple-600 hover:underline"
+                      className="btn-secondary-outline"
+                      style={{ padding: '4px 10px', fontSize: '11px' }}
                     >
                       Inspect
                     </button>
@@ -1825,46 +1842,49 @@ function CanteenTransactions({ transactions, fetchTransactions, wallets, items }
 
       {/* Transaction Details Modal */}
       {activeTxDetail && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white rounded max-w-sm w-full p-6 space-y-4 border shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-            <button 
-              onClick={() => setActiveTxDetail(null)}
-              className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 text-gray-500"
-            >
-              <X className="h-5 w-5" />
-            </button>
+        <div className="canteen-popup-overlay">
+          <div className="canteen-popup-content" style={{ maxWidth: '365px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h4 style={{ margin: 0, fontWeight: 700 }}>Receipt Details</h4>
+              <button 
+                onClick={() => setActiveTxDetail(null)}
+                style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#999' }}
+              >
+                &times;
+              </button>
+            </div>
             
-            <h3 className="text-sm font-bold text-gray-900">Receipt Details</h3>
-            <p className="text-[11px] text-gray-400 font-mono">Tx ID: #{activeTxDetail.id}</p>
+            <p style={{ margin: '0 0 15px', fontSize: '11px', color: '#999', fontFamily: 'monospace' }}>Tx ID: #{activeTxDetail.id}</p>
 
-            <div className="space-y-2.5 text-xs border-t border-b border-dashed py-3">
-              <p className="flex justify-between"><span className="text-gray-500">Transaction Type:</span> <span className="font-bold capitalize">{activeTxDetail.type}</span></p>
-              <p className="flex justify-between"><span className="text-gray-500">Student Wallet:</span> <span className="font-bold">Student #{activeTxDetail.studentId}</span></p>
-              <p className="flex justify-between"><span className="text-gray-500">Payment Option:</span> <span className="uppercase">{activeTxDetail.paymentMethod || 'Wallet'}</span></p>
-              <p className="flex justify-between"><span className="text-gray-500">Timestamp:</span> <span>{new Date(activeTxDetail.createdAt).toLocaleString()}</span></p>
+            <div style={{ borderTop: '1px dashed #ddd', borderBottom: '1px dashed #ddd', padding: '12px 0', margin: '15px 0', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Transaction Type:</span> <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{activeTxDetail.type}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Student Wallet:</span> <span style={{ fontWeight: 600 }}>Student #{activeTxDetail.studentId}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Payment Option:</span> <span style={{ textTransform: 'uppercase' }}>{activeTxDetail.paymentMethod || 'Wallet'}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Timestamp:</span> <span>{new Date(activeTxDetail.createdAt).toLocaleString()}</span></div>
               
               {activeTxDetail.itemId && (
-                <div className="pt-2 border-t mt-2">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">PURCHASE ITEM</p>
-                  <p className="flex justify-between font-bold text-gray-900 mt-1">
+                <div style={{ borderTop: '1px solid #f1f1f1', paddingTop: '8px', marginTop: '4px' }}>
+                  <div style={{ fontSize: '9px', fontWeight: 700, color: '#999', textTransform: 'uppercase' }}>PURCHASE ITEM</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, color: '#333', marginTop: '4px' }}>
                     <span>Item ID #{activeTxDetail.itemId} (x{activeTxDetail.quantity})</span>
                     <span>₹{parseFloat(activeTxDetail.amount).toFixed(2)}</span>
-                  </p>
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="text-xs space-y-1">
-              <p className="flex justify-between"><span className="text-gray-500">Transaction Value:</span> <span className="font-bold">₹{parseFloat(activeTxDetail.amount).toFixed(2)}</span></p>
-              <p className="flex justify-between"><span className="text-gray-500">Post Balance:</span> <span className="font-bold text-purple-600">₹{parseFloat(activeTxDetail.balanceAfter).toFixed(2)}</span></p>
+            <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Transaction Value:</span> <span style={{ fontWeight: 600 }}>₹{parseFloat(activeTxDetail.amount).toFixed(2)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700, color: 'var(--primary-color)' }}><span style={{ color: '#333' }}>Post Balance:</span> <span>₹{parseFloat(activeTxDetail.balanceAfter).toFixed(2)}</span></div>
             </div>
 
             {activeTxDetail.type === 'purchase' && (
               <button 
                 onClick={() => handleRefund(activeTxDetail.id)}
-                className="w-full bg-red-600 text-white font-bold py-2 rounded text-xs flex items-center justify-center gap-1 hover:bg-red-700 transition-colors"
+                className="primary_btn"
+                style={{ width: '100%', justifyContent: 'center', background: '#ef5f5f' }}
               >
-                <RotateCcw className="h-4 w-4" /> Issue Refund / Cancel Sale
+                <span className="ti-reload" style={{ marginRight: '6px' }} /> Issue Refund / Cancel Sale
               </button>
             )}
           </div>
