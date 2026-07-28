@@ -3,10 +3,12 @@ package com.sac.erp.config.datasource;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
+@Order(1)
 public class ModuleDatabaseAspect {
 
     @Around("execution(* com.sac.erp.modules..*Repository.*(..)) || execution(* com.sac.erp.modules..*ServiceImpl.*(..))")
