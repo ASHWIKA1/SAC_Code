@@ -14,6 +14,16 @@ export default function CanteenPage({ active }) {
   const activeTab = active || 'dashboard';
   const setActiveTab = (tabId) => navigate(`/modules/canteen/${tabId}`);
 
+  const tabTitles = {
+    dashboard: 'Canteen Dashboard',
+    pos: 'POS Terminal',
+    wallets: 'Student Wallets',
+    items: 'Menu Items',
+    categories: 'Food & Meal Categories',
+    transactions: 'Transaction History'
+  };
+  const currentTitle = tabTitles[activeTab] || 'Canteen Management';
+
   const [stats, setStats] = useState({
     todayRevenue: 0,
     completedOrders: 0,
@@ -119,10 +129,256 @@ export default function CanteenPage({ active }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <style>{`
+        /* Custom scoped vanilla CSS specifically for Canteen module */
+        .canteen-row {
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          gap: 20px;
+        }
+        .canteen-col-12 { grid-column: span 12; }
+        .canteen-col-8 { grid-column: span 8; }
+        .canteen-col-6 { grid-column: span 6; }
+        .canteen-col-4 { grid-column: span 4; }
+        .canteen-col-3 { grid-column: span 3; }
+        
+        @media (max-width: 991px) {
+          .canteen-col-8, .canteen-col-6, .canteen-col-4, .canteen-col-3 {
+            grid-column: span 12;
+          }
+        }
+
+        .canteen-flex-between {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 15px;
+        }
+        
+        .canteen-flex-gap {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+        }
+
+        /* Items list & Category Filter */
+        .canteen-cat-scroll {
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+          padding-bottom: 5px;
+        }
+
+        .canteen-cat-btn {
+          padding: 6px 14px;
+          border-radius: 20px;
+          border: 1px solid #e8e8e8;
+          background: #fff;
+          color: #555;
+          font-size: 12px;
+          font-weight: 500;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.2s;
+        }
+        .canteen-cat-btn.active {
+          background: var(--primary-gradient);
+          color: #fff;
+          border-color: transparent;
+        }
+        .canteen-cat-btn:hover:not(.active) {
+          background: #f5f6fa;
+        }
+
+        /* POS grid items */
+        .canteen-pos-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+          gap: 15px;
+          margin-top: 15px;
+        }
+
+        .canteen-card-item {
+          background: #fff;
+          border: 1px solid #e8e8e8;
+          border-radius: 6px;
+          overflow: hidden;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+        }
+        .canteen-card-item:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--card-shadow);
+          border-color: var(--primary-color);
+        }
+        .canteen-card-item.disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
+        }
+        .canteen-card-item .item-visual {
+          height: 100px;
+          background: #fafafa;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #999;
+          font-size: 28px;
+          border-bottom: 1px solid #f1f1f1;
+        }
+        .canteen-card-item .item-body {
+          padding: 12px;
+          display: flex;
+          flex-direction: column;
+          flex-grow: 1;
+        }
+        .canteen-card-item .item-title {
+          font-weight: 600;
+          font-size: 13px;
+          color: #333;
+          margin-bottom: 3px;
+        }
+        .canteen-card-item .item-meta {
+          font-size: 11px;
+          color: #888;
+          margin-bottom: 8px;
+        }
+        .canteen-card-item .item-price-stock {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: auto;
+        }
+        .canteen-card-item .price {
+          font-weight: 700;
+          color: var(--primary-color);
+          font-size: 14px;
+        }
+        .canteen-card-item .stock {
+          font-size: 11px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          background: #f1f1f1;
+          color: #666;
+        }
+
+        /* Cart details */
+        .canteen-cart-box {
+          background: #fff;
+          border: 1px solid #e8e8e8;
+          border-radius: 6px;
+          padding: 15px;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+        .canteen-cart-list {
+          max-height: 250px;
+          overflow-y: auto;
+          margin-bottom: 15px;
+        }
+        .canteen-cart-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 0;
+          border-bottom: 1px solid #f9f9f9;
+        }
+        .canteen-cart-row-title {
+          font-size: 13px;
+          font-weight: 500;
+        }
+        .canteen-cart-qty {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .canteen-qty-btn {
+          width: 20px;
+          height: 20px;
+          border: 1px solid #ddd;
+          background: #fff;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 11px;
+        }
+        .canteen-qty-btn:hover {
+          background: #f5f6fa;
+        }
+
+        .canteen-cart-summary {
+          background: #fafafa;
+          border-radius: 6px;
+          padding: 12px;
+          margin-bottom: 15px;
+        }
+        .canteen-summary-line {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+          margin-bottom: 6px;
+        }
+        .canteen-summary-line.total {
+          font-weight: 700;
+          font-size: 14px;
+          border-top: 1px solid #e8e8e8;
+          padding-top: 8px;
+          margin-top: 8px;
+          color: var(--primary-color);
+        }
+
+        /* General Forms & Tables alignment */
+        .canteen-form-group {
+          margin-bottom: 15px;
+        }
+        .canteen-form-group label {
+          display: block;
+          font-weight: 600;
+          font-size: 13px;
+          margin-bottom: 5px;
+          color: #333;
+        }
+        .canteen-form-control {
+          width: 100%;
+          padding: 8px 12px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 13px;
+          outline: none;
+        }
+        .canteen-form-control:focus {
+          border-color: var(--primary-color);
+        }
+
+        /* Modal popups */
+        .canteen-popup-overlay {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+        }
+        .canteen-popup-content {
+          background: #fff;
+          border-radius: 6px;
+          width: 90%;
+          max-width: 500px;
+          padding: 20px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+      `}</style>
       <PageHeader 
-        title="Canteen Management" 
-        breadcrumbs={[{ label: 'Modules' }, { label: 'Canteen' }]}
+        title={currentTitle} 
+        breadcrumbs={[{ label: 'Modules' }, { label: 'Canteen' }, { label: currentTitle }]}
       />
 
       {/* Main Tab Workspace */}
@@ -197,9 +453,9 @@ export default function CanteenPage({ active }) {
    ========================================== */
 function CanteenDashboard({ stats, setActiveTab, fetchStats }) {
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Stat Cards matching style of InfixEdu */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="canteen-row">
         {[
           { title: "Today's Revenue", value: `₹${parseFloat(stats.todayRevenue || 0).toFixed(2)}`, icon: 'ti-wallet', color: 'purple', action: () => setActiveTab('transactions') },
           { title: 'Completed Orders', value: stats.completedOrders || 0, icon: 'ti-shopping-cart', color: 'blue', action: () => setActiveTab('pos') },
@@ -209,53 +465,52 @@ function CanteenDashboard({ stats, setActiveTab, fetchStats }) {
           <div 
             key={idx} 
             onClick={card.action}
-            className="stat_card cursor-pointer hover:shadow-md transition-shadow"
+            className="canteen-col-3"
+            style={{ cursor: 'pointer' }}
           >
-            <div className={`stat_icon_wrap ${card.color}`}>
-              <span className={card.icon} style={{ fontSize: 22 }} />
-            </div>
-            <div className="stat_info">
-              <div className="value">{card.value}</div>
-              <div className="label">{card.title}</div>
+            <div className="stat_card">
+              <div className={`stat_icon_wrap ${card.color}`}>
+                <span className={card.icon} style={{ fontSize: 22 }} />
+              </div>
+              <div className="stat_info">
+                <div className="value">{card.value}</div>
+                <div className="label">{card.title}</div>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="canteen-row">
         {/* Activity Feed */}
-        <div className="lg:col-span-2">
+        <div className="canteen-col-8">
           <WhiteCard title="Live Activity Stream">
-            <div className="divide-y divide-gray-100 max-h-[300px] overflow-y-auto pr-1">
+            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
               {stats.recentActivities && stats.recentActivities.length > 0 ? (
                 stats.recentActivities.map((act) => (
-                  <div key={act.id} className="py-3 flex justify-between items-center hover:bg-gray-50 px-2 rounded transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${
-                        act.type === 'purchase' ? 'bg-purple-100 text-purple-600' : 'bg-emerald-100 text-emerald-600'
-                      }`}>
-                        {act.type === 'purchase' ? <ShoppingCart className="h-4 w-4" /> : <CreditCard className="h-4 w-4" />}
+                  <div key={act.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 8px', borderBottom: '1px solid #f1f1f1' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ padding: '8px', borderRadius: '50%', background: act.type === 'purchase' ? '#F3E8FF' : '#D1FAE5', color: act.type === 'purchase' ? '#7C32FF' : '#10B981' }}>
+                        <span className={act.type === 'purchase' ? 'ti-shopping-cart' : 'ti-credit-card'} />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-gray-800">
+                        <p style={{ margin: 0, fontSize: '13px', fontWeight: 600 }}>
                           {act.type === 'purchase' ? 'POS Purchase Complete' : 'Wallet Recharge'}
                         </p>
-                        <p className="text-xs text-gray-500">Student ID: #{act.studentId} • {act.notes || 'No description'}</p>
+                        <p style={{ margin: 0, fontSize: '11px', color: '#777' }}>Student ID: #{act.studentId} • {act.notes || 'No description'}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className={`text-sm font-bold ${
-                        act.type === 'purchase' ? 'text-gray-900' : 'text-emerald-600'
-                      }`}>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: act.type === 'purchase' ? '#333' : '#10B981' }}>
                         {act.type === 'purchase' ? '-' : '+'}₹{parseFloat(act.amount).toFixed(2)}
                       </p>
-                      <p className="text-xs text-gray-400">{new Date(act.timestamp).toLocaleTimeString()}</p>
+                      <p style={{ margin: 0, fontSize: '11px', color: '#999' }}>{new Date(act.timestamp).toLocaleTimeString()}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <Coffee className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#777' }}>
+                  <span className="ti-cup" style={{ fontSize: '32px', color: '#ccc', display: 'block', marginBottom: '8px' }} />
                   No transactions completed today.
                 </div>
               )}
@@ -264,35 +519,56 @@ function CanteenDashboard({ stats, setActiveTab, fetchStats }) {
         </div>
 
         {/* Quick actions */}
-        <WhiteCard title="Quick Operations">
-          <div className="space-y-3">
-            {[
-              { label: 'POS checkout terminal', desc: 'Scan items & checkout student', tab: 'pos', icon: ShoppingCart },
-              { label: 'Recharge a wallet', desc: 'Top up student daily balance', tab: 'wallets', icon: CreditCard },
-              { label: 'Meal Categories', desc: 'Manage time schedules', tab: 'categories', icon: Layers }
-            ].map((op, idx) => {
-              const Icon = op.icon;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => setActiveTab(op.tab)}
-                  className="w-full text-left p-3.5 rounded border border-gray-100 hover:bg-purple-50/50 hover:border-purple-200 transition-all flex items-center justify-between group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-50 rounded text-gray-600 group-hover:bg-white transition-colors">
-                      <Icon className="h-4.5 w-4.5" />
+        <div className="canteen-col-4">
+          <WhiteCard title="Quick Operations">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { label: 'POS checkout terminal', desc: 'Scan items & checkout student', tab: 'pos', icon: 'ti-shopping-cart' },
+                { label: 'Recharge a wallet', desc: 'Top up student daily balance', tab: 'wallets', icon: 'ti-credit-card' },
+                { label: 'Meal Categories', desc: 'Manage time schedules', tab: 'categories', icon: 'ti-layers' }
+              ].map((op, idx) => {
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveTab(op.tab)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '12px',
+                      background: '#fff',
+                      border: '1px solid #e8e8e8',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--primary-color)';
+                      e.currentTarget.style.background = '#fcfaff';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.borderColor = '#e8e8e8';
+                      e.currentTarget.style.background = '#fff';
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ padding: '8px', background: '#f5f6fa', borderRadius: '4px', color: '#555' }}>
+                        <span className={op.icon} />
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#333' }}>{op.label}</p>
+                        <p style={{ margin: 0, fontSize: '11px', color: '#777' }}>{op.desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">{op.label}</p>
-                      <p className="text-xs text-gray-500">{op.desc}</p>
-                    </div>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-purple-600 transition-transform group-hover:translate-x-1" />
-                </button>
-              );
-            })}
-          </div>
-        </WhiteCard>
+                    <span className="ti-angle-right" style={{ color: '#aaa' }} />
+                  </button>
+                );
+              })}
+            </div>
+          </WhiteCard>
+        </div>
       </div>
     </div>
   );
@@ -398,27 +674,25 @@ function CanteenPos({ items, categories, wallets, refreshData }) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div className="canteen-row">
       {/* Products list */}
-      <div className="lg:col-span-2 space-y-6">
-        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-          <div className="relative w-full sm:max-w-xs">
-            <span className="ti-search absolute left-3 top-3.5 text-gray-400 text-sm" />
+      <div className="canteen-col-8" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div className="canteen-flex-between">
+          <div className="pos-search-wrapper">
+            <span className="ti-search" />
             <input 
               type="text" 
               placeholder="Search items or codes..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full border border-gray-200 rounded focus:outline-none focus:border-purple-600 bg-white"
+              className="canteen-form-control"
             />
           </div>
 
-          <div className="flex gap-1 overflow-x-auto w-full sm:w-auto pb-1">
+          <div className="canteen-cat-scroll">
             <button 
               onClick={() => setSelectedCat('all')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors whitespace-nowrap ${
-                selectedCat === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`canteen-cat-btn ${selectedCat === 'all' ? 'active' : ''}`}
             >
               All Meals
             </button>
@@ -426,9 +700,7 @@ function CanteenPos({ items, categories, wallets, refreshData }) {
               <button 
                 key={cat.id}
                 onClick={() => setSelectedCat(cat.id.toString())}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors whitespace-nowrap ${
-                  selectedCat === cat.id.toString() ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                className={`canteen-cat-btn ${selectedCat === cat.id.toString() ? 'active' : ''}`}
               >
                 {cat.name}
               </button>
@@ -437,43 +709,38 @@ function CanteenPos({ items, categories, wallets, refreshData }) {
         </div>
 
         {/* Item Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="canteen-pos-grid">
           {filteredItems.map(item => {
             const outOfStock = item.isAvailable !== 1 || item.stock <= 0;
             return (
               <div 
                 key={item.id}
                 onClick={() => !outOfStock && addToCart(item)}
-                className={`bg-white rounded border border-gray-200 overflow-hidden transition-all duration-200 ${
-                  outOfStock 
-                    ? 'opacity-60 cursor-not-allowed filter grayscale' 
-                    : 'cursor-pointer hover:shadow hover:border-purple-400 active:scale-98'
-                }`}
+                className={`canteen-card-item ${outOfStock ? 'disabled' : ''}`}
               >
-                <div className="h-32 bg-gray-50 relative">
+                <div className="item-visual">
                   {item.image ? (
-                    <img src={item.image} alt={item.itemName} className="w-full h-full object-cover" />
+                    <img src={item.image} alt={item.itemName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300">
-                      <Coffee className="h-10 w-10" />
-                    </div>
+                    <span className="ti-cup" />
                   )}
                   {outOfStock && (
-                    <span className="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                    <span style={{ position: 'absolute', top: '8px', right: '8px', background: '#ef5f5f', color: '#fff', fontSize: '9px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '3px' }}>
                       OUT OF STOCK
                     </span>
                   )}
                   {item.isVegetarian === 1 && (
-                    <span className="absolute bottom-2 left-2 bg-emerald-100 border border-emerald-300 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                    <span style={{ position: 'absolute', bottom: '8px', left: '8px', background: '#D1FAE5', border: '1px solid #6EE7B7', color: '#065F46', fontSize: '9px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '3px' }}>
                       VEG
                     </span>
                   )}
                 </div>
-                <div className="p-4 space-y-1">
-                  <h4 className="font-bold text-gray-900 truncate">{item.itemName}</h4>
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm font-black text-purple-600">₹{parseFloat(item.price).toFixed(2)}</p>
-                    <p className="text-[10px] text-gray-400 font-medium">Stock: {item.stock}</p>
+                <div className="item-body">
+                  <div className="item-title" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.itemName}</div>
+                  <div className="item-meta">Code: {item.itemCode || 'N/A'}</div>
+                  <div className="item-price-stock">
+                    <span className="price">₹{parseFloat(item.price).toFixed(2)}</span>
+                    <span className="stock">Qty: {item.stock}</span>
                   </div>
                 </div>
               </div>
@@ -482,120 +749,132 @@ function CanteenPos({ items, categories, wallets, refreshData }) {
         </div>
       </div>
 
-      {/* Cart Drawer */}
-      <div className="bg-white rounded border border-gray-200 overflow-hidden flex flex-col min-h-[500px]">
-        <div className="p-4 border-b border-gray-100 flex items-center gap-2 bg-gray-50">
-          <ShoppingCart className="h-4.5 w-4.5 text-purple-600" />
-          <h3 className="font-bold text-gray-900 text-sm">Current Order</h3>
-          <span className="ml-auto bg-purple-100 text-purple-800 text-[11px] px-2 py-0.5 rounded-full font-bold">
-            {cart.reduce((sum, i) => sum + i.quantity, 0)} Items
-          </span>
-        </div>
-
-        <div className="flex-1 divide-y divide-gray-100 overflow-y-auto max-h-[300px] p-2">
-          {cart.length > 0 ? (
-            cart.map(item => (
-              <div key={item.id} className="py-2.5 flex justify-between items-center px-2">
-                <div className="max-w-[150px]">
-                  <p className="text-xs font-semibold text-gray-800 truncate">{item.itemName}</p>
-                  <p className="text-[11px] text-purple-600 font-bold">₹{parseFloat(item.price).toFixed(2)}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => updateCartQty(item.id, -1)}
-                    className="p-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold w-5 h-5 flex items-center justify-center"
-                  >
-                    -
-                  </button>
-                  <span className="text-xs font-bold text-gray-900 w-5 text-center">{item.quantity}</span>
-                  <button 
-                    onClick={() => updateCartQty(item.id, 1)}
-                    className="p-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold w-5 h-5 flex items-center justify-center"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-16 text-gray-400 text-xs">
-              <ShoppingCart className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-              Cart is empty. Click items to add.
+      {/* Cart Box */}
+      <div className="canteen-col-4">
+        <div className="canteen-cart-box">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #f1f1f1', marginBottom: '15px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="ti-shopping-cart" style={{ color: 'var(--primary-color)', fontSize: '16px' }} />
+              <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>Current Order</h4>
             </div>
-          )}
-        </div>
+            <span style={{ background: '#f5f6fa', color: '#555', fontSize: '11px', fontWeight: 600, padding: '3px 8px', borderRadius: '12px' }}>
+              {cart.reduce((sum, i) => sum + i.quantity, 0)} Items
+            </span>
+          </div>
 
-        {/* Pricing Summary */}
-        <div className="p-4 bg-gray-50 border-t border-gray-100 space-y-4">
-          <div className="space-y-1.5 text-xs text-gray-600">
-            <div className="flex justify-between">
+          <div className="canteen-cart-list">
+            {cart.length > 0 ? (
+              cart.map(item => (
+                <div key={item.id} className="canteen-cart-row">
+                  <div>
+                    <div className="canteen-cart-row-title" style={{ maxWidth: '140px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.itemName}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--primary-color)', fontWeight: 600 }}>₹{parseFloat(item.price).toFixed(2)}</div>
+                  </div>
+                  <div className="canteen-cart-qty">
+                    <button 
+                      onClick={() => updateCartQty(item.id, -1)}
+                      className="canteen-qty-btn"
+                    >
+                      -
+                    </button>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', width: '20px', textAlign: 'center' }}>{item.quantity}</span>
+                    <button 
+                      onClick={() => updateCartQty(item.id, 1)}
+                      className="canteen-qty-btn"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px 0', color: '#999', fontSize: '12px' }}>
+                <span className="ti-shopping-cart" style={{ display: 'block', fontSize: '24px', marginBottom: '8px', color: '#ccc' }} />
+                Cart is empty. Click items to add.
+              </div>
+            )}
+          </div>
+
+          {/* Pricing Summary */}
+          <div className="canteen-cart-summary">
+            <div className="canteen-summary-line">
               <span>Subtotal</span>
               <span>₹{subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="canteen-summary-line">
               <span>Tax (5%)</span>
               <span>₹{tax.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between font-bold text-gray-900 text-sm pt-1.5 border-t border-dashed border-gray-200">
+            <div className="canteen-summary-line total">
               <span>Total Cost</span>
-              <span className="text-purple-600">₹{total.toFixed(2)}</span>
+              <span>₹{total.toFixed(2)}</span>
             </div>
           </div>
 
           {/* Student Verification */}
-          <div className="space-y-2 pt-1">
-            <label className="text-[10px] font-bold text-gray-600 block">STUDENT WALLET VERIFICATION</label>
-            <div className="flex gap-2">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '15px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 600, color: '#555' }}>STUDENT WALLET VERIFICATION</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
               <input 
                 type="number" 
                 placeholder="Enter Student ID"
                 value={checkoutStudentId}
                 onChange={(e) => setCheckoutStudentId(e.target.value)}
-                className="flex-1 border border-gray-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-purple-600 bg-white"
+                className="canteen-form-control"
+                style={{ flex: 1 }}
               />
               <button 
                 onClick={verifyStudent}
-                className="bg-gray-800 text-white rounded px-4 py-1.5 text-xs font-bold hover:bg-gray-900"
+                className="primary_btn"
+                style={{ padding: '8px 15px' }}
               >
                 Verify
               </button>
             </div>
 
             {verificationResult && (
-              <div className={`p-2.5 rounded border text-[11px] flex items-center gap-2 ${
-                verificationResult.success ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'
-              }`}>
+              <div style={{
+                padding: '10px',
+                borderRadius: '4px',
+                border: '1px solid',
+                fontSize: '11px',
+                background: verificationResult.success ? '#ECFDF5' : '#FEF2F2',
+                borderColor: verificationResult.success ? '#A7F3D0' : '#FCA5A5',
+                color: verificationResult.success ? '#065F46' : '#991B1B'
+              }}>
                 {verificationResult.success ? (
-                  <>
-                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                    <div>
-                      <p className="font-bold">Verified: #{verificationResult.wallet.studentId}</p>
-                      <p>Balance: ₹{parseFloat(verificationResult.wallet.balance).toFixed(2)} • Daily Cap: ₹{parseFloat(verificationResult.wallet.dailyLimit).toFixed(2)}</p>
-                    </div>
-                  </>
+                  <div>
+                    <strong style={{ display: 'block' }}>Verified Student: #{verificationResult.wallet.studentId}</strong>
+                    <span>Balance: ₹{parseFloat(verificationResult.wallet.balance).toFixed(2)} • Limit: ₹{parseFloat(verificationResult.wallet.dailyLimit).toFixed(2)}</span>
+                  </div>
                 ) : (
-                  <>
-                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                    <span>{verificationResult.message}</span>
-                  </>
+                  <span>{verificationResult.message}</span>
                 )}
               </div>
             )}
           </div>
 
           {checkoutError && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-xs flex items-center gap-2">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-              <span>{checkoutError}</span>
+            <div style={{
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #FCA5A5',
+              background: '#FEF2F2',
+              color: '#991B1B',
+              fontSize: '11px',
+              marginBottom: '15px'
+            }}>
+              {checkoutError}
             </div>
           )}
 
           <button
             onClick={handleCheckout}
             disabled={cart.length === 0 || !verificationResult?.success}
-            className="primary_btn w-full flex items-center justify-center gap-2 py-2"
+            className="primary_btn"
+            style={{ width: '100%', justifyContent: 'center', opacity: (cart.length === 0 || !verificationResult?.success) ? 0.6 : 1 }}
           >
-            <CreditCard className="h-4 w-4" />
+            <span className="ti-check" style={{ marginRight: '6px' }} />
             Complete Checkout (Wallet)
           </button>
         </div>
@@ -603,53 +882,73 @@ function CanteenPos({ items, categories, wallets, refreshData }) {
 
       {/* Receipt Modal */}
       {receipt && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white rounded max-w-sm w-full p-6 space-y-4 border shadow-2xl relative">
-            <button 
-              onClick={() => setReceipt(null)}
-              className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 text-gray-500"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="text-center space-y-1">
-              <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-                <Check className="h-5 w-5" />
-              </div>
-              <h3 className="text-md font-bold text-gray-900">Purchase Completed!</h3>
-              <p className="text-[11px] text-gray-400">Order ID: #{receipt.id}</p>
+        <div className="canteen-popup-overlay">
+          <div className="canteen-popup-content" style={{ maxWidth: '380px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h4 style={{ margin: 0, fontWeight: 700 }}>Receipt Details</h4>
+              <button 
+                onClick={() => setReceipt(null)}
+                style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#999' }}
+              >
+                &times;
+              </button>
             </div>
 
-            <div className="border-t border-b border-dashed border-gray-200 py-3 space-y-2 text-xs">
-              <p className="flex justify-between"><span className="text-gray-500">Student:</span> <span className="font-bold">#{receipt.studentId}</span></p>
-              <p className="flex justify-between"><span className="text-gray-500">Date:</span> <span>{new Date(receipt.timestamp).toLocaleString()}</span></p>
-              
-              <div className="pt-2 space-y-1.5 border-t border-gray-100">
+            <div style={{ textAlign: 'center', marginBottom: '15px' }}>
+              <div style={{ width: '40px', height: '40px', background: '#D1FAE5', color: '#10B981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
+                <span className="ti-check" style={{ fontSize: '20px' }} />
+              </div>
+              <h4 style={{ margin: 0, fontWeight: 700 }}>Purchase Completed!</h4>
+              <p style={{ margin: 0, fontSize: '11px', color: '#999' }}>Order ID: #{receipt.id}</p>
+            </div>
+
+            <div style={{ borderTop: '1px dashed #ddd', borderBottom: '1px dashed #ddd', padding: '12px 0', margin: '15px 0', fontSize: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ color: '#777' }}>Student ID:</span>
+                <span style={{ fontWeight: 600 }}>#{receipt.studentId}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ color: '#777' }}>Date:</span>
+                <span>{new Date(receipt.timestamp).toLocaleString()}</span>
+              </div>
+
+              <div style={{ borderTop: '1px solid #f1f1f1', paddingTop: '8px' }}>
                 {receipt.items.map(item => (
-                  <p key={item.id} className="flex justify-between text-gray-800">
+                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <span>{item.itemName} x{item.quantity}</span>
                     <span>₹{(item.price * item.quantity).toFixed(2)}</span>
-                  </p>
+                  </div>
                 ))}
               </div>
             </div>
 
-            <div className="space-y-1 text-xs">
-              <p className="flex justify-between"><span className="text-gray-500">Subtotal:</span> <span>₹{receipt.subtotal.toFixed(2)}</span></p>
-              <p className="flex justify-between"><span className="text-gray-500">Tax (5%):</span> <span>₹{receipt.tax.toFixed(2)}</span></p>
-              <p className="flex justify-between text-sm font-black text-purple-600 pt-1.5 border-t"><span className="text-gray-900">Total Paid:</span> <span>₹{receipt.total.toFixed(2)}</span></p>
+            <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#777' }}>Subtotal:</span>
+                <span>₹{receipt.subtotal.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#777' }}>Tax (5%):</span>
+                <span>₹{receipt.tax.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 700, color: 'var(--primary-color)', borderTop: '1px solid #eee', paddingTop: '6px', marginTop: '4px' }}>
+                <span style={{ color: '#333' }}>Total Paid:</span>
+                <span>₹{receipt.total.toFixed(2)}</span>
+              </div>
             </div>
 
-            <div className="flex gap-2">
+            <div style={{ display: 'flex', gap: '10px' }}>
               <button 
                 onClick={() => window.print()}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 rounded text-xs flex items-center justify-center gap-1.5 border"
+                className="btn-secondary-outline"
+                style={{ flex: 1, justifyContent: 'center' }}
               >
-                <Printer className="h-3.5 w-3.5" /> Print
+                <span className="ti-printer" style={{ marginRight: '6px' }} /> Print
               </button>
               <button 
                 onClick={() => setReceipt(null)}
-                className="primary_btn flex-1 py-2 rounded text-xs"
+                className="primary_btn"
+                style={{ flex: 1, justifyContent: 'center' }}
               >
                 Done
               </button>
@@ -750,16 +1049,17 @@ function CanteenWallets({ wallets, fetchWallets, categories, items }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="relative w-full max-w-xs">
-          <span className="ti-search absolute left-3 top-3 text-gray-400 text-xs" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="pos-search-wrapper" style={{ marginBottom: 0 }}>
+          <span className="ti-search" />
           <input 
             type="text" 
             placeholder="Search student ID or RFID UID..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-4 py-1.5 w-full border border-gray-200 rounded focus:outline-none focus:border-purple-600 bg-white"
+            className="canteen-form-control"
+            style={{ width: '250px' }}
           />
         </div>
       </div>
@@ -774,44 +1074,45 @@ function CanteenWallets({ wallets, fetchWallets, categories, items }) {
                 <th>Current Balance</th>
                 <th>Daily Spend Limit</th>
                 <th>Status</th>
-                <th className="text-right">Actions</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(w => (
                 <tr key={w.id}>
-                  <td className="font-semibold text-gray-900">Student #{w.studentId}</td>
-                  <td className="font-mono text-xs text-gray-500">{w.rfidCardUid || 'No Tag Assigned'}</td>
-                  <td className="font-bold text-emerald-600">₹{parseFloat(w.balance).toFixed(2)}</td>
-                  <td className="font-semibold text-gray-600">₹{parseFloat(w.dailyLimit).toFixed(2)}</td>
+                  <td style={{ fontWeight: 600 }}>Student #{w.studentId}</td>
+                  <td style={{ fontFamily: 'monospace', fontSize: '12px', color: '#777' }}>{w.rfidCardUid || 'No Tag Assigned'}</td>
+                  <td style={{ fontWeight: 700, color: '#10B981' }}>₹{parseFloat(w.balance).toFixed(2)}</td>
+                  <td style={{ fontWeight: 600, color: '#555' }}>₹{parseFloat(w.dailyLimit).toFixed(2)}</td>
                   <td>
                     <Badge type={w.isActive === 1 ? 'success' : 'danger'}>
                       {w.isActive === 1 ? 'Active' : 'Locked'}
                     </Badge>
                   </td>
-                  <td className="text-right space-x-2">
-                    <button 
-                      onClick={() => { setTopUpWallet(w); setTopUpAmount(''); }}
-                      className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded border border-emerald-100 transition-colors"
-                    >
-                      Top-Up
-                    </button>
-                    <button 
-                      onClick={() => { setRulesWallet(w); loadRestrictions(w.studentId); }}
-                      className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded border border-purple-100 transition-colors"
-                    >
-                      Restrictions
-                    </button>
-                    <button 
-                      onClick={() => toggleWalletActive(w.studentId)}
-                      className={`px-2.5 py-1 text-xs font-bold rounded border transition-colors ${
-                        w.isActive === 1 
-                          ? 'bg-red-50 hover:bg-red-100 text-red-700 border-red-100' 
-                          : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-100'
-                      }`}
-                    >
-                      {w.isActive === 1 ? 'Lock' : 'Unlock'}
-                    </button>
+                  <td style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'inline-flex', gap: '8px' }}>
+                      <button 
+                        onClick={() => { setTopUpWallet(w); setTopUpAmount(''); }}
+                        className="btn-secondary-outline"
+                        style={{ padding: '4px 10px', fontSize: '11px' }}
+                      >
+                        Top-Up
+                      </button>
+                      <button 
+                        onClick={() => { setRulesWallet(w); loadRestrictions(w.studentId); }}
+                        className="btn-secondary-outline"
+                        style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--primary-color)' }}
+                      >
+                        Restrictions
+                      </button>
+                      <button 
+                        onClick={() => toggleWalletActive(w.studentId)}
+                        className="btn-secondary-outline"
+                        style={{ padding: '4px 10px', fontSize: '11px', color: w.isActive === 1 ? '#ef5f5f' : '#10B981' }}
+                      >
+                        {w.isActive === 1 ? 'Lock' : 'Unlock'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -822,36 +1123,39 @@ function CanteenWallets({ wallets, fetchWallets, categories, items }) {
 
       {/* Top Up Modal */}
       {topUpWallet && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white rounded max-w-sm w-full p-6 space-y-4 border shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-            <button 
-              onClick={() => setTopUpWallet(null)}
-              className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 text-gray-500"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <h3 className="text-sm font-bold text-gray-900">Recharge Student Wallet</h3>
-            <p className="text-xs text-gray-500">Add funds instantly to Student #{topUpWallet.studentId}'s daily account.</p>
+        <div className="canteen-popup-overlay">
+          <div className="canteen-popup-content" style={{ maxWidth: '350px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h4 style={{ margin: 0, fontWeight: 700 }}>Recharge Student Wallet</h4>
+              <button 
+                onClick={() => setTopUpWallet(null)}
+                style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#999' }}
+              >
+                &times;
+              </button>
+            </div>
+            <p style={{ margin: '0 0 15px', fontSize: '12px', color: '#666' }}>Add funds instantly to Student #{topUpWallet.studentId}'s daily account.</p>
             
-            <div className="space-y-4">
-              <div className="space-y-1 text-xs">
-                <label className="font-bold text-gray-600 block">RECHARGE AMOUNT (₹)</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div className="canteen-form-group" style={{ marginBottom: 0 }}>
+                <label>RECHARGE AMOUNT (₹)</label>
                 <input 
                   type="number" 
                   placeholder="Enter amount"
                   value={topUpAmount}
                   onChange={(e) => setTopUpAmount(e.target.value)}
-                  className="w-full border rounded px-3 py-1.5 focus:outline-none focus:border-purple-600 bg-white"
+                  className="canteen-form-control"
                 />
               </div>
 
               {/* Presets */}
-              <div className="flex gap-2">
+              <div style={{ display: 'flex', gap: '6px' }}>
                 {[10, 20, 50, 100].map(amt => (
                   <button 
                     key={amt}
                     onClick={() => setTopUpAmount(amt.toString())}
-                    className="flex-1 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded border"
+                    className="btn-secondary-outline"
+                    style={{ flex: 1, padding: '5px', fontSize: '11px', justifyContent: 'center' }}
                   >
                     +₹{amt}
                   </button>
@@ -860,7 +1164,8 @@ function CanteenWallets({ wallets, fetchWallets, categories, items }) {
 
               <button 
                 onClick={handleTopUp}
-                className="primary_btn w-full py-2 text-xs"
+                className="primary_btn"
+                style={{ justifyContent: 'center', padding: '10px' }}
               >
                 Confirm Top-Up
               </button>
@@ -871,43 +1176,50 @@ function CanteenWallets({ wallets, fetchWallets, categories, items }) {
 
       {/* Restrictions / Rules Modal */}
       {rulesWallet && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white rounded max-w-md w-full p-6 space-y-4 border shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-            <button 
-              onClick={() => setRulesWallet(null)}
-              className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 text-gray-500"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <h3 className="text-sm font-bold text-gray-900">Student Allergens & Block Rules</h3>
-            <p className="text-xs text-gray-500">Configure blocked food items or entire categories for Student #{rulesWallet.studentId}.</p>
+        <div className="canteen-popup-overlay">
+          <div className="canteen-popup-content" style={{ maxWidth: '420px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h4 style={{ margin: 0, fontWeight: 700 }}>Allergens & Block Rules</h4>
+              <button 
+                onClick={() => setRulesWallet(null)}
+                style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#999' }}
+              >
+                &times;
+              </button>
+            </div>
+            <p style={{ margin: '0 0 15px', fontSize: '12px', color: '#666' }}>Configure blocked food items or entire categories for Student #{rulesWallet.studentId}.</p>
 
-            <div className="space-y-4 text-xs">
-              <div className="flex gap-4 border-b pb-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', gap: '15px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>
                 <button 
                   onClick={() => { setBlockType('category'); setSelectedBlockId(''); }}
-                  className={`font-semibold pb-1.5 border-b-2 transition-colors ${
-                    blockType === 'category' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500'
-                  }`}
+                  style={{
+                    background: 'none', border: 'none', paddingBottom: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 600,
+                    color: blockType === 'category' ? 'var(--primary-color)' : '#666',
+                    borderBottom: blockType === 'category' ? '2px solid var(--primary-color)' : 'none'
+                  }}
                 >
                   Block Category
                 </button>
                 <button 
                   onClick={() => { setBlockType('item'); setSelectedBlockId(''); }}
-                  className={`font-semibold pb-1.5 border-b-2 transition-colors ${
-                    blockType === 'item' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500'
-                  }`}
+                  style={{
+                    background: 'none', border: 'none', paddingBottom: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 600,
+                    color: blockType === 'item' ? 'var(--primary-color)' : '#666',
+                    borderBottom: blockType === 'item' ? '2px solid var(--primary-color)' : 'none'
+                  }}
                 >
                   Block Food Item
                 </button>
               </div>
 
               {/* Blocks Config Form */}
-              <div className="flex gap-2">
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <select
                   value={selectedBlockId}
                   onChange={(e) => setSelectedBlockId(e.target.value)}
-                  className="flex-1 border rounded px-3 py-1.5 focus:outline-none focus:border-purple-600 bg-white"
+                  className="canteen-form-control"
+                  style={{ flex: 1 }}
                 >
                   <option value="">Select target...</option>
                   {blockType === 'category' ? (
@@ -918,38 +1230,41 @@ function CanteenWallets({ wallets, fetchWallets, categories, items }) {
                 </select>
                 <button 
                   onClick={addRestriction}
-                  className="primary_btn py-1.5 px-4 text-xs"
+                  className="primary_btn"
+                  style={{ padding: '8px 15px' }}
                 >
                   Add
                 </button>
               </div>
 
               {/* Active Rules List */}
-              <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
-                <label className="font-bold text-gray-600 block">ACTIVE BLOCKS ({restrictions.length})</label>
-                {restrictions.map(r => {
-                  const labelName = r.restrictionType === 'category_block'
-                    ? categories.find(c => c.id === r.categoryId)?.name || 'Category'
-                    : items.find(i => i.id === r.itemId)?.itemName || 'Food Item';
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#555' }}>ACTIVE BLOCKS ({restrictions.length})</label>
+                <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {restrictions.map(r => {
+                    const labelName = r.restrictionType === 'category_block'
+                      ? categories.find(c => c.id === r.categoryId)?.name || 'Category'
+                      : items.find(i => i.id === r.itemId)?.itemName || 'Food Item';
 
-                  return (
-                    <div key={r.id} className="p-2 bg-red-50 border border-red-100 rounded flex justify-between items-center text-red-800">
-                      <span>
-                        <span className="font-bold uppercase mr-1.5">[{r.restrictionType.replace('_', ' ')}]</span>
-                        {labelName}
-                      </span>
-                      <button 
-                        onClick={() => deleteRestriction(r.id)}
-                        className="text-red-500 hover:text-red-700 font-bold"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  );
-                })}
-                {restrictions.length === 0 && (
-                  <p className="text-center py-6 text-gray-400 italic">No allergen or block rules set for this student.</p>
-                )}
+                    return (
+                      <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '4px', fontSize: '12px', color: '#991B1B' }}>
+                        <span>
+                          <strong style={{ marginRight: '5px' }}>[{r.restrictionType.replace('_', ' ').toUpperCase()}]</strong>
+                          {labelName}
+                        </span>
+                        <button 
+                          onClick={() => deleteRestriction(r.id)}
+                          style={{ background: 'none', border: 'none', color: '#ef5f5f', fontWeight: 'bold', cursor: 'pointer' }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    );
+                  })}
+                  {restrictions.length === 0 && (
+                    <p style={{ margin: 0, textAlign: 'center', padding: '20px 0', color: '#999', fontStyle: 'italic', fontSize: '12px' }}>No allergen or block rules set.</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1053,23 +1368,24 @@ function CanteenItems({ items, categories, fetchItems }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="relative w-full max-w-xs">
-          <span className="ti-search absolute left-3 top-3 text-gray-400 text-xs" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="pos-search-wrapper" style={{ marginBottom: 0 }}>
+          <span className="ti-search" />
           <input 
             type="text" 
             placeholder="Search menu items..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-4 py-1.5 w-full border border-gray-200 rounded focus:outline-none focus:border-purple-600 bg-white"
+            className="canteen-form-control"
+            style={{ width: '250px' }}
           />
         </div>
         <button 
           onClick={() => openForm('create')}
-          className="primary_btn py-1.5 px-4 rounded text-xs flex items-center gap-1.5"
+          className="primary_btn"
         >
-          <Plus className="h-4 w-4" /> Add Food Item
+          <span className="ti-plus" /> Add Food Item
         </button>
       </div>
 
@@ -1084,18 +1400,18 @@ function CanteenItems({ items, categories, fetchItems }) {
                 <th>Stock</th>
                 <th>Dietary</th>
                 <th>Status</th>
-                <th className="text-right">Actions</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(item => (
                 <tr key={item.id}>
                   <td>
-                    <p className="font-semibold text-gray-900">{item.itemName}</p>
-                    <p className="text-xs text-gray-400">{item.itemCode || 'No Code'}</p>
+                    <p style={{ margin: 0, fontWeight: 600 }}>{item.itemName}</p>
+                    <p style={{ margin: 0, fontSize: '11px', color: '#888' }}>{item.itemCode || 'No Code'}</p>
                   </td>
-                  <td className="text-gray-600 font-semibold">{item.categoryName || 'General'}</td>
-                  <td className="font-bold text-purple-600">₹{parseFloat(item.price).toFixed(2)}</td>
+                  <td style={{ fontWeight: 600, color: '#555' }}>{item.categoryName || 'General'}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--primary-color)' }}>₹{parseFloat(item.price).toFixed(2)}</td>
                   <td>
                     <Badge type={item.stock <= 10 ? 'danger' : 'success'}>
                       {item.stock} qty
@@ -1111,25 +1427,30 @@ function CanteenItems({ items, categories, fetchItems }) {
                       {item.isAvailable === 1 ? 'Available' : 'Out of Stock'}
                     </Badge>
                   </td>
-                  <td className="text-right space-x-2">
-                    <button 
-                      onClick={() => toggleStatus(item.id)}
-                      className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded"
-                    >
-                      Toggle Stock
-                    </button>
-                    <button 
-                      onClick={() => openForm('edit', item)}
-                      className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded border border-purple-100"
-                    >
-                      <span className="ti-pencil" /> Edit
-                    </button>
-                    <button 
-                      onClick={() => deleteItem(item.id)}
-                      className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded border border-red-100"
-                    >
-                      <span className="ti-trash" /> Delete
-                    </button>
+                  <td style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'inline-flex', gap: '8px' }}>
+                      <button 
+                        onClick={() => toggleStatus(item.id)}
+                        className="btn-secondary-outline"
+                        style={{ padding: '4px 10px', fontSize: '11px' }}
+                      >
+                        Toggle Stock
+                      </button>
+                      <button 
+                        onClick={() => openForm('edit', item)}
+                        className="btn-secondary-outline"
+                        style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--primary-color)' }}
+                      >
+                        <span className="ti-pencil" /> Edit
+                      </button>
+                      <button 
+                        onClick={() => deleteItem(item.id)}
+                        className="btn-secondary-outline"
+                        style={{ padding: '4px 10px', fontSize: '11px', color: '#ef5f5f' }}
+                      >
+                        <span className="ti-trash" /> Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -1140,118 +1461,138 @@ function CanteenItems({ items, categories, fetchItems }) {
 
       {/* Item Create/Edit Modal */}
       {itemModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white rounded max-w-md w-full p-6 space-y-4 border shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-            <button 
-              onClick={() => setItemModal(null)}
-              className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 text-gray-500"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <h3 className="text-sm font-bold text-gray-900">
-              {itemModal === 'create' ? 'Create New Food Item' : 'Edit Food Item'}
-            </h3>
+        <div className="canteen-popup-overlay">
+          <div className="canteen-popup-content" style={{ maxWidth: '450px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h4 style={{ margin: 0, fontWeight: 700 }}>
+                {itemModal === 'create' ? 'Create New Food Item' : 'Edit Food Item'}
+              </h4>
+              <button 
+                onClick={() => setItemModal(null)}
+                style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#999' }}
+              >
+                &times;
+              </button>
+            </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-gray-600 block">ITEM NAME</label>
-                  <input 
-                    type="text" 
-                    value={formName} 
-                    onChange={e => setFormName(e.target.value)}
-                    className="w-full border rounded px-3 py-1.5 focus:outline-none focus:border-purple-600 bg-white"
-                  />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="canteen-row">
+                <div className="canteen-col-6">
+                  <div className="canteen-form-group">
+                    <label>ITEM NAME</label>
+                    <input 
+                      type="text" 
+                      value={formName} 
+                      onChange={e => setFormName(e.target.value)}
+                      className="canteen-form-control"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-gray-600 block">ITEM CODE / SKU</label>
-                  <input 
-                    type="text" 
-                    value={formCode} 
-                    onChange={e => setFormCode(e.target.value)}
-                    className="w-full border rounded px-3 py-1.5 focus:outline-none focus:border-purple-600 bg-white"
-                  />
+                <div className="canteen-col-6">
+                  <div className="canteen-form-group">
+                    <label>ITEM CODE / SKU</label>
+                    <input 
+                      type="text" 
+                      value={formCode} 
+                      onChange={e => setFormCode(e.target.value)}
+                      className="canteen-form-control"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="font-bold text-gray-600 block">DESCRIPTION</label>
+              <div className="canteen-form-group">
+                <label>DESCRIPTION</label>
                 <textarea 
                   value={formDesc} 
                   onChange={e => setFormDesc(e.target.value)}
-                  className="w-full border rounded px-3 py-1.5 focus:outline-none focus:border-purple-600 bg-white"
+                  className="canteen-form-control"
+                  style={{ height: '60px' }}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-gray-600 block">SELLING PRICE (₹)</label>
-                  <input 
-                    type="number" 
-                    value={formPrice} 
-                    onChange={e => setFormPrice(e.target.value)}
-                    className="w-full border rounded px-3 py-1.5 focus:outline-none focus:border-purple-600 bg-white"
-                  />
+              <div className="canteen-row">
+                <div className="canteen-col-6">
+                  <div className="canteen-form-group">
+                    <label>SELLING PRICE (₹)</label>
+                    <input 
+                      type="number" 
+                      value={formPrice} 
+                      onChange={e => setFormPrice(e.target.value)}
+                      className="canteen-form-control"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-gray-600 block">COST PRICE (₹)</label>
-                  <input 
-                    type="number" 
-                    value={formCostPrice} 
-                    onChange={e => setFormCostPrice(e.target.value)}
-                    className="w-full border rounded px-3 py-1.5 focus:outline-none focus:border-purple-600 bg-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-gray-600 block">UNIT (e.g. piece, plate)</label>
-                  <input 
-                    type="text" 
-                    value={formUnit} 
-                    onChange={e => setFormUnit(e.target.value)}
-                    className="w-full border rounded px-3 py-1.5 focus:outline-none focus:border-purple-600 bg-white"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-gray-600 block">INITIAL STOCK QUANTITY</label>
-                  <input 
-                    type="number" 
-                    value={formStock} 
-                    onChange={e => setFormStock(e.target.value)}
-                    className="w-full border rounded px-3 py-1.5 focus:outline-none focus:border-purple-600 bg-white"
-                  />
+                <div className="canteen-col-6">
+                  <div className="canteen-form-group">
+                    <label>COST PRICE (₹)</label>
+                    <input 
+                      type="number" 
+                      value={formCostPrice} 
+                      onChange={e => setFormCostPrice(e.target.value)}
+                      className="canteen-form-control"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-gray-600 block">CATEGORY</label>
-                  <select
-                    value={formCategoryId}
-                    onChange={e => setFormCategoryId(e.target.value)}
-                    className="w-full border rounded px-3 py-1.5 focus:outline-none focus:border-purple-600 bg-white"
-                  >
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+              <div className="canteen-row">
+                <div className="canteen-col-6">
+                  <div className="canteen-form-group">
+                    <label>UNIT (e.g. piece, plate)</label>
+                    <input 
+                      type="text" 
+                      value={formUnit} 
+                      onChange={e => setFormUnit(e.target.value)}
+                      className="canteen-form-control"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-gray-600 block">DIETARY TYPE</label>
-                  <select
-                    value={formIsVeg}
-                    onChange={e => setFormIsVeg(parseInt(e.target.value))}
-                    className="w-full border rounded px-3 py-1.5 focus:outline-none focus:border-purple-600 bg-white"
-                  >
-                    <option value="1">Vegetarian</option>
-                    <option value="0">Non-Vegetarian</option>
-                  </select>
+                <div className="canteen-col-6">
+                  <div className="canteen-form-group">
+                    <label>INITIAL STOCK QUANTITY</label>
+                    <input 
+                      type="number" 
+                      value={formStock} 
+                      onChange={e => setFormStock(e.target.value)}
+                      className="canteen-form-control"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="canteen-row">
+                <div className="canteen-col-6">
+                  <div className="canteen-form-group">
+                    <label>CATEGORY</label>
+                    <select
+                      value={formCategoryId}
+                      onChange={e => setFormCategoryId(e.target.value)}
+                      className="canteen-form-control"
+                    >
+                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="canteen-col-6">
+                  <div className="canteen-form-group">
+                    <label>DIETARY TYPE</label>
+                    <select
+                      value={formIsVeg}
+                      onChange={e => setFormIsVeg(parseInt(e.target.value))}
+                      className="canteen-form-control"
+                    >
+                      <option value="1">Vegetarian</option>
+                      <option value="0">Non-Vegetarian</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
               <button 
                 onClick={handleSave}
-                className="primary_btn w-full py-2.5 text-xs"
+                className="primary_btn"
+                style={{ justifyContent: 'center', padding: '10px' }}
               >
                 Save Food Item
               </button>
@@ -1304,90 +1645,109 @@ function CanteenCategories({ categories, fetchCategories }) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="canteen-row">
       {/* Category List */}
-      <div className="lg:col-span-2 space-y-4">
-        <h3 className="text-sm font-bold text-gray-900 uppercase">Food & Meal Categories</h3>
+      <div className="canteen-col-8" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <h4 style={{ margin: 0, fontWeight: 700, textTransform: 'uppercase', fontSize: '13px', color: '#555' }}>Food & Meal Categories</h4>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="canteen-row">
           {categories.map(cat => (
-            <div key={cat.id} className="bg-white rounded border border-gray-200 p-5 shadow-sm space-y-3 relative group">
-              <button 
-                onClick={() => deleteCategory(cat.id)}
-                className="absolute top-4 right-4 p-1 rounded-full text-gray-400 hover:text-red-500 hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="h-4 w-4" />
-              </button>
+            <div key={cat.id} className="canteen-col-6">
+              <div className="white_card" style={{ padding: '15px', position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button 
+                  onClick={() => deleteCategory(cat.id)}
+                  style={{
+                    position: 'absolute', top: '12px', right: '12px', background: 'none', border: 'none',
+                    fontSize: '16px', color: '#999', cursor: 'pointer', transition: 'color 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.color = '#ef5f5f'}
+                  onMouseOut={(e) => e.currentTarget.style.color = '#999'}
+                >
+                  &times;
+                </button>
 
-              <div className="space-y-1">
-                <h4 className="font-bold text-gray-900 text-sm">{cat.name}</h4>
-                <p className="text-xs text-gray-500">{cat.description || 'No description provided.'}</p>
-              </div>
-
-              {cat.startTime && (
-                <div className="flex items-center gap-1.5 text-[11px] text-purple-600 bg-purple-50 px-2 py-1 rounded w-max font-bold border border-purple-100">
-                  <Clock className="h-3.5 w-3.5" />
-                  Available: {cat.startTime.substring(0, 5)} - {cat.endTime.substring(0, 5)}
+                <div>
+                  <h4 style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 600, color: '#333' }}>{cat.name}</h4>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#777' }}>{cat.description || 'No description provided.'}</p>
                 </div>
-              )}
+
+                {cat.startTime && (
+                  <div style={{
+                    marginTop: 'auto', display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    fontSize: '11px', fontWeight: 600, color: 'var(--primary-color)',
+                    background: '#fcfaff', border: '1px solid #f3eeff', padding: '3px 8px', borderRadius: '4px', width: 'max-content'
+                  }}>
+                    <span className="ti-time" />
+                    Available: {cat.startTime.substring(0, 5)} - {cat.endTime.substring(0, 5)}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
       {/* Category Form */}
-      <WhiteCard title="Add Meal Category">
-        <form onSubmit={handleSave} className="space-y-4 text-xs">
-          <div className="space-y-1">
-            <label className="font-bold text-gray-600 block">CATEGORY NAME</label>
-            <input 
-              type="text" 
-              placeholder="e.g. Breakfast, Snacks"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full border rounded px-3 py-2 focus:outline-none focus:border-purple-600 bg-white"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="font-bold text-gray-600 block">DESCRIPTION</label>
-            <textarea 
-              placeholder="Meal category details..."
-              value={desc}
-              onChange={e => setDesc(e.target.value)}
-              className="w-full border rounded px-3 py-2 focus:outline-none focus:border-purple-600 bg-white"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="font-bold text-gray-600 block">START TIME</label>
+      <div className="canteen-col-4">
+        <WhiteCard title="Add Meal Category">
+          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="canteen-form-group">
+              <label>CATEGORY NAME</label>
               <input 
-                type="time" 
-                value={startTime}
-                onChange={e => setStartTime(e.target.value)}
-                className="w-full border rounded px-3 py-2 focus:outline-none focus:border-purple-600 bg-white"
+                type="text" 
+                placeholder="e.g. Breakfast, Snacks"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                className="canteen-form-control"
               />
             </div>
-            <div className="space-y-1">
-              <label className="font-bold text-gray-600 block">END TIME</label>
-              <input 
-                type="time" 
-                value={endTime}
-                onChange={e => setEndTime(e.target.value)}
-                className="w-full border rounded px-3 py-2 focus:outline-none focus:border-purple-600 bg-white"
+
+            <div className="canteen-form-group">
+              <label>DESCRIPTION</label>
+              <textarea 
+                placeholder="Meal category details..."
+                value={desc}
+                onChange={e => setDesc(e.target.value)}
+                className="canteen-form-control"
+                style={{ height: '60px' }}
               />
             </div>
-          </div>
 
-          <button 
-            type="submit"
-            className="primary_btn w-full py-2.5 text-xs font-bold"
-          >
-            Create Category
-          </button>
-        </form>
-      </WhiteCard>
+            <div className="canteen-row">
+              <div className="canteen-col-6">
+                <div className="canteen-form-group">
+                  <label>START TIME</label>
+                  <input 
+                    type="time" 
+                    value={startTime}
+                    onChange={e => setStartTime(e.target.value)}
+                    className="canteen-form-control"
+                  />
+                </div>
+              </div>
+              <div className="canteen-col-6">
+                <div className="canteen-form-group">
+                  <label>END TIME</label>
+                  <input 
+                    type="time" 
+                    value={endTime}
+                    onChange={e => setEndTime(e.target.value)}
+                    className="canteen-form-control"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button 
+              type="submit"
+              className="primary_btn"
+              style={{ justifyContent: 'center', padding: '10px' }}
+            >
+              Create Category
+            </button>
+          </form>
+        </WhiteCard>
+      </div>
     </div>
   );
 }
@@ -1418,29 +1778,28 @@ function CanteenTransactions({ transactions, fetchTransactions, wallets, items }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <span className="ti-search absolute left-3 top-3 text-gray-400 text-xs" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+        <div className="pos-search-wrapper" style={{ marginBottom: 0 }}>
+          <span className="ti-search" />
           <input 
             type="text" 
             placeholder="Search Student ID or notes..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-4 py-1.5 w-full border border-gray-200 rounded focus:outline-none focus:border-purple-600 bg-white"
+            className="canteen-form-control"
+            style={{ width: '250px' }}
           />
         </div>
 
-        <div className="flex gap-2">
+        <div style={{ display: 'inline-flex', gap: '8px' }}>
           {['all', 'purchase', 'recharge', 'refund'].map(type => (
             <button 
               key={type}
               onClick={() => setFilterType(type)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded capitalize transition-colors ${
-                filterType === type ? 'bg-purple-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`canteen-cat-btn ${filterType === type ? 'active' : ''}`}
             >
-              {type}s
+              {type.toUpperCase()}S
             </button>
           ))}
         </div>
@@ -1457,30 +1816,29 @@ function CanteenTransactions({ transactions, fetchTransactions, wallets, items }
                 <th>Amount</th>
                 <th>Balance After</th>
                 <th>Date</th>
-                <th className="text-right">Receipt</th>
+                <th style={{ textAlign: 'right' }}>Receipt</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(t => (
                 <tr key={t.id}>
-                  <td className="font-mono text-xs font-bold text-gray-500">#{t.id}</td>
-                  <td className="font-semibold text-gray-900">Student #{t.studentId}</td>
+                  <td style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 'bold' }}>#{t.id}</td>
+                  <td style={{ fontWeight: 600 }}>Student #{t.studentId}</td>
                   <td>
                     <Badge type={t.type === 'purchase' ? 'purple' : t.type === 'recharge' ? 'success' : 'danger'}>
                       {t.type}
                     </Badge>
                   </td>
-                  <td className={`font-bold ${
-                    t.type === 'purchase' ? 'text-gray-900' : 'text-emerald-600'
-                  }`}>
+                  <td style={{ fontWeight: 700, color: t.type === 'purchase' ? '#333' : '#10B981' }}>
                     ₹{parseFloat(t.amount).toFixed(2)}
                   </td>
-                  <td className="text-gray-500">₹{parseFloat(t.balanceAfter).toFixed(2)}</td>
-                  <td className="text-gray-400 text-xs">{new Date(t.createdAt).toLocaleString()}</td>
-                  <td className="text-right">
+                  <td style={{ color: '#555' }}>₹{parseFloat(t.balanceAfter).toFixed(2)}</td>
+                  <td style={{ color: '#777', fontSize: '11px' }}>{new Date(t.createdAt).toLocaleString()}</td>
+                  <td style={{ textAlign: 'right' }}>
                     <button 
                       onClick={() => setActiveTxDetail(t)}
-                      className="text-xs font-bold text-purple-600 hover:underline"
+                      className="btn-secondary-outline"
+                      style={{ padding: '4px 10px', fontSize: '11px' }}
                     >
                       Inspect
                     </button>
@@ -1494,46 +1852,49 @@ function CanteenTransactions({ transactions, fetchTransactions, wallets, items }
 
       {/* Transaction Details Modal */}
       {activeTxDetail && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white rounded max-w-sm w-full p-6 space-y-4 border shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-            <button 
-              onClick={() => setActiveTxDetail(null)}
-              className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 text-gray-500"
-            >
-              <X className="h-5 w-5" />
-            </button>
+        <div className="canteen-popup-overlay">
+          <div className="canteen-popup-content" style={{ maxWidth: '365px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h4 style={{ margin: 0, fontWeight: 700 }}>Receipt Details</h4>
+              <button 
+                onClick={() => setActiveTxDetail(null)}
+                style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#999' }}
+              >
+                &times;
+              </button>
+            </div>
             
-            <h3 className="text-sm font-bold text-gray-900">Receipt Details</h3>
-            <p className="text-[11px] text-gray-400 font-mono">Tx ID: #{activeTxDetail.id}</p>
+            <p style={{ margin: '0 0 15px', fontSize: '11px', color: '#999', fontFamily: 'monospace' }}>Tx ID: #{activeTxDetail.id}</p>
 
-            <div className="space-y-2.5 text-xs border-t border-b border-dashed py-3">
-              <p className="flex justify-between"><span className="text-gray-500">Transaction Type:</span> <span className="font-bold capitalize">{activeTxDetail.type}</span></p>
-              <p className="flex justify-between"><span className="text-gray-500">Student Wallet:</span> <span className="font-bold">Student #{activeTxDetail.studentId}</span></p>
-              <p className="flex justify-between"><span className="text-gray-500">Payment Option:</span> <span className="uppercase">{activeTxDetail.paymentMethod || 'Wallet'}</span></p>
-              <p className="flex justify-between"><span className="text-gray-500">Timestamp:</span> <span>{new Date(activeTxDetail.createdAt).toLocaleString()}</span></p>
+            <div style={{ borderTop: '1px dashed #ddd', borderBottom: '1px dashed #ddd', padding: '12px 0', margin: '15px 0', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Transaction Type:</span> <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{activeTxDetail.type}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Student Wallet:</span> <span style={{ fontWeight: 600 }}>Student #{activeTxDetail.studentId}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Payment Option:</span> <span style={{ textTransform: 'uppercase' }}>{activeTxDetail.paymentMethod || 'Wallet'}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Timestamp:</span> <span>{new Date(activeTxDetail.createdAt).toLocaleString()}</span></div>
               
               {activeTxDetail.itemId && (
-                <div className="pt-2 border-t mt-2">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">PURCHASE ITEM</p>
-                  <p className="flex justify-between font-bold text-gray-900 mt-1">
+                <div style={{ borderTop: '1px solid #f1f1f1', paddingTop: '8px', marginTop: '4px' }}>
+                  <div style={{ fontSize: '9px', fontWeight: 700, color: '#999', textTransform: 'uppercase' }}>PURCHASE ITEM</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, color: '#333', marginTop: '4px' }}>
                     <span>Item ID #{activeTxDetail.itemId} (x{activeTxDetail.quantity})</span>
                     <span>₹{parseFloat(activeTxDetail.amount).toFixed(2)}</span>
-                  </p>
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="text-xs space-y-1">
-              <p className="flex justify-between"><span className="text-gray-500">Transaction Value:</span> <span className="font-bold">₹{parseFloat(activeTxDetail.amount).toFixed(2)}</span></p>
-              <p className="flex justify-between"><span className="text-gray-500">Post Balance:</span> <span className="font-bold text-purple-600">₹{parseFloat(activeTxDetail.balanceAfter).toFixed(2)}</span></p>
+            <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Transaction Value:</span> <span style={{ fontWeight: 600 }}>₹{parseFloat(activeTxDetail.amount).toFixed(2)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700, color: 'var(--primary-color)' }}><span style={{ color: '#333' }}>Post Balance:</span> <span>₹{parseFloat(activeTxDetail.balanceAfter).toFixed(2)}</span></div>
             </div>
 
             {activeTxDetail.type === 'purchase' && (
               <button 
                 onClick={() => handleRefund(activeTxDetail.id)}
-                className="w-full bg-red-600 text-white font-bold py-2 rounded text-xs flex items-center justify-center gap-1 hover:bg-red-700 transition-colors"
+                className="primary_btn"
+                style={{ width: '100%', justifyContent: 'center', background: '#ef5f5f' }}
               >
-                <RotateCcw className="h-4 w-4" /> Issue Refund / Cancel Sale
+                <span className="ti-reload" style={{ marginRight: '6px' }} /> Issue Refund / Cancel Sale
               </button>
             )}
           </div>
