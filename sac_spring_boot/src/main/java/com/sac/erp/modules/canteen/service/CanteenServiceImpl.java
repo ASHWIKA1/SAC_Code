@@ -5,6 +5,8 @@ import com.sac.erp.modules.canteen.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.sac.erp.modules.student.repository.StudentRepository;
+import com.sac.erp.modules.student.entity.Student;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -23,6 +25,8 @@ public class CanteenServiceImpl implements CanteenService {
     private final CanteenRestrictionRepository restrictionRepository;
     private final CanteenTransactionRepository transactionRepository;
     private final CanteenDailySaleRepository dailySaleRepository;
+    private final StudentRepository studentRepository;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
     @Override
     public List<CanteenCategory> getAllCategories() {
@@ -109,6 +113,12 @@ public class CanteenServiceImpl implements CanteenService {
         transaction.setNotes(notes);
         transactionRepository.save(transaction);
 
+        // Rule DB-1: Emit database event to notify STUDENT-INFO_MODULE on top-up
+        realtimeEventPublisher.publish("WALLET_UPDATE", wallet);
+        realtimeEventPublisher.publish("SYSTEM_NOTIFICATION", 
+            String.format("[VENDOR -> DATABASE] Student #%d wallet top-up of $%s completed. Wallet balance updated to $%s.", 
+                studentId, amount.toString(), newBalance.toString()));
+
         return wallet;
     }
 
@@ -136,6 +146,13 @@ public class CanteenServiceImpl implements CanteenService {
 
         if (wallet.getIsActive() != 1) {
             throw new IllegalArgumentException("Canteen wallet is inactive");
+        }
+
+        // Ensure student exists and is active/not suspended
+        Student student = studentRepository.findById(studentId)
+            .orElseThrow(() -> new IllegalArgumentException("Student record not found"));
+        if (student.getActiveStatus() != 1) {
+            throw new IllegalArgumentException("Student is suspended or inactive");
         }
 
         BigDecimal totalCost = item.getPrice().multiply(BigDecimal.valueOf(quantity));
@@ -181,6 +198,14 @@ public class CanteenServiceImpl implements CanteenService {
         BigDecimal newBalance = wallet.getBalance().subtract(totalCost);
         wallet.setBalance(newBalance);
         walletRepository.save(wallet);
+
+        // Rule DB-2: Generate low-balance notification if balance drops below 5.00
+        if (newBalance.compareTo(BigDecimal.valueOf(5.00)) < 0) {
+            realtimeEventPublisher.publish("LOW_BALANCE_ALERT", wallet);
+            realtimeEventPublisher.publish("SYSTEM_NOTIFICATION", 
+                String.format("[DATABASE -> STUDENT-INFO] Low Balance Alert! Student #%d wallet balance is low: $%s", 
+                    studentId, newBalance.toString()));
+        }
 
         inventory.setStockQuantity(inventory.getStockQuantity().subtract(BigDecimal.valueOf(quantity)));
         inventoryRepository.save(inventory);

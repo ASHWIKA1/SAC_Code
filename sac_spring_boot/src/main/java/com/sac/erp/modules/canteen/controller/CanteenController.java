@@ -2,7 +2,7 @@ package com.sac.erp.modules.canteen.controller;
 
 import com.sac.erp.modules.canteen.entity.*;
 import com.sac.erp.modules.canteen.repository.*;
-import com.sac.erp.modules.canteen.service.CanteenEventPublisher;
+import com.sac.erp.modules.canteen.service.RealtimeEventPublisher;
 import com.sac.erp.modules.canteen.service.CanteenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class CanteenController {
 
     private final CanteenService canteenService;
-    private final CanteenEventPublisher eventPublisher;
+    private final RealtimeEventPublisher eventPublisher;
     private final CanteenTransactionRepository transactionRepository;
     private final CanteenWalletRepository walletRepository;
     private final CanteenInventoryRepository inventoryRepository;

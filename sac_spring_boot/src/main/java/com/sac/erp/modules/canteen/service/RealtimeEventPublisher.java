@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
-public class CanteenEventPublisher {
+public class RealtimeEventPublisher {
 
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
@@ -20,7 +20,7 @@ public class CanteenEventPublisher {
         emitter.onError((ex) -> emitters.remove(emitter));
 
         try {
-            emitter.send(SseEmitter.event().name("INIT").data("Connected to Canteen Event Stream"));
+            emitter.send(SseEmitter.event().name("INIT").data("Connected to Realtime Event Stream"));
         } catch (IOException e) {
             emitters.remove(emitter);
         }

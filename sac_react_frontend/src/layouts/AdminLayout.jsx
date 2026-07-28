@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import SystemEventLogBar from '../components/SystemEventLogBar';
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -18,13 +19,15 @@ export default function AdminLayout() {
         transition: 'margin-left 0.3s ease',
         minHeight: '100vh',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        paddingBottom: '160px'
       }}>
         <Header onToggleSidebar={() => setSidebarOpen(v => !v)} sidebarOpen={sidebarOpen} />
         <div className="main_content_iner">
           <Outlet />
         </div>
       </div>
+      <SystemEventLogBar />
     </div>
   );
 }
