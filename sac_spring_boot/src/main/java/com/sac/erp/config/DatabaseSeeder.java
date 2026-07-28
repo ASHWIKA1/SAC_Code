@@ -59,7 +59,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             user.setUsername("admin");
             user.setPassword(passwordEncoder.encode("password"));
             user.setPhone("1234567890");
-            user.setIsAdministrator("yes");
+            user.setIsAdministrator(true);
             user.setActiveStatus(1);
             user.setRole(adminRole);
             user.setSchoolId(1L);
