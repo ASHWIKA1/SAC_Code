@@ -3,6 +3,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/Login';
 import AdminLayout from './layouts/AdminLayout';
+import AssignmentSubmission from './components/AssignmentSubmission';
+import LmsDashboard from './pages/modules/LmsDashboard';
+
 
 // Dashboards
 import AdminDashboard from './pages/Dashboard/AdminDashboard';
@@ -176,6 +179,7 @@ export default function App() {
           {/* Homework */}
           <Route path="homework/list" element={<HomeworkListPage />} />
           <Route path="homework/create" element={<HomeworkListPage />} /> {/* Form modal inside list */}
+          <Route path="homework/submit" element={<AssignmentSubmission />} />
 
           {/* Student Info Directory */}
           <Route path="students" element={<StudentListPage />} />
@@ -307,7 +311,11 @@ export default function App() {
           <Route path="modules/wallet" element={<WalletPage />} />
           <Route path="modules/downloads" element={<DownloadCenterPage />} />
           <Route path="modules/chat" element={<ChatPage />} />
-          <Route path="modules/lms" element={<LmsCoursesPage />} />
+          <Route path="modules/lms" element={<LmsDashboard />} />
+          <Route path="lms/courses" element={<LmsDashboard />} />
+          <Route path="lms/quizzes" element={<LmsDashboard />} />
+          <Route path="lms/forum" element={<LmsDashboard />} />
+          <Route path="lms/progress" element={<LmsDashboard />} />
           <Route path="modules/alumni" element={<AlumniPage />} />
           <Route path="modules/clubs" element={<ClubsPage />} />
           <Route path="modules/forum" element={<UserForumPage />} />
