@@ -52,4 +52,5 @@ public interface LmsService {
 
     void deleteMediaContent(Long id);
     void deleteForum(Long id);
+    void rewardMilestone(Long studentId, String milestoneName, java.math.BigDecimal amount);
 }

@@ -5,12 +5,15 @@ import com.sac.erp.modules.lms.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.sac.erp.modules.canteen.service.CanteenService;
+import com.sac.erp.modules.canteen.service.RealtimeEventPublisher;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class LmsServiceImpl implements LmsService {
 
     private final MediaTypeRepository mediaTypeRepository;
@@ -29,6 +32,8 @@ public class LmsServiceImpl implements LmsService {
     private final LmsForumRepository lmsForumRepository;
     private final LmsForumPostRepository lmsForumPostRepository;
     private final LmsLiveClassRepository lmsLiveClassRepository;
+    private final CanteenService canteenService;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -414,5 +419,20 @@ public class LmsServiceImpl implements LmsService {
         LmsForum forum = lmsForumRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Forum not found"));
         lmsForumRepository.delete(forum);
+    }
+
+    @Override
+    @Transactional
+    public void rewardMilestone(Long studentId, String milestoneName, BigDecimal amount) {
+        log.info("LMS Trigger: Rewarding student {} with amount {} for milestone: {}", studentId, amount, milestoneName);
+        
+        // Recharge canteen wallet directly
+        canteenService.rechargeWallet(studentId, amount, "recharge", "LMS_SYSTEM", "LMS Reward: " + milestoneName);
+        
+        // Publish real-time events over SSE
+        realtimeEventPublisher.publish("LMS_REWARD_EARNED", studentId);
+        realtimeEventPublisher.publish("SYSTEM_NOTIFICATION", 
+            String.format("[LMS -> DATABASE] Issued $%s LMS Bonus to Student #%d for milestone: %s", 
+                amount.toString(), studentId, milestoneName));
     }
 }

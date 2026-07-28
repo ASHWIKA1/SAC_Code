@@ -4435,6 +4435,39 @@ function ProgressTrackingTab({ role, submissions = [], assignments = [] }) {
   const isTeacher = role === 'teacher' || role === 'admin';
   const isParent = role === 'parent';
 
+  const studentIds = {
+    'Rahul Student': 1,
+    'Sneha Rao': 2,
+    'Arjun Singh': 3
+  };
+
+  const handleIssueReward = async () => {
+    const studentId = studentIds[selectedStudent];
+    if (!studentId) {
+      alert("Invalid student mapping.");
+      return;
+    }
+
+    const milestone = window.prompt("Enter milestone name:", "Perfect Attendance Reward");
+    if (!milestone) return;
+
+    const amount = window.prompt("Enter credit voucher amount ($):", "10.00");
+    if (!amount || isNaN(parseFloat(amount))) return;
+
+    try {
+      await api.post(`/api/v1/lms/students/${studentId}/reward-milestone`, null, {
+        params: {
+          milestoneName: milestone,
+          amount: parseFloat(amount)
+        }
+      });
+      alert(`Successfully issued $${parseFloat(amount).toFixed(2)} canteen reward credit to ${selectedStudent}!`);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to issue milestone reward.");
+    }
+  };
+
   const STUDENT_DATA_MAP = {
     'Rahul Student': {
       quizScores: [
@@ -4633,6 +4666,25 @@ function ProgressTrackingTab({ role, submissions = [], assignments = [] }) {
               <option value="Sneha Rao">Sneha Rao (Roll 4)</option>
               <option value="Arjun Singh">Arjun Singh (Roll 12)</option>
             </select>
+            <button 
+              type="button" 
+              onClick={handleIssueReward}
+              style={{ 
+                fontSize: '11px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '4px', 
+                border: 'none', 
+                borderRadius: '4px', 
+                cursor: 'pointer', 
+                background: '#23c277', 
+                color: '#fff',
+                fontWeight: 'bold', 
+                padding: '6px 12px' 
+              }}
+            >
+              🏆 Issue Canteen Credit
+            </button>
           </div>
         )}
         {!isTeacher && <div style={{ fontSize: '13.5px' }}>Logged in as: <strong>{isParent ? 'Kieran (Parent)' : 'Rahul Student'}</strong></div>}
