@@ -253,7 +253,7 @@ export default function PosTerminal() {
                   <input type="text" className="form-control" value={rfidCard} onChange={e => setRfidCard(e.target.value)} />
                 </div>
                 <button className="primary_btn w-100" onClick={() => handleCheckout('PREPAID')}>
-                  Simulate RFID Card Tap (< 3s)
+                  {"Simulate RFID Card Tap (< 3s)"}
                 </button>
               </div>
             )}
