@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
+import api from '../../../utils/api';
 
 export function useInventorySync(onStockUpdate) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchItems = () => {
-    fetch('/api/v1/canteen/items')
-      .then(res => res.json())
-      .then(data => {
-        setItems(data || []);
+    api.get('/api/v1/canteen/items')
+      .then(res => {
+        setItems(res.data || []);
         setLoading(false);
       })
       .catch(err => {

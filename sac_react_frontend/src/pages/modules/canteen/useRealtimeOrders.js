@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
+import api from '../../../utils/api';
 
 export function useRealtimeOrders(onStatusChange) {
   const [orders, setOrders] = useState([]);
@@ -8,10 +9,9 @@ export function useRealtimeOrders(onStatusChange) {
 
   // Fetch initial active orders
   const fetchActiveOrders = () => {
-    fetch('/api/v1/canteen/orders/active')
-      .then(res => res.json())
-      .then(data => {
-        setOrders(data || []);
+    api.get('/api/v1/canteen/orders/active')
+      .then(res => {
+        setOrders(res.data || []);
         setLoading(false);
       })
       .catch(err => {
