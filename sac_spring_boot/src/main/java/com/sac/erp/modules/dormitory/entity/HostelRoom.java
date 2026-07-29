@@ -27,6 +27,9 @@ public class HostelRoom extends BaseEntity {
     @Column(name = "capacity")
     private Integer capacity;
 
+    @Column(name = "current_occupancy")
+    private Integer currentOccupancy = 0;
+
     @Column(name = "floor")
     private Integer floor;
 

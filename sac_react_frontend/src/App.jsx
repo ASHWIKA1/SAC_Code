@@ -110,6 +110,7 @@ import {
   UserForumPage,
   VisitorsPage,
   CanteenPage,
+  HostelManagement,
   EmailSettingsPage,
   SmsSettingsPage,
   PaymentGatewayPage,
@@ -346,6 +347,14 @@ export default function App() {
           <Route path="modules/canteen/transactions" element={<CanteenPage active="transactions" />} />
           <Route path="modules/canteen/student-app" element={<CanteenPage active="student-app" />} />
           <Route path="modules/canteen/kds" element={<CanteenPage active="kds" />} />
+
+          {/* Hostel Management */}
+          <Route path="modules/hostel" element={<Navigate to="/modules/hostel/dashboard" replace />} />
+          <Route path="modules/hostel/dashboard" element={<HostelManagement active="dashboard" />} />
+          <Route path="modules/hostel/rooms" element={<HostelManagement active="rooms" />} />
+          <Route path="modules/hostel/visitors" element={<HostelManagement active="visitors" />} />
+          <Route path="modules/hostel/mess" element={<HostelManagement active="mess" />} />
+          <Route path="modules/hostel/discipline" element={<HostelManagement active="discipline" />} />
 
           {/* System Settings */}
           <Route path="settings/general" element={<GeneralSettingsPage />} />

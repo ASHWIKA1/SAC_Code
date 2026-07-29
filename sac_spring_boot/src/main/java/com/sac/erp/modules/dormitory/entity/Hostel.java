@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalTime;
+
 @Getter
 @Setter
 @Entity
@@ -40,10 +42,13 @@ public class Hostel extends BaseEntity {
     private Integer rfidEnabled;
 
     @Column(name = "rfid_reader_id")
-    private Long rfidReaderId;
+    private String rfidReaderId;
 
     @Column(name = "facilities")
     private String facilities;
+
+    @Column(name = "curfew_time")
+    private LocalTime curfewTime;
 
     @Column(name = "status")
     private String status;
