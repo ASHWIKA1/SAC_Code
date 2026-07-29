@@ -344,6 +344,8 @@ export default function App() {
           <Route path="modules/canteen/items" element={<CanteenPage active="items" />} />
           <Route path="modules/canteen/categories" element={<CanteenPage active="categories" />} />
           <Route path="modules/canteen/transactions" element={<CanteenPage active="transactions" />} />
+          <Route path="modules/canteen/student-app" element={<CanteenPage active="student-app" />} />
+          <Route path="modules/canteen/kds" element={<CanteenPage active="kds" />} />
 
           {/* System Settings */}
           <Route path="settings/general" element={<GeneralSettingsPage />} />

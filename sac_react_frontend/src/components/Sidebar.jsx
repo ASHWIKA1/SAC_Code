@@ -326,6 +326,8 @@ const ADMIN_MENU = [
         label: 'Canteen', icon: 'ti-cup', children: [
           { label: 'Dashboard', path: '/modules/canteen/dashboard' },
           { label: 'POS Terminal', path: '/modules/canteen/pos' },
+          { label: 'Student App', path: '/modules/canteen/student-app' },
+          { label: 'Kitchen KDS', path: '/modules/canteen/kds' },
           { label: 'Student Wallets', path: '/modules/canteen/wallets' },
           { label: 'Menu Items', path: '/modules/canteen/items' },
           { label: 'Categories', path: '/modules/canteen/categories' },

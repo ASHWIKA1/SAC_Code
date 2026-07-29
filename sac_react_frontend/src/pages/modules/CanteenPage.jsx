@@ -8,6 +8,10 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import { PageHeader, WhiteCard, Badge } from '../../components/UI';
 import api from '../../utils/api';
+import AdminDashboard from './canteen/AdminDashboard';
+import PosTerminal from './canteen/PosTerminal';
+import StudentApp from './canteen/StudentApp';
+import KitchenDisplaySystem from './canteen/KitchenDisplaySystem';
 
 export default function CanteenPage({ active }) {
   const navigate = useNavigate();
@@ -20,7 +24,9 @@ export default function CanteenPage({ active }) {
     wallets: 'Student Wallets',
     items: 'Menu Items',
     categories: 'Food & Meal Categories',
-    transactions: 'Transaction History'
+    transactions: 'Transaction History',
+    'student-app': 'Student Portal & Live Tracking',
+    kds: 'Kitchen Display System (KDS)'
   };
   const currentTitle = tabTitles[activeTab] || 'Canteen Management';
 
@@ -391,19 +397,20 @@ export default function CanteenPage({ active }) {
           exit="exit"
         >
           {activeTab === 'dashboard' && (
-            <CanteenDashboard 
+            <AdminDashboard 
               stats={stats} 
               setActiveTab={setActiveTab} 
               fetchStats={fetchStats}
             />
           )}
           {activeTab === 'pos' && (
-            <CanteenPos 
-              items={items} 
-              categories={categories} 
-              wallets={wallets} 
-              refreshData={fetchStats}
-            />
+            <PosTerminal />
+          )}
+          {activeTab === 'student-app' && (
+            <StudentApp />
+          )}
+          {activeTab === 'kds' && (
+            <KitchenDisplaySystem />
           )}
           {activeTab === 'wallets' && (
             <CanteenWallets 
