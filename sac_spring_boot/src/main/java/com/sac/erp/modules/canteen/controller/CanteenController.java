@@ -30,6 +30,7 @@ public class CanteenController {
     private final CanteenCategoryRepository categoryRepository;
     private final CanteenRestrictionRepository restrictionRepository;
     private final CanteenDailySaleRepository dailySaleRepository;
+    private final CanteenRawMaterialRepository rawMaterialRepository;
 
     // SSE Realtime Subscription
     @GetMapping("/realtime/stream")
@@ -59,8 +60,10 @@ public class CanteenController {
                 .filter(w -> w.getIsActive() != null && w.getIsActive() == 1)
                 .count();
 
-        long lowStockAlerts = inventoryRepository.findAll().stream()
-                .filter(i -> i.getStockQuantity() != null && i.getStockQuantity().compareTo(BigDecimal.valueOf(10)) < 0)
+        long lowStockAlerts = itemRepository.findAll().stream()
+                .filter(i -> i.getIsUnlimited() != null && !i.getIsUnlimited() 
+                        && i.getStockQuantity() != null 
+                        && i.getStockQuantity().compareTo(i.getLowStockThreshold()) <= 0)
                 .count();
 
         // Build recent activities ticker list
@@ -401,5 +404,22 @@ public class CanteenController {
 
         eventPublisher.publish("TRANSACTION_REFUND", saved);
         return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/raw-materials")
+    public ResponseEntity<List<CanteenRawMaterial>> getRawMaterials() {
+        return ResponseEntity.ok(rawMaterialRepository.findAll());
+    }
+
+    @PostMapping("/raw-materials")
+    public ResponseEntity<CanteenRawMaterial> saveRawMaterial(@RequestBody CanteenRawMaterial rawMaterial) {
+        CanteenRawMaterial saved = rawMaterialRepository.save(rawMaterial);
+        return ResponseEntity.ok(saved);
+    }
+
+    @DeleteMapping("/raw-materials/{id}")
+    public ResponseEntity<?> deleteRawMaterial(@PathVariable Long id) {
+        rawMaterialRepository.deleteById(id);
+        return ResponseEntity.ok(Map.of("message", "Deleted raw material successfully"));
     }
 }
