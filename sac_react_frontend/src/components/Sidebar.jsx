@@ -334,6 +334,15 @@ const ADMIN_MENU = [
           { label: 'Transactions', path: '/modules/canteen/transactions' }
         ]
       },
+      {
+        label: 'Hostel', icon: 'ti-home', children: [
+          { label: 'Dashboard', path: '/modules/hostel/dashboard' },
+          { label: 'Room Allocation', path: '/modules/hostel/rooms' },
+          { label: 'Visitors & RFID', path: '/modules/hostel/visitors' },
+          { label: 'Mess & Billing', path: '/modules/hostel/mess' },
+          { label: 'Discipline', path: '/modules/hostel/discipline' }
+        ]
+      },
     ]
   },
   // ── SYSTEM SETTINGS ──
