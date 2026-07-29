@@ -1,30 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, ShoppingCart, CreditCard, AlertTriangle, Command, Search, Plus } from 'lucide-react';
+import { DollarSign, ShoppingCart, CreditCard, AlertTriangle, Plus } from 'lucide-react';
 import { PageHeader, WhiteCard, Badge } from '../../../components/UI';
 import api from '../../../utils/api';
 
 export default function AdminDashboard({ stats, setActiveTab, fetchStats }) {
-  const [showPalette, setShowPalette] = useState(false);
-  const [paletteSearch, setPaletteSearch] = useState('');
   const [rawMaterials, setRawMaterials] = useState([]);
 
   useEffect(() => {
     fetchRawMaterials();
-    
-    // CMD+K palette global listener
-    const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setShowPalette(prev => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const fetchRawMaterials = async () => {
     try {
-      // In a real ERP system this is fetched from inventory modules, mock/fallback here
       const res = await api.get('/api/v1/canteen/items'); // fallback items
       setRawMaterials([
         { id: 1, name: 'Wheat Flour', stock: '45.5 kg', threshold: '10.0 kg' },
@@ -38,17 +25,12 @@ export default function AdminDashboard({ stats, setActiveTab, fetchStats }) {
   };
 
   const fastActions = [
-    { name: 'Launch POS Touch Checkout Grid', desc: 'Jump to POS ordering terminal screen', action: () => { setActiveTab('pos'); setShowPalette(false); } },
-    { name: 'Top-up Student Wallet Balance', desc: 'Recharge student prepaid card', action: () => { setActiveTab('wallets'); setShowPalette(false); } },
-    { name: 'Manage Food & Meal Categories', desc: 'Add breakfast/lunch schedules', action: () => { setActiveTab('categories'); setShowPalette(false); } },
-    { name: 'Adjust Menu Item Stock Quantity', desc: 'Increase item inventory count', action: () => { setActiveTab('items'); setShowPalette(false); } },
-    { name: 'Track Order Transaction History', desc: 'Log files and audit trails', action: () => { setActiveTab('transactions'); setShowPalette(false); } }
+    { name: 'POS Checkout Grid', desc: 'Jump to POS cashier checkout terminal screen', action: () => setActiveTab('pos') },
+    { name: 'Student Wallets', desc: 'Top-up prepaid card and manage daily spending limits', action: () => setActiveTab('wallets') },
+    { name: 'Food & Meal Categories', desc: 'Add or modify breakfast/lunch schedules', action: () => setActiveTab('categories') },
+    { name: 'Menu Item Inventory', desc: 'Add products and adjust low-stock thresholds', action: () => setActiveTab('items') },
+    { name: 'Transaction History', desc: 'View revenue logs and system audit trails', action: () => setActiveTab('transactions') }
   ];
-
-  const filteredActions = fastActions.filter(a => 
-    a.name.toLowerCase().includes(paletteSearch.toLowerCase()) ||
-    a.desc.toLowerCase().includes(paletteSearch.toLowerCase())
-  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -74,16 +56,42 @@ export default function AdminDashboard({ stats, setActiveTab, fetchStats }) {
         ))}
       </div>
 
-      {/* Cmd+K visual hint panel */}
-      <div style={{ background: '#F3E8FF', border: '1px solid #7C32FF', borderRadius: 8, padding: '12px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#6D28D9' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Command size={18} />
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Quick Navigation Palette: Press <strong>Ctrl + K</strong> or <strong>Cmd + K</strong> to launch the fast action command bar.</span>
+      {/* Terminal Quick Actions Directory */}
+      <WhiteCard title="CMS Navigation Quick Actions">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+          {fastActions.map((act, idx) => (
+            <div 
+              key={idx}
+              onClick={act.action}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                textAlign: 'left',
+                padding: '15px',
+                borderRadius: '6px',
+                border: '1px solid #e0e0e0',
+                background: '#fff',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                width: '100%',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.02)'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = 'var(--primary-color)';
+                e.currentTarget.style.boxShadow = '0 4px 10px rgba(124, 50, 255, 0.08)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = '#e0e0e0';
+                e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.02)';
+              }}
+            >
+              <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--primary-color)', marginBottom: '4px' }}>{act.name}</span>
+              <span style={{ fontSize: 11, color: '#666', lineHeight: '1.4' }}>{act.desc}</span>
+            </div>
+          ))}
         </div>
-        <button onClick={() => setShowPalette(true)} className="primary_btn btn_sm" style={{ padding: '4px 12px', fontSize: 12 }}>
-          Open Palette
-        </button>
-      </div>
+      </WhiteCard>
 
       <div className="canteen-row">
         {/* Recipe BOM Depletion Raw Materials Table */}
@@ -149,47 +157,6 @@ export default function AdminDashboard({ stats, setActiveTab, fetchStats }) {
           </WhiteCard>
         </div>
       </div>
-
-      {/* Global Cmd+K Search Palette Modal */}
-      {showPalette && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
-          <div style={{ background: '#fff', borderRadius: 8, width: '90%', maxWidth: 550, overflow: 'hidden', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid #eee' }}>
-              <Search size={18} style={{ color: '#aaa', marginRight: 12 }} />
-              <input 
-                type="text" 
-                className="form-control" 
-                placeholder="Type a command or action name..." 
-                value={paletteSearch}
-                onChange={e => setPaletteSearch(e.target.value)}
-                style={{ border: 'none', outline: 'none', width: '100%', fontSize: 14 }}
-                autoFocus
-              />
-              <button onClick={() => setShowPalette(false)} style={{ background: 'none', border: 'none', color: '#999', fontSize: 16, cursor: 'pointer' }}>ESC</button>
-            </div>
-            
-            <div style={{ maxHeight: 300, overflowY: 'auto', padding: 10 }}>
-              <p style={{ fontSize: 11, color: '#888', margin: '5px 10px', fontWeight: 600 }}>FAST ACTIONS</p>
-              {filteredActions.length === 0 ? (
-                <p style={{ padding: 15, color: '#999', textAlign: 'center', fontSize: 13 }}>No commands matching search query.</p>
-              ) : (
-                filteredActions.map((act, idx) => (
-                  <div 
-                    key={idx} 
-                    onClick={act.action}
-                    style={{ padding: '10px 15px', borderRadius: 6, cursor: 'pointer', transition: 'background 0.2s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#f5f6fa'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <div style={{ fontWeight: 600, fontSize: 13, color: '#333' }}>{act.name}</div>
-                    <div style={{ fontSize: 11, color: '#777' }}>{act.desc}</div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
