@@ -1463,7 +1463,6 @@ export function VisitorsPage() {
 }
 
 export { default as CanteenPage } from './CanteenPage';
-export { default as HostelManagement } from './HostelManagement';
 
 
 function SimpleSettingsPage({ title }) {
