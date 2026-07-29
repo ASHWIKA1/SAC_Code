@@ -86,12 +86,24 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/status")
-    public ResponseEntity<?> updateStatus(@PathVariable Long id, @RequestParam String status) {
+    public ResponseEntity<?> updateStatus(@PathVariable Long id, 
+                                          @RequestParam(value = "status", required = false) String statusParam,
+                                          @RequestBody(required = false) Map<String, String> body) {
         try {
+            String status = statusParam;
+            if (status == null || status.trim().isEmpty()) {
+                if (body != null && body.containsKey("status")) {
+                    status = body.get("status");
+                }
+            }
+            if (status == null || status.trim().isEmpty()) {
+                throw new IllegalArgumentException("Required parameter 'status' is missing.");
+            }
+
             CanteenOrder order = orderRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Order not found"));
 
-            CanteenOrder.OrderStatus newStatus = CanteenOrder.OrderStatus.valueOf(status);
+            CanteenOrder.OrderStatus newStatus = CanteenOrder.OrderStatus.valueOf(status.trim());
             order.setOrderStatus(newStatus);
 
             if (newStatus == CanteenOrder.OrderStatus.FULFILLED) {
@@ -103,6 +115,7 @@ public class OrderController {
 
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
+            log.error("Failed to update status for order {}: ", id, e);
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }

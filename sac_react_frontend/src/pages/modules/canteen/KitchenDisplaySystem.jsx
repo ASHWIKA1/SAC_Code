@@ -24,11 +24,11 @@ export default function KitchenDisplaySystem() {
 
   const handleNextStatus = async (order, nextStatus) => {
     try {
-      await api.post(`/api/v1/canteen/orders/${order.id}/status?status=${nextStatus}`);
+      await api.post(`/api/v1/canteen/orders/${order.id}/status?status=${nextStatus}`, { status: nextStatus });
       refetch();
     } catch (e) {
       console.error(e);
-      alert("Failed to update status: " + e.message);
+      alert("Failed to update status: " + (e.response?.data?.message || e.response?.data || e.message));
     }
   };
 
