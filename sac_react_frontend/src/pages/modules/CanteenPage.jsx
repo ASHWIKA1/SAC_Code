@@ -1882,13 +1882,24 @@ function CanteenTransactions({ transactions, fetchTransactions, wallets, items }
   const [purchasedItems, setPurchasedItems] = useState([]);
 
   useEffect(() => {
-    if (activeTxDetail && activeTxDetail.type === 'purchase' && activeTxDetail.referenceNo) {
-      api.get(`/api/v1/canteen/orders/${activeTxDetail.referenceNo}/items`)
-        .then(res => setPurchasedItems(res.data || []))
-        .catch(err => {
-          console.error(err);
-          setPurchasedItems([]);
-        });
+    if (activeTxDetail && activeTxDetail.type === 'purchase') {
+      if (activeTxDetail.referenceNo) {
+        api.get(`/api/v1/canteen/orders/${activeTxDetail.referenceNo}/items`)
+          .then(res => setPurchasedItems(res.data || []))
+          .catch(err => {
+            console.error(err);
+            setPurchasedItems([]);
+          });
+      } else if (activeTxDetail.itemId) {
+        setPurchasedItems([{
+          id: 'pos-' + activeTxDetail.id,
+          menuItemId: activeTxDetail.itemId,
+          quantity: activeTxDetail.quantity || 1,
+          unitPrice: parseFloat(activeTxDetail.amount) / (activeTxDetail.quantity || 1)
+        }]);
+      } else {
+        setPurchasedItems([]);
+      }
     } else {
       setPurchasedItems([]);
     }
@@ -1962,6 +1973,15 @@ function CanteenTransactions({ transactions, fetchTransactions, wallets, items }
                     <Badge type={t.type === 'purchase' ? 'purple' : t.type === 'recharge' ? 'success' : 'danger'}>
                       {t.type}
                     </Badge>
+                    {t.type === 'purchase' && (
+                      <div style={{ fontSize: '10px', color: '#666', marginTop: '4px', fontWeight: 600 }}>
+                        {t.itemId ? (
+                          items.find(m => String(m.id) === String(t.itemId))?.itemName || `Item #${t.itemId}`
+                        ) : (
+                          t.notes || 'Order Purchase'
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td style={{ fontWeight: 700, color: t.type === 'purchase' ? '#333' : '#10B981' }}>
                     ₹{parseFloat(t.amount).toFixed(2)}
