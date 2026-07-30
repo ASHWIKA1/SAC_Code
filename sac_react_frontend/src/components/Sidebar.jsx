@@ -445,8 +445,14 @@ const TEACHER_MENU = [
       },
       { label: 'Marks Entry', icon: 'ti-write', path: '/teacher/marks' },
       { label: 'My Students', icon: 'ti-user', path: '/teacher/students' },
-      { label: 'My Profile', icon: 'ti-id-badge', path: '/teacher/profile' },
       { label: 'Notice Board', icon: 'ti-comment-alt', path: '/teacher/notice-board' },
+      { label: 'My Profile', icon: 'ti-id-badge', path: '/teacher/profile' },
+      {
+        label: 'Canteen', icon: 'ti-cup', children: [
+          { label: 'POS Terminal', path: '/modules/canteen/pos' },
+          { label: 'Kitchen KDS', path: '/modules/canteen/kds' }
+        ]
+      },
     ]
   },
   // ── LMS NAVIGATION ──
@@ -525,15 +531,47 @@ const PARENT_MENU = [
 ];
 
 function getMenuForRole(role) {
+  let menu = ADMIN_MENU;
   switch (role) {
-    case ROLES.ULTRA_SUPER_ADMIN: return [...ULTRA_SUPER_ADMIN_MENU, ...SUPER_ADMIN_MENU, ...ADMIN_MENU];
-    case ROLES.SUPER_ADMIN:       return [...SUPER_ADMIN_MENU, ...ADMIN_MENU];
-    case ROLES.ADMIN:             return ADMIN_MENU;
-    case ROLES.TEACHER:           return TEACHER_MENU;
-    case ROLES.STUDENT:           return STUDENT_MENU;
-    case ROLES.PARENT:            return PARENT_MENU;
-    default:                      return ADMIN_MENU;
+    case ROLES.ULTRA_SUPER_ADMIN: 
+      menu = [...ULTRA_SUPER_ADMIN_MENU, ...SUPER_ADMIN_MENU, ...ADMIN_MENU];
+      break;
+    case ROLES.SUPER_ADMIN:       
+      menu = [...SUPER_ADMIN_MENU, ...ADMIN_MENU];
+      break;
+    case ROLES.ADMIN:             
+      menu = ADMIN_MENU;
+      break;
+    case ROLES.TEACHER:           
+      return TEACHER_MENU;
+    case ROLES.STUDENT:           
+      return STUDENT_MENU;
+    case ROLES.PARENT:            
+      return PARENT_MENU;
+    default:                      
+      return ADMIN_MENU;
   }
+
+  // Filter out operational/terminal items for Super/Ultra Super Admin roles
+  if (role === ROLES.ULTRA_SUPER_ADMIN || role === ROLES.SUPER_ADMIN) {
+    return menu.map(section => ({
+      ...section,
+      items: section.items.map(item => {
+        if (item.label === 'Canteen' && item.children) {
+          return {
+            ...item,
+            children: item.children.filter(child => 
+              child.label !== 'POS Terminal' && 
+              child.label !== 'Student App' && 
+              child.label !== 'Kitchen KDS'
+            )
+          };
+        }
+        return item;
+      })
+    }));
+  }
+  return menu;
 }
 
 // ─── Single Menu Item (leaf node) ────────────────────────────────────────────
