@@ -326,7 +326,7 @@ const ADMIN_MENU = [
         label: 'Canteen', icon: 'ti-cup', children: [
           { label: 'Dashboard', path: '/modules/canteen/dashboard' },
           { label: 'Checkout Counter', path: '/modules/canteen/pos' },
-          { label: 'Student App', path: '/modules/canteen/student-app' },
+          { label: 'Student Pre-Orders', path: '/modules/canteen/student-app' },
           { label: 'Kitchen KDS', path: '/modules/canteen/kds' },
           { label: 'Student Wallets', path: '/modules/canteen/wallets' },
           { label: 'Menu Items', path: '/modules/canteen/items' },
@@ -484,7 +484,7 @@ const STUDENT_MENU = [
       { label: 'My Profile', icon: 'ti-id-badge', path: '/student/profile' },
       {
         label: 'Canteen', icon: 'ti-cup', children: [
-          { label: 'Student App', path: '/modules/canteen/student-app' }
+          { label: 'Student Pre-Orders', path: '/modules/canteen/student-app' }
         ]
       },
     ]

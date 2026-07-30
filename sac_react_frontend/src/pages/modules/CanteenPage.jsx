@@ -25,7 +25,7 @@ export default function CanteenPage({ active }) {
     items: 'Menu Items',
     categories: 'Food & Meal Categories',
     transactions: 'Transaction History',
-    'student-app': 'Student Portal & Live Tracking',
+    'student-app': 'Student Pre-Orders',
     kds: 'Kitchen Display System (KDS)'
   };
   const currentTitle = tabTitles[activeTab] || 'Canteen Management';
