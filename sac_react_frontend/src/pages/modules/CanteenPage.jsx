@@ -20,7 +20,7 @@ export default function CanteenPage({ active }) {
 
   const tabTitles = {
     dashboard: 'Canteen Dashboard',
-    pos: 'POS Terminal',
+    pos: 'Checkout Counter',
     wallets: 'Student Wallets',
     items: 'Menu Items',
     categories: 'Food & Meal Categories',
@@ -2132,7 +2132,7 @@ function CommandPalette({ setActiveTab, wallets, items, fetchWallets }) {
           <div className="space-y-1">
             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Navigation Shortcuts</h4>
             {[
-              { label: 'Go to POS Terminal', tab: 'pos', desc: 'Place orders and scan students' },
+              { label: 'Go to Checkout Counter', tab: 'pos', desc: 'Place orders and scan students' },
               { label: 'Go to Student Wallets', tab: 'wallets', desc: 'Top up balances & restrictions' },
               { label: 'Go to Menu Catalog', tab: 'items', desc: 'Add food items and stock control' }
             ].filter(nav => nav.label.toLowerCase().includes(query.toLowerCase())).map((nav, idx) => (
