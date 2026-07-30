@@ -1,6 +1,36 @@
 -- V14__LMS_Demo_Data.sql
 -- Flyway migration to seed realistic demo data for LMS Assignments and Quizzes
 
+-- Pre-migration: Ensure sm_homeworks and sm_homework_students have the necessary newer columns that were missing in V7 schema
+ALTER TABLE `sm_homeworks`
+  ADD COLUMN `title` VARCHAR(255) DEFAULT NULL,
+  ADD COLUMN `instructions` TEXT DEFAULT NULL,
+  ADD COLUMN `start_date` DATETIME DEFAULT NULL,
+  ADD COLUMN `end_date` DATETIME DEFAULT NULL,
+  ADD COLUMN `max_marks` INT DEFAULT 100,
+  ADD COLUMN `passing_marks` INT DEFAULT 40,
+  ADD COLUMN `assignment_type` VARCHAR(255) DEFAULT 'Written Essay',
+  ADD COLUMN `allowed_file_types` VARCHAR(255) DEFAULT 'pdf, zip, docx',
+  ADD COLUMN `max_file_size` INT DEFAULT 10,
+  ADD COLUMN `allow_late_submission` TINYINT(1) DEFAULT 1,
+  ADD COLUMN `portal_mode` VARCHAR(255) DEFAULT 'College',
+  ADD COLUMN `school_class` VARCHAR(255) DEFAULT NULL,
+  ADD COLUMN `school_section` VARCHAR(255) DEFAULT NULL,
+  ADD COLUMN `school_term` VARCHAR(255) DEFAULT NULL,
+  ADD COLUMN `school_grading_scale` VARCHAR(255) DEFAULT NULL,
+  ADD COLUMN `parent_signature_required` TINYINT(1) DEFAULT 0,
+  ADD COLUMN `status_id` INT DEFAULT 1;
+
+ALTER TABLE `sm_homework_students`
+  ADD COLUMN `file` VARCHAR(255) DEFAULT NULL,
+  ADD COLUMN `feedback_file` VARCHAR(255) DEFAULT NULL,
+  ADD COLUMN `submission_link` VARCHAR(255) DEFAULT NULL,
+  ADD COLUMN `student_notes` TEXT DEFAULT NULL,
+  ADD COLUMN `feedback` TEXT DEFAULT NULL,
+  ADD COLUMN `rubric_accuracy` INT DEFAULT NULL,
+  ADD COLUMN `rubric_completeness` INT DEFAULT NULL,
+  ADD COLUMN `rubric_presentation` INT DEFAULT NULL;
+
 -- 1. Insert users if they do not exist
 INSERT IGNORE INTO users (id, name, email, username, password, role_id) VALUES
 (2, 'Rahul Student', 'rahul@student.sac', 'rahul', '$2a$10$abcdefghijklmnopqrstuv', 2),

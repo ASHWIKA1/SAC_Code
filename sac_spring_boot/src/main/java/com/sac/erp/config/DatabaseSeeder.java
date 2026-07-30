@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@org.springframework.core.annotation.Order(2)
 @RequiredArgsConstructor
 public class DatabaseSeeder implements CommandLineRunner {
 

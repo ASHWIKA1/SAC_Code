@@ -162,21 +162,41 @@ export default function HostelManagement({ active }) {
     exit: { opacity: 0, y: -15, transition: { duration: 0.2 } }
   };
 
+  const tabTitles = {
+    dashboard: 'Hostel Dashboard',
+    rooms: 'Room Allocations',
+    visitors: 'Visitor & RFID Log',
+    mess: 'Mess Billing',
+    discipline: 'Discipline Log'
+  };
+  const currentTitle = tabTitles[activeTab] || 'Hostel Management';
+
   return (
-    <div className="space-y-6">
-      <PageHeader 
-        title="Hostel Management" 
-        breadcrumbs={[{ label: 'Modules' }, { label: 'Hostel' }]}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <style>{`
+        .hostel-row {
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          gap: 20px;
+        }
+        .hostel-col-12 { grid-column: span 12; }
+        .hostel-col-8  { grid-column: span 8; }
+        .hostel-col-4  { grid-column: span 4; }
+        .hostel-col-3  { grid-column: span 3; }
+        @media (max-width: 991px) {
+          .hostel-col-8, .hostel-col-4, .hostel-col-3 { grid-column: span 12; }
+        }
+      `}</style>
+
+      <PageHeader
+        title={currentTitle}
+        breadcrumbs={[{ label: 'Home' }, { label: 'Modules' }, { label: 'Hostel' }, { label: currentTitle }]}
       />
 
       {alert && (
-        <div className={`p-4 rounded-md ${alert.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-          <div className="flex justify-between items-center">
-            <span>{alert.msg}</span>
-            <button onClick={() => setAlert(null)} className="text-gray-500 hover:text-gray-700">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+        <div style={{ padding: '12px 16px', borderRadius: 6, background: alert.type === 'success' ? '#f0fdf4' : '#fef2f2', color: alert.type === 'success' ? '#166534' : '#991b1b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{alert.msg}</span>
+          <button onClick={() => setAlert(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#666' }}>×</button>
         </div>
       )}
 
@@ -190,16 +210,18 @@ export default function HostelManagement({ active }) {
           exit="exit"
         >
           {activeTab === 'dashboard' && (
-            <HostelDashboard 
-              stats={stats} 
+            <HostelDashboard
+              stats={stats}
               rooms={rooms}
-              setActiveTab={setActiveTab} 
+              rfidLogs={rfidLogs}
+              disciplineLogs={disciplineLogs}
+              setActiveTab={setActiveTab}
             />
           )}
           {activeTab === 'rooms' && (
-            <RoomAllocation 
-              rooms={rooms} 
-              allocations={allocations} 
+            <RoomAllocation
+              rooms={rooms}
+              allocations={allocations}
               triggerAlert={triggerAlert}
               refreshData={() => {
                 fetchRooms();
@@ -209,8 +231,8 @@ export default function HostelManagement({ active }) {
             />
           )}
           {activeTab === 'visitors' && (
-            <VisitorLog 
-              visitors={visitors} 
+            <VisitorLog
+              visitors={visitors}
               rfidLogs={rfidLogs}
               triggerAlert={triggerAlert}
               refreshData={() => {
@@ -221,7 +243,7 @@ export default function HostelManagement({ active }) {
             />
           )}
           {activeTab === 'mess' && (
-            <MessBilling 
+            <MessBilling
               messPlans={messPlans}
               messBillings={messBillings}
               stats={stats}
@@ -233,7 +255,7 @@ export default function HostelManagement({ active }) {
             />
           )}
           {activeTab === 'discipline' && (
-            <DisciplineWarden 
+            <DisciplineWarden
               disciplineLogs={disciplineLogs}
               stats={stats}
               triggerAlert={triggerAlert}
@@ -252,125 +274,142 @@ export default function HostelManagement({ active }) {
 /* ==========================================
    SUB-COMPONENT: DASHBOARD
    ========================================== */
-function HostelDashboard({ stats, rooms, setActiveTab }) {
+function HostelDashboard({ stats, rooms, rfidLogs, disciplineLogs, setActiveTab }) {
+  const fastActions = [
+    { name: 'Room Allocations', desc: 'Assign beds, transfer or vacate student rooms', action: () => setActiveTab('rooms') },
+    { name: 'Visitor Log', desc: 'Check-in guests and view RFID gate entries', action: () => setActiveTab('visitors') },
+    { name: 'Mess Billing', desc: 'View weekly meal plans and billing records', action: () => setActiveTab('mess') },
+    { name: 'Discipline Log', desc: 'Record and review hostel discipline incidents', action: () => setActiveTab('discipline') },
+  ];
+
+  // Combine recent RFID logs + discipline logs as activity feed
+  const recentActivity = [
+    ...(rfidLogs || []).slice(0, 5).map(l => ({ type: 'rfid', label: l.flagged ? 'Late Entry Flagged' : 'Gate Scan', detail: `Student #${l.studentId} • ${l.gateDirection} • ${l.entryStatus}`, time: l.scanTimestamp, flag: l.flagged })),
+    ...(disciplineLogs || []).slice(0, 5).map(d => ({ type: 'discipline', label: d.incidentType, detail: `Student #${d.studentId} • ${d.severity}`, time: d.incidentDate, flag: d.severity === 'High' || d.severity === 'Critical' }))
+  ].slice(0, 8);
+
   return (
-    <div className="space-y-6">
-      {/* Quick Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Stat Cards — identical style to Canteen */}
+      <div className="hostel-row">
         {[
-          { title: "Total Capacity", value: stats.totalCapacity || 0, icon: 'ti-home', color: 'purple', action: () => setActiveTab('rooms') },
-          { title: 'Occupied Beds', value: stats.occupiedBeds || 0, icon: 'ti-user', color: 'blue', action: () => setActiveTab('rooms') },
-          { title: 'Vacant Beds', value: stats.vacantBeds || 0, icon: 'ti-check', color: 'green', action: () => setActiveTab('rooms') },
-          { title: 'Active Visitors Today', value: stats.activeVisitorsToday || 0, icon: 'ti-eye', color: 'yellow', action: () => setActiveTab('visitors') },
-          { title: 'Pending Mess Bills', value: stats.pendingMessBills || 0, icon: 'ti-money', color: 'red', action: () => setActiveTab('mess') }
+          { title: 'Total Capacity',       value: stats.totalCapacity      || 0, icon: 'ti-home',          color: 'purple', action: () => setActiveTab('rooms') },
+          { title: 'Occupied Beds',        value: stats.occupiedBeds       || 0, icon: 'ti-user',          color: 'blue',   action: () => setActiveTab('rooms') },
+          { title: 'Vacant Beds',          value: stats.vacantBeds         || 0, icon: 'ti-check',         color: 'green',  action: () => setActiveTab('rooms') },
+          { title: 'Active Visitors Today',value: stats.activeVisitorsToday|| 0, icon: 'ti-eye',           color: 'yellow', action: () => setActiveTab('visitors') },
+          { title: 'Pending Mess Bills',   value: stats.pendingMessBills   || 0, icon: 'ti-money',         color: 'red',    action: () => setActiveTab('mess') },
         ].map((card, idx) => (
-          <div 
-            key={idx} 
-            onClick={card.action}
-            className="stat_card cursor-pointer hover:shadow-md transition-shadow"
-          >
-            <div className={`stat_icon_wrap ${card.color}`}>
-              <span className={card.icon} style={{ fontSize: 22 }} />
-            </div>
-            <div className="stat_info">
-              <div className="value">{card.value}</div>
-              <div className="label">{card.title}</div>
+          <div key={idx} onClick={card.action} className="hostel-col-3" style={{ cursor: 'pointer' }}>
+            <div className="stat_card">
+              <div className={`stat_icon_wrap ${card.color}`}>
+                <span className={card.icon} style={{ fontSize: 22 }} />
+              </div>
+              <div className="stat_info">
+                <div className="value">{card.value}</div>
+                <div className="label">{card.title}</div>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Visual Floor Plan Grid */}
-      <WhiteCard title="Hostel Visual Room Tracker (Interactive Floor Plan)">
-        <div className="space-y-8">
-          {(stats.hostels || []).map((h) => {
-            const hostelRooms = rooms.filter(r => r.hostelId === h.hostelId);
-            return (
-              <div key={h.hostelId} className="border border-gray-100 rounded-lg p-4 bg-gray-50 space-y-4">
-                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                  <div>
-                    <h5 className="text-base font-bold text-gray-800">{h.hostelName}</h5>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">{h.type} Hostel Block</p>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm font-semibold text-gray-700">Occupancy: {h.occupancy} / {h.capacity}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                      h.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {h.status === 'active' ? 'Active' : 'Maintenance'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Rooms Matrix */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-3">
-                  {hostelRooms.map((room) => {
-                    const capacity = room.capacity || 1;
-                    const occupancy = room.currentOccupancy || 0;
-                    const isFull = occupancy >= capacity;
-                    const isMaintenance = room.status === 'maintenance';
-                    
-                    let bgClass = 'bg-green-500 text-white border-green-600';
-                    let statusLabel = 'Available';
-                    
-                    if (isMaintenance) {
-                      bgClass = 'bg-yellow-500 text-white border-yellow-600';
-                      statusLabel = 'Maintenance';
-                    } else if (isFull) {
-                      bgClass = 'bg-red-500 text-white border-red-600';
-                      statusLabel = 'Full';
-                    } else if (occupancy > 0) {
-                      bgClass = 'bg-indigo-500 text-white border-indigo-600';
-                      statusLabel = `${occupancy}/${capacity} Beds`;
-                    }
-
-                    return (
-                      <div 
-                        key={room.id}
-                        onClick={() => setActiveTab('rooms')}
-                        className={`cursor-pointer border rounded-lg p-3 text-center transition-transform hover:scale-105 ${bgClass}`}
-                      >
-                        <div className="text-xs font-medium tracking-wider uppercase opacity-85">Floor {room.floor}</div>
-                        <div className="text-lg font-bold">{room.roomNo}</div>
-                        <div className="text-xs font-medium mt-1 opacity-90">{statusLabel}</div>
-                      </div>
-                    );
-                  })}
-                  {hostelRooms.length === 0 && (
-                    <div className="col-span-full py-6 text-center text-gray-500 text-sm">
-                      No rooms configured for this block.
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+      {/* HMS Navigation Quick Actions */}
+      <WhiteCard title="HMS Navigation Quick Actions">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+          {fastActions.map((act, idx) => (
+            <div
+              key={idx}
+              onClick={act.action}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left',
+                padding: '15px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff',
+                cursor: 'pointer', transition: 'all 0.2s', width: '100%', boxShadow: '0 2px 5px rgba(0,0,0,0.02)'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary-color)'; e.currentTarget.style.boxShadow = '0 4px 10px rgba(124,50,255,0.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#e0e0e0'; e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.02)'; }}
+            >
+              <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--primary-color)', marginBottom: '4px' }}>{act.name}</span>
+              <span style={{ fontSize: 11, color: '#666', lineHeight: '1.4' }}>{act.desc}</span>
+            </div>
+          ))}
         </div>
       </WhiteCard>
 
-      {/* Grid Legend */}
-      <div className="flex items-center space-x-6 bg-white p-4 rounded-lg shadow-sm border border-gray-100 justify-center">
-        <span className="text-xs font-semibold text-gray-600 uppercase">Room Legend:</span>
-        <div className="flex items-center space-x-2">
-          <span className="h-3.5 w-3.5 rounded-full bg-green-500"></span>
-          <span className="text-sm font-semibold text-gray-700">Available</span>
+      <div className="hostel-row">
+        {/* Room Occupancy Table */}
+        <div className="hostel-col-8">
+          <WhiteCard title="Room Occupancy Status">
+            <div className="table-responsive">
+              <table className="table" style={{ width: '100%', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ background: '#f5f6fa', textAlign: 'left' }}>
+                    <th style={{ padding: 12 }}>Room No</th>
+                    <th style={{ padding: 12 }}>Type</th>
+                    <th style={{ padding: 12 }}>Floor</th>
+                    <th style={{ padding: 12 }}>Occupancy</th>
+                    <th style={{ padding: 12 }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(rooms || []).slice(0, 10).map(room => {
+                    const occ = room.currentOccupancy || 0;
+                    const cap = room.capacity || 1;
+                    const isFull = occ >= cap;
+                    const isMaint = room.status === 'maintenance';
+                    return (
+                      <tr key={room.id} style={{ borderBottom: '1px solid #f1f1f1', cursor: 'pointer' }} onClick={() => setActiveTab('rooms')}>
+                        <td style={{ padding: 12, fontWeight: 600 }}>{room.roomNo}</td>
+                        <td style={{ padding: 12 }}>{room.roomType || '—'}</td>
+                        <td style={{ padding: 12 }}>Floor {room.floor}</td>
+                        <td style={{ padding: 12 }}>{occ} / {cap} beds</td>
+                        <td style={{ padding: 12 }}>
+                          {isMaint ? (
+                            <Badge text="Maintenance" color="yellow" />
+                          ) : isFull ? (
+                            <Badge text="FULL" color="red" />
+                          ) : occ > 0 ? (
+                            <Badge text="PARTIAL" color="blue" />
+                          ) : (
+                            <Badge text="AVAILABLE" color="green" />
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {(rooms || []).length === 0 && (
+                    <tr><td colSpan="5" style={{ padding: 20, textAlign: 'center', color: '#999', fontSize: 12 }}>No rooms configured yet.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </WhiteCard>
         </div>
-        <div className="flex items-center space-x-2">
-          <span className="h-3.5 w-3.5 rounded-full bg-indigo-500"></span>
-          <span className="text-sm font-semibold text-gray-700">Partially Occupied</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="h-3.5 w-3.5 rounded-full bg-red-500"></span>
-          <span className="text-sm font-semibold text-gray-700">Full</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="h-3.5 w-3.5 rounded-full bg-yellow-500"></span>
-          <span className="text-sm font-semibold text-gray-700">Under Maintenance</span>
+
+        {/* Recent Activity Panel */}
+        <div className="hostel-col-4">
+          <WhiteCard title="Recent Activity">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 320, overflowY: 'auto' }}>
+              {recentActivity.length > 0 ? (
+                recentActivity.map((act, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: 10, fontSize: 12, borderBottom: '1px solid #f9f9f9', paddingBottom: 8 }}>
+                    <div style={{ color: act.flag ? '#EF4444' : '#7C32FF', fontWeight: 700, fontSize: 16, lineHeight: 1 }}>•</div>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 600, color: '#333' }}>{act.label}</p>
+                      <p style={{ margin: 0, color: '#777', fontSize: 11 }}>{act.detail}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p style={{ fontSize: 12, color: '#999', textAlign: 'center' }}>No recent activity records found.</p>
+              )}
+            </div>
+          </WhiteCard>
         </div>
       </div>
     </div>
   );
 }
+
 
 /* ==========================================
    SUB-COMPONENT: ROOM ALLOCATION & TRANSFER

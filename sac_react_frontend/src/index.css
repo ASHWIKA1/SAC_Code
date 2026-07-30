@@ -1329,10 +1329,10 @@ select.form-control { appearance: none; cursor: pointer; }
 .text-gray-400 {
   color: #9ca3af;
 }
-.text-[10px] {
+.text-\[10px\] {
   font-size: 10px;
 }
-.text-[11px] {
+.text-\[11px\] {
   font-size: 11px;
 }
 .uppercase {
