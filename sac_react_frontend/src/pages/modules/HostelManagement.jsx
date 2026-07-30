@@ -514,9 +514,30 @@ function RoomAllocation({ rooms, allocations, triggerAlert, refreshData }) {
         </div>
         <button 
           onClick={() => setShowAllocateModal(true)}
-          className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-purple-700 transition-colors"
+          style={{
+            textTransform: 'uppercase',
+            fontSize: '11px',
+            fontWeight: 600,
+            background: 'var(--primary-color, #7c32ff)',
+            color: '#fff',
+            borderRadius: '4px',
+            padding: '10px 24px',
+            letterSpacing: '0.8px',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            boxShadow: 'none',
+            height: '42px',
+            boxSizing: 'border-box'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#631ee6'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary-color, #7c32ff)'; e.currentTarget.style.transform = 'none'; }}
         >
-          <Plus className="h-4 w-4" />
+          <Plus size={14} />
           <span>Allocate Student</span>
         </button>
       </div>
@@ -833,9 +854,30 @@ function VisitorLog({ visitors, rfidLogs, triggerAlert, refreshData }) {
           </div>
           <button 
             onClick={() => setShowCheckinModal(true)}
-            className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-purple-700 transition-colors"
+            style={{
+              textTransform: 'uppercase',
+              fontSize: '11px',
+              fontWeight: 600,
+              background: 'var(--primary-color, #7c32ff)',
+              color: '#fff',
+              borderRadius: '4px',
+              padding: '10px 24px',
+              letterSpacing: '0.8px',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              boxShadow: 'none',
+              height: '42px',
+              boxSizing: 'border-box'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#631ee6'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary-color, #7c32ff)'; e.currentTarget.style.transform = 'none'; }}
           >
-            <Plus className="h-4 w-4" />
+            <Plus size={14} />
             <span>Check In Visitor</span>
           </button>
         </div>
@@ -1203,9 +1245,30 @@ function MessBilling({ messPlans, messBillings, stats, triggerAlert, refreshData
           </div>
           <button 
             onClick={() => setShowBatchModal(true)}
-            className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-purple-700 transition-colors"
+            style={{
+              textTransform: 'uppercase',
+              fontSize: '11px',
+              fontWeight: 600,
+              background: 'var(--primary-color, #7c32ff)',
+              color: '#fff',
+              borderRadius: '4px',
+              padding: '10px 24px',
+              letterSpacing: '0.8px',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              boxShadow: 'none',
+              height: '42px',
+              boxSizing: 'border-box'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#631ee6'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary-color, #7c32ff)'; e.currentTarget.style.transform = 'none'; }}
           >
-            <CreditCard className="h-4 w-4" />
+            <CreditCard size={14} />
             <span>Generate Mess Bills (Batch)</span>
           </button>
         </div>
@@ -1535,9 +1598,30 @@ function DisciplineWarden({ disciplineLogs, stats, triggerAlert, refreshData }) 
           </div>
           <button 
             onClick={() => setShowIncidentModal(true)}
-            className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-purple-700 transition-colors"
+            style={{
+              textTransform: 'uppercase',
+              fontSize: '11px',
+              fontWeight: 600,
+              background: 'var(--primary-color, #7c32ff)',
+              color: '#fff',
+              borderRadius: '4px',
+              padding: '10px 24px',
+              letterSpacing: '0.8px',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              boxShadow: 'none',
+              height: '42px',
+              boxSizing: 'border-box'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#631ee6'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary-color, #7c32ff)'; e.currentTarget.style.transform = 'none'; }}
           >
-            <Plus className="h-4 w-4" />
+            <Plus size={14} />
             <span>Add Incident Record</span>
           </button>
         </div>
