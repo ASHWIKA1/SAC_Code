@@ -11,16 +11,34 @@ export default function StudentApp() {
   const [cart, setCart] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [reordering, setReordering] = useState(false);
+  const [orderItemsCache, setOrderItemsCache] = useState({});
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
 
   useEffect(() => {
     fetchOrders();
     fetchMenu();
+    fetchCategories();
   }, [cardUid]);
 
   const fetchOrders = async () => {
     try {
       const res = await api.get(`/api/v1/canteen/orders/track/${cardUid}`);
-      setOrders(res.data || []);
+      const fetchedOrders = res.data || [];
+      setOrders(fetchedOrders);
+
+      // Asynchronously fetch item details for each historical order
+      const completed = fetchedOrders.filter(o => o.orderStatus === 'FULFILLED');
+      const itemsMap = {};
+      for (const order of completed) {
+        try {
+          const itemsRes = await api.get(`/api/v1/canteen/orders/${order.id}/items`);
+          itemsMap[order.id] = itemsRes.data || [];
+        } catch (err) {
+          console.error("Failed to load items for order " + order.id, err);
+        }
+      }
+      setOrderItemsCache(itemsMap);
     } catch (e) {
       console.error(e);
     }
@@ -30,6 +48,15 @@ export default function StudentApp() {
     try {
       const res = await api.get('/api/v1/canteen/items');
       setMenuItems(res.data || []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/api/v1/canteen/categories');
+      setCategories(res.data || []);
     } catch (e) {
       console.error(e);
     }
@@ -106,6 +133,20 @@ export default function StudentApp() {
     });
   };
 
+  const increaseQuantity = (itemId) => {
+    setCart(prev => prev.map(i => i.id === itemId ? { ...i, quantity: i.quantity + 1 } : i));
+  };
+
+  const decreaseQuantity = (itemId) => {
+    setCart(prev => prev.map(i => {
+      if (i.id === itemId) {
+        const newQty = i.quantity - 1;
+        return newQty > 0 ? { ...i, quantity: newQty } : null;
+      }
+      return i;
+    }).filter(Boolean));
+  };
+
   const orderStatuses = [
     { label: 'Payment Done', status: 'PAYMENT_DONE' },
     { label: 'Received', status: 'ORDER_RECEIVED' },
@@ -119,10 +160,6 @@ export default function StudentApp() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <PageHeader 
-        title="Student CMS Portal" 
-        breadcrumbs={[{ label: 'Canteen' }, { label: 'Student Portal' }]}
-      />
 
       <div className="row">
         {/* Active Order Progress Trackers */}
@@ -197,19 +234,40 @@ export default function StudentApp() {
                 <div className="row">
                   <div className="col-12 col-md-6">
                     <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>Select Pickup Slot</label>
-                    <select 
-                      className="form-control" 
-                      value={bookingSlot} 
-                      onChange={e => setBookingSlot(e.target.value)}
-                      required
-                    >
-                      <option value="">-- Choose Slot --</option>
-                      <option value="08:30">Breakfast Slot A (08:30 AM)</option>
-                      <option value="10:30">Breakfast Slot B (10:30 AM)</option>
-                      <option value="12:30">Lunch Slot A (12:30 PM)</option>
-                      <option value="13:30">Lunch Slot B (01:30 PM)</option>
-                      <option value="15:30">Snack Slot A (03:30 PM)</option>
-                    </select>
+                      <select 
+                        className="form-control" 
+                        value={selectedCategoryId} 
+                        onChange={e => {
+                          const catId = e.target.value;
+                          setSelectedCategoryId(catId);
+                          const cat = categories.find(c => String(c.id) === String(catId));
+                          const slotValue = cat && cat.startTime ? cat.startTime.substring(0, 5) : '';
+                          setBookingSlot(slotValue);
+                        }}
+                        required
+                      >
+                        <option value="">-- Choose Slot --</option>
+                        {categories.map(cat => {
+                          const formatTime = (timeStr) => {
+                            if (!timeStr) return '';
+                            const parts = timeStr.split(':');
+                            let hr = parseInt(parts[0]);
+                            const min = parts[1] || '00';
+                            const ampm = hr >= 12 ? 'PM' : 'AM';
+                            hr = hr % 12;
+                            hr = hr ? hr : 12;
+                            const hrStr = hr < 10 ? '0' + hr : hr;
+                            return `${hrStr}:${min} ${ampm}`;
+                          };
+                          const label = `${cat.name} Slot (${formatTime(cat.startTime)} - ${formatTime(cat.endTime)})`;
+                          
+                          return (
+                            <option key={cat.id} value={cat.id}>
+                              {label}
+                            </option>
+                          );
+                        })}
+                      </select>
                   </div>
                   <div className="col-12 col-md-6" style={{ display: 'flex', alignItems: 'flex-end' }}>
                     <button type="submit" className="primary_btn w-100" style={{ height: '38px' }}>
@@ -227,9 +285,29 @@ export default function StudentApp() {
                 ) : (
                   <div>
                     {cart.map(c => (
-                      <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0' }}>
-                        <span>{c.itemName} x{c.quantity}</span>
-                        <span>₹{(c.price * c.quantity).toFixed(2)}</span>
+                      <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '6px 0', borderBottom: '1px solid #f9f9f9' }}>
+                        <span>{c.itemName}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          {/* Quantity control on the right side */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#f0f0f0', borderRadius: 4, padding: '2px 4px' }}>
+                            <button 
+                              type="button"
+                              onClick={() => decreaseQuantity(c.id)} 
+                              style={{ background: 'none', border: 'none', padding: '0 4px', fontSize: 11, fontWeight: 'bold', cursor: 'pointer', color: '#555', display: 'flex', alignItems: 'center' }}
+                            >
+                              -
+                            </button>
+                            <span style={{ fontSize: 11, fontWeight: 700, minWidth: 10, textAlign: 'center', color: '#333' }}>{c.quantity}</span>
+                            <button 
+                              type="button"
+                              onClick={() => increaseQuantity(c.id)} 
+                              style={{ background: 'none', border: 'none', padding: '0 4px', fontSize: 11, fontWeight: 'bold', cursor: 'pointer', color: '#555', display: 'flex', alignItems: 'center' }}
+                            >
+                              +
+                            </button>
+                          </div>
+                          <span style={{ minWidth: 50, textAlign: 'right', fontWeight: 600 }}>₹{(c.price * c.quantity).toFixed(2)}</span>
+                        </div>
                       </div>
                     ))}
                     <div style={{ textAlign: 'right', fontWeight: 700, fontSize: 13, marginTop: 8 }}>
@@ -246,7 +324,10 @@ export default function StudentApp() {
         <div className="col-12 col-md-4">
           <WhiteCard title="Quick Menu Ordering">
             <div style={{ maxHeight: 350, overflowY: 'auto' }}>
-              {menuItems.map(item => (
+              {(selectedCategoryId 
+                ? menuItems.filter(item => String(item.categoryId) === String(selectedCategoryId))
+                : menuItems
+              ).map(item => (
                 <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f9f9f9' }}>
                   <div>
                     <p style={{ margin: 0, fontSize: 12, fontWeight: 600 }}>{item.itemName}</p>
@@ -271,6 +352,18 @@ export default function StudentApp() {
                       <div>
                         <p style={{ margin: 0, fontSize: 12, fontWeight: 600 }}>Token: {hist.orderTokenId}</p>
                         <p style={{ margin: 0, fontSize: 11, color: '#888' }}>Total: ₹{hist.totalAmount} • {new Date(hist.timeOrdered).toLocaleDateString()}</p>
+                        {orderItemsCache[hist.id] && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                            {orderItemsCache[hist.id].map(item => {
+                              const name = menuItems.find(m => m.id === item.menuItemId)?.itemName || `Item #${item.menuItemId}`;
+                              return (
+                                <Badge key={item.id} type="info">
+                                  {name} x{item.quantity}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                       <button 
                         className="btn-secondary-outline btn_sm" 

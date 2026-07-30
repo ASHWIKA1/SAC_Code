@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, CreditCard, QrCode, DollarSign, X, CheckCircle, Smartphone } from 'lucide-react';
+import { ShoppingCart, CreditCard, QrCode, X, CheckCircle } from 'lucide-react';
 import { PageHeader, WhiteCard, Badge } from '../../../components/UI';
 import { useInventorySync } from './useInventorySync';
 import api from '../../../utils/api';
@@ -7,24 +7,9 @@ import api from '../../../utils/api';
 export default function PosTerminal() {
   const { items: menuItems, refetch: refetchItems } = useInventorySync();
   const [cart, setCart] = useState([]);
-  const [checkoutModal, setCheckoutModal] = useState(null); // 'prepaid', 'upi', 'cod'
+  const [checkoutModal, setCheckoutModal] = useState(null); // 'prepaid', 'upi'
   const [rfidCard, setRfidCard] = useState('CARD-9021');
   const [checkoutResult, setCheckoutResult] = useState(null);
-  const [codOrders, setCodOrders] = useState([]);
-
-  useEffect(() => {
-    fetchCodOrders();
-  }, []);
-
-  const fetchCodOrders = async () => {
-    try {
-      const res = await api.get('/api/v1/canteen/orders/active');
-      const cods = (res.data || []).filter(o => o.paymentMode === 'COD' && o.paymentStatus === 'PENDING');
-      setCodOrders(cods);
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const addToCart = (item) => {
     if (item.isOutOfStock) return;
@@ -39,6 +24,20 @@ export default function PosTerminal() {
 
   const removeFromCart = (itemId) => {
     setCart(prev => prev.filter(i => i.id !== itemId));
+  };
+
+  const increaseQuantity = (itemId) => {
+    setCart(prev => prev.map(i => i.id === itemId ? { ...i, quantity: i.quantity + 1 } : i));
+  };
+
+  const decreaseQuantity = (itemId) => {
+    setCart(prev => prev.map(i => {
+      if (i.id === itemId) {
+        const newQty = i.quantity - 1;
+        return newQty > 0 ? { ...i, quantity: newQty } : null;
+      }
+      return i;
+    }).filter(Boolean));
   };
 
   const getCartTotal = () => {
@@ -68,17 +67,7 @@ export default function PosTerminal() {
           setCheckoutModal(null);
           setCheckoutResult(null);
         }, 2000);
-      } else if (mode === 'COD') {
-        setCheckoutResult({ type: 'success', msg: `Order created in COD cash queue! Token: ${savedOrder.orderTokenId}` });
-        setCart([]);
-        fetchCodOrders();
-        refetchItems();
-        setTimeout(() => {
-          setCheckoutModal(null);
-          setCheckoutResult(null);
-        }, 2500);
       } else if (mode === 'UPI') {
-        // Show QR and simulate webhook trigger after 4 seconds
         setCheckoutResult({ 
           type: 'upi-pending', 
           orderId: savedOrder.id,
@@ -106,22 +95,8 @@ export default function PosTerminal() {
     }
   };
 
-  const clearCodOrder = async (orderId) => {
-    try {
-      await api.post(`/api/v1/canteen/orders/${orderId}/clear-cod`);
-      alert("Payment cleared! Order dispatched to KDS.");
-      fetchCodOrders();
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <PageHeader 
-        title="POS Cashier Terminal" 
-        breadcrumbs={[{ label: 'Canteen' }, { label: 'POS Terminal' }]}
-      />
 
       <div className="row">
         {/* Visual Item Cards Grid */}
@@ -161,29 +136,6 @@ export default function PosTerminal() {
               })}
             </div>
           </WhiteCard>
-
-          {/* COD Cashier Queue Stream */}
-          <div style={{ marginTop: 20 }}>
-            <WhiteCard title="COD Queue (Cash Payments Clearance)">
-              {codOrders.length === 0 ? (
-                <p style={{ color: '#999', fontSize: 13 }}>No pending COD orders awaiting cash payment.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {codOrders.map(order => (
-                    <div key={order.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 15px', background: '#FFFDF5', border: '1px solid #F59E0B', borderRadius: 6 }}>
-                      <div>
-                        <strong style={{ fontSize: 13 }}>Token: {order.orderTokenId}</strong>
-                        <p style={{ margin: 0, fontSize: 11, color: '#777' }}>Total: ₹{order.totalAmount} • Card: {order.cardUid}</p>
-                      </div>
-                      <button className="primary_btn btn_sm" onClick={() => clearCodOrder(order.id)} style={{ background: '#10B981', border: 'none' }}>
-                        <DollarSign size={13} style={{ marginRight: 4 }} /> Clear Payment
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </WhiteCard>
-          </div>
         </div>
 
         {/* POS Cart Sidebar */}
@@ -201,9 +153,27 @@ export default function PosTerminal() {
                     <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
                       <div>
                         <div style={{ fontSize: 12, fontWeight: 600 }}>{c.itemName}</div>
-                        <div style={{ fontSize: 11, color: '#666' }}>{c.quantity}x @ ₹{c.price}</div>
+                        <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>
+                          {c.quantity}x @ ₹{c.price}
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        {/* Quantity control on the right side */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f0f0f0', borderRadius: 4, padding: '2px 6px' }}>
+                          <button 
+                            onClick={() => decreaseQuantity(c.id)} 
+                            style={{ background: 'none', border: 'none', padding: '0 4px', fontSize: 12, fontWeight: 'bold', cursor: 'pointer', color: '#555', display: 'flex', alignItems: 'center' }}
+                          >
+                            -
+                          </button>
+                          <span style={{ fontSize: 11, fontWeight: 700, minWidth: 12, textAlign: 'center', color: '#333' }}>{c.quantity}</span>
+                          <button 
+                            onClick={() => increaseQuantity(c.id)} 
+                            style={{ background: 'none', border: 'none', padding: '0 4px', fontSize: 12, fontWeight: 'bold', cursor: 'pointer', color: '#555', display: 'flex', alignItems: 'center' }}
+                          >
+                            +
+                          </button>
+                        </div>
                         <span style={{ fontSize: 12, fontWeight: 700 }}>₹{(c.price * c.quantity).toFixed(2)}</span>
                         <button onClick={() => removeFromCart(c.id)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer' }}>
                           <X size={14} />
@@ -225,9 +195,6 @@ export default function PosTerminal() {
                   </button>
                   <button className="primary_btn" onClick={() => setCheckoutModal('upi')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 0', background: '#059669' }}>
                     <QrCode size={14} /> UPI / QR
-                  </button>
-                  <button className="primary_btn" onClick={() => setCheckoutModal('cod')} style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 0', background: '#F59E0B' }}>
-                    <DollarSign size={14} /> COD Cash Order
                   </button>
                 </div>
               </div>
@@ -276,15 +243,6 @@ export default function PosTerminal() {
                 <p style={{ fontSize: 13, fontWeight: 600 }}>Awaiting UPI Gateway confirmation...</p>
                 <button className="primary_btn w-100" onClick={() => simulateUpiConfirmation(checkoutResult.orderId)} style={{ marginTop: 10, background: '#10B981' }}>
                   Simulate UPI Webhook Confirmation
-                </button>
-              </div>
-            )}
-
-            {checkoutModal === 'cod' && !checkoutResult && (
-              <div>
-                <p>Dispatch order directly to cash cashier queue?</p>
-                <button className="primary_btn w-100" onClick={() => handleCheckout('COD')}>
-                  Confirm Cash Order Dispatch
                 </button>
               </div>
             )}

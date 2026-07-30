@@ -476,6 +476,11 @@ const STUDENT_MENU = [
       { label: 'Downloads', icon: 'ti-download', path: '/student/downloads' },
       { label: 'My Wallet', icon: 'ti-wallet', path: '/student/wallet' },
       { label: 'My Profile', icon: 'ti-id-badge', path: '/student/profile' },
+      {
+        label: 'Canteen', icon: 'ti-cup', children: [
+          { label: 'Student App', path: '/modules/canteen/student-app' }
+        ]
+      },
     ]
   },
   // ── LMS NAVIGATION ──
@@ -500,6 +505,11 @@ const PARENT_MENU = [
       { label: "Child's Fees", icon: 'ti-money', path: '/parent/fees' },
       { label: 'Notice Board', icon: 'ti-comment-alt', path: '/parent/notice-board' },
       { label: 'My Profile', icon: 'ti-id-badge', path: '/parent/profile' },
+      {
+        label: 'Canteen', icon: 'ti-cup', children: [
+          { label: 'Student Wallets', path: '/modules/canteen/wallets' }
+        ]
+      },
     ]
   },
   // ── LMS NAVIGATION ──

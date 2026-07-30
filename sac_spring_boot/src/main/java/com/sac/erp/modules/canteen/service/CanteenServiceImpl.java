@@ -103,10 +103,16 @@ public class CanteenServiceImpl implements CanteenService {
                 return cw;
             });
 
+        if (wallet.getIsActive() == null) {
+            wallet.setIsActive(1);
+        }
         if (wallet.getIsActive() != 1) {
             throw new IllegalArgumentException("Cannot recharge an inactive wallet");
         }
 
+        if (wallet.getBalance() == null) {
+            wallet.setBalance(BigDecimal.ZERO);
+        }
         BigDecimal newBalance = wallet.getBalance().add(amount);
         wallet.setBalance(newBalance);
         walletRepository.save(wallet);

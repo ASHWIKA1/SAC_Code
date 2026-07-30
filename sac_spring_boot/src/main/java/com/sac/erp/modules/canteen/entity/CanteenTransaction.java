@@ -17,6 +17,7 @@ public class CanteenTransaction extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wallet_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private CanteenWallet wallet;
 
     @Column(name = "student_id", nullable = false)

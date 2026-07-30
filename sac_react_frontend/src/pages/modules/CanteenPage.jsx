@@ -6,7 +6,7 @@ import {
   RotateCcw, DollarSign, Plus, X, Command, ArrowRight, Printer, AlertCircle, Sparkles, Edit2, Trash2
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { PageHeader, WhiteCard, Badge } from '../../components/UI';
+import { PageHeader, WhiteCard, DataTable, Badge, ActionBtn, FormGroup, Alert } from '../../components/UI';
 import api from '../../utils/api';
 import AdminDashboard from './canteen/AdminDashboard';
 import PosTerminal from './canteen/PosTerminal';
@@ -138,20 +138,23 @@ export default function CanteenPage({ active }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <style>{`
         /* Custom scoped vanilla CSS specifically for Canteen module */
+        /* Custom scoped vanilla CSS specifically for Canteen module */
         .canteen-row {
-          display: grid;
-          grid-template-columns: repeat(12, 1fr);
-          gap: 20px;
+          display: flex;
+          flex-wrap: wrap;
+          margin-right: -15px;
+          margin-left: -15px;
+          row-gap: 20px;
         }
-        .canteen-col-12 { grid-column: span 12; }
-        .canteen-col-8 { grid-column: span 8; }
-        .canteen-col-6 { grid-column: span 6; }
-        .canteen-col-4 { grid-column: span 4; }
-        .canteen-col-3 { grid-column: span 3; }
+        .canteen-col-12 { width: 100%; padding-right: 15px; padding-left: 15px; }
+        .canteen-col-8 { width: 66.666667%; padding-right: 15px; padding-left: 15px; }
+        .canteen-col-6 { width: 50%; padding-right: 15px; padding-left: 15px; }
+        .canteen-col-4 { width: 33.333333%; padding-right: 15px; padding-left: 15px; }
+        .canteen-col-3 { width: 25%; padding-right: 15px; padding-left: 15px; }
         
         @media (max-width: 991px) {
           .canteen-col-8, .canteen-col-6, .canteen-col-4, .canteen-col-3 {
-            grid-column: span 12;
+            width: 100%;
           }
         }
 
@@ -342,44 +345,52 @@ export default function CanteenPage({ active }) {
 
         /* General Forms & Tables alignment */
         .canteen-form-group {
-          margin-bottom: 15px;
+          margin-bottom: 20px;
         }
         .canteen-form-group label {
           display: block;
-          font-weight: 600;
-          font-size: 13px;
-          margin-bottom: 5px;
-          color: #333;
+          font-weight: 500;
+          font-size: 12px;
+          margin-bottom: 6px;
+          color: var(--text-dark);
+          text-transform: uppercase;
         }
         .canteen-form-control {
           width: 100%;
-          padding: 8px 12px;
-          border: 1px solid #ddd;
+          padding: 9px 14px;
+          border: 1px solid #BBC1C9;
           border-radius: 4px;
+          font-family: var(--font);
           font-size: 13px;
+          color: var(--text-dark);
+          background: #fff;
           outline: none;
+          transition: border-color 0.2s;
         }
         .canteen-form-control:focus {
           border-color: var(--primary-color);
+          box-shadow: 0 0 0 3px rgba(124,50,255,0.08);
         }
 
         /* Modal popups */
         .canteen-popup-overlay {
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.4);
+          background: rgba(0,0,0,0.6);
           display: flex;
           align-items: center;
           justify-content: center;
-          z-index: 9999;
+          z-index: 99999;
+          backdrop-filter: blur(4px);
         }
         .canteen-popup-content {
           background: #fff;
-          border-radius: 6px;
+          border-radius: 8px;
           width: 90%;
           max-width: 500px;
-          padding: 20px;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+          padding: 24px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+          border: 1px solid #e8e8e8;
         }
       `}</style>
       <PageHeader 
@@ -1766,9 +1777,23 @@ function CanteenTransactions({ transactions, fetchTransactions, wallets, items }
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [activeTxDetail, setActiveTxDetail] = useState(null);
+  const [purchasedItems, setPurchasedItems] = useState([]);
+
+  useEffect(() => {
+    if (activeTxDetail && activeTxDetail.type === 'purchase' && activeTxDetail.referenceNo) {
+      api.get(`/api/v1/canteen/orders/${activeTxDetail.referenceNo}/items`)
+        .then(res => setPurchasedItems(res.data || []))
+        .catch(err => {
+          console.error(err);
+          setPurchasedItems([]);
+        });
+    } else {
+      setPurchasedItems([]);
+    }
+  }, [activeTxDetail]);
 
   const filtered = transactions.filter(t => {
-    const matchesSearch = t.studentId.toString().includes(search) || (t.notes && t.notes.toLowerCase().includes(search.toLowerCase()));
+    const matchesSearch = (t.studentId && t.studentId.toString().includes(search)) || (t.notes && t.notes.toLowerCase().includes(search.toLowerCase()));
     const matchesType = filterType === 'all' || t.type === filterType;
     return matchesSearch && matchesType;
   });
@@ -1830,7 +1855,7 @@ function CanteenTransactions({ transactions, fetchTransactions, wallets, items }
               {filtered.map(t => (
                 <tr key={t.id}>
                   <td style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 'bold' }}>#{t.id}</td>
-                  <td style={{ fontWeight: 600 }}>Student #{t.studentId}</td>
+                  <td style={{ fontWeight: 600 }}>{t.studentId ? `Student #${t.studentId}` : 'Guest / Walking'}</td>
                   <td>
                     <Badge type={t.type === 'purchase' ? 'purple' : t.type === 'recharge' ? 'success' : 'danger'}>
                       {t.type}
@@ -1875,16 +1900,24 @@ function CanteenTransactions({ transactions, fetchTransactions, wallets, items }
 
             <div style={{ borderTop: '1px dashed #ddd', borderBottom: '1px dashed #ddd', padding: '12px 0', margin: '15px 0', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Transaction Type:</span> <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{activeTxDetail.type}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Student Wallet:</span> <span style={{ fontWeight: 600 }}>Student #{activeTxDetail.studentId}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Student Wallet:</span> <span style={{ fontWeight: 600 }}>{activeTxDetail.studentId ? `Student #${activeTxDetail.studentId}` : 'Guest / Walking'}</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Payment Option:</span> <span style={{ textTransform: 'uppercase' }}>{activeTxDetail.paymentMethod || 'Wallet'}</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#777' }}>Timestamp:</span> <span>{new Date(activeTxDetail.createdAt).toLocaleString()}</span></div>
               
-              {activeTxDetail.itemId && (
+              {activeTxDetail.type === 'purchase' && purchasedItems.length > 0 && (
                 <div style={{ borderTop: '1px solid #f1f1f1', paddingTop: '8px', marginTop: '4px' }}>
-                  <div style={{ fontSize: '9px', fontWeight: 700, color: '#999', textTransform: 'uppercase' }}>PURCHASE ITEM</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, color: '#333', marginTop: '4px' }}>
-                    <span>Item ID #{activeTxDetail.itemId} (x{activeTxDetail.quantity})</span>
-                    <span>₹{parseFloat(activeTxDetail.amount).toFixed(2)}</span>
+                  <div style={{ fontSize: '9px', fontWeight: 700, color: '#999', textTransform: 'uppercase', marginBottom: '6px' }}>PURCHASE DETAILS</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {purchasedItems.map(item => {
+                      const menuItem = items.find(m => String(m.id) === String(item.menuItemId));
+                      const name = menuItem ? menuItem.itemName : `Item #${item.menuItemId}`;
+                      return (
+                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, color: '#333' }}>
+                          <span>{item.quantity}x {name}</span>
+                          <span>₹{(parseFloat(item.priceOrdered || 0) * item.quantity).toFixed(2)}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

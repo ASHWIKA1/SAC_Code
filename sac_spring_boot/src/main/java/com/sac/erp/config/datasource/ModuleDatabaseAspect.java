@@ -13,7 +13,7 @@ public class ModuleDatabaseAspect {
 
     @Around("execution(* com.sac.erp.modules..*Repository.*(..)) || execution(* com.sac.erp.modules..*ServiceImpl.*(..))")
     public Object routeDatabase(ProceedingJoinPoint joinPoint) throws Throwable {
-        String packageName = joinPoint.getTarget().getClass().getPackageName();
+        String packageName = resolvePackageName(joinPoint);
         String key = "core"; 
 
         if (packageName.startsWith("com.sac.erp.modules.")) {
@@ -38,6 +38,24 @@ public class ModuleDatabaseAspect {
                 ModuleDatabaseContext.clear();
             }
         }
+    }
+
+    private String resolvePackageName(ProceedingJoinPoint joinPoint) {
+        // 1. Try interfaces (for dynamic JDK proxy objects representing Spring repositories)
+        if (joinPoint.getTarget() != null) {
+            for (Class<?> iface : joinPoint.getTarget().getClass().getInterfaces()) {
+                if (iface.getPackageName().startsWith("com.sac.erp.modules.")) {
+                    return iface.getPackageName();
+                }
+            }
+            // 2. Try target class package
+            String pkg = joinPoint.getTarget().getClass().getPackageName();
+            if (pkg.startsWith("com.sac.erp.modules.")) {
+                return pkg;
+            }
+        }
+        // 3. Fall back to method signature declaring type package
+        return joinPoint.getSignature().getDeclaringType().getPackageName();
     }
 
     private boolean isValidModuleKey(String module) {

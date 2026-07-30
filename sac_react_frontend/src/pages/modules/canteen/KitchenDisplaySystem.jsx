@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Clock, Play, CheckCircle2, UserCheck, Flame } from 'lucide-react';
+import { Clock, Play, CheckCircle2, UserCheck, Flame, Trash2 } from 'lucide-react';
 import { PageHeader, WhiteCard, Badge } from '../../../components/UI';
 import { useRealtimeOrders } from './useRealtimeOrders';
 import api from '../../../utils/api';
@@ -7,6 +7,14 @@ import api from '../../../utils/api';
 export default function KitchenDisplaySystem() {
   const { orders, refetch } = useRealtimeOrders();
   const [currentTimes, setCurrentTimes] = useState({});
+  const [menuItems, setMenuItems] = useState([]);
+
+  // Load menu items to resolve names
+  useEffect(() => {
+    api.get('/api/v1/canteen/items')
+      .then(res => setMenuItems(res.data || []))
+      .catch(err => console.error(err));
+  }, []);
 
   // Clock tick to calculate SLA visual timers
   useEffect(() => {
@@ -41,6 +49,106 @@ export default function KitchenDisplaySystem() {
     } else {
       return { className: 'kds-red-flash', label: 'OVERDUE!' };
     }
+  };
+
+  const elapsedLimit = 20 * 60; // 20 minutes in seconds
+
+  const normalOrders = orders.filter(order => {
+    const elapsed = currentTimes[order.id] || 0;
+    return elapsed <= elapsedLimit;
+  });
+
+  const delayedOrders = orders.filter(order => {
+    const elapsed = currentTimes[order.id] || 0;
+    return elapsed > elapsedLimit;
+  });
+
+  const renderOrderGrid = (ordersList) => {
+    return (
+      <div className="kds-grid">
+        {ordersList.map(order => {
+          const elapsed = currentTimes[order.id] || 0;
+          const sla = getSlaClassAndText(elapsed);
+          const minutes = Math.floor(elapsed / 60);
+          const seconds = elapsed % 60;
+
+          return (
+            <div key={order.id} className="kds-card">
+              {/* Visual Aging Alert Header */}
+              <div className={`kds-card-header ${sla.className}`}>
+                <div>{order.orderTokenId}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                  <Clock size={14} />
+                  {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+                </div>
+              </div>
+
+              <div className="kds-body">
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#777' }}>
+                  <span>Card UID: {order.cardUid}</span>
+                  <span>{order.paymentMode}</span>
+                </div>
+
+                <div style={{ margin: '8px 0', borderBottom: '1px solid #f0f0f0' }} />
+
+                {/* Order items loader */}
+                <div style={{ flexGrow: 1 }}>
+                  <KdsItemsList orderId={order.id} menuItems={menuItems} />
+                </div>
+
+                {order.scheduledTime && (
+                  <div style={{ background: '#EFF6FF', border: '1px solid #3B82F6', borderRadius: 4, padding: 6, fontSize: 11, color: '#1E3A8A' }}>
+                    📅 Scheduled Pickup: {new Date(order.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                )}
+
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#4B5563' }}>
+                  Current State: <Badge text={order.orderStatus} color={order.orderStatus === 'CURRENTLY_PREPARING' ? 'orange' : 'blue'} />
+                </div>
+              </div>
+
+              {/* Single tap status progression */}
+              <div className="kds-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <button 
+                  className="btn-secondary-outline btn_sm" 
+                  onClick={() => {
+                    if (window.confirm("Cancel and delete this order from KDS?")) {
+                      handleNextStatus(order, 'CANCELLED');
+                    }
+                  }} 
+                  style={{ color: '#ef5f5f', borderColor: '#ef5f5f', display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', fontSize: 11 }}
+                >
+                  <Trash2 size={12} /> Delete
+                </button>
+                
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {order.orderStatus === 'ORDER_RECEIVED' && (
+                    <button className="primary_btn btn_sm" onClick={() => handleNextStatus(order, 'CURRENTLY_PREPARING')}>
+                      <Play size={13} style={{ marginRight: 4 }} /> Start Cooking
+                    </button>
+                  )}
+                  {order.orderStatus === 'PAYMENT_DONE' && (
+                    <button className="primary_btn btn_sm" onClick={() => handleNextStatus(order, 'CURRENTLY_PREPARING')}>
+                      <Play size={13} style={{ marginRight: 4 }} /> Start Cooking
+                    </button>
+                  )}
+                  {order.orderStatus === 'CURRENTLY_PREPARING' && (
+                    <button className="primary_btn btn_sm" onClick={() => handleNextStatus(order, 'READY_FOR_COLLECTION')} style={{ background: '#10B981' }}>
+                      <CheckCircle2 size={13} style={{ marginRight: 4 }} /> Mark Ready
+                    </button>
+                  )}
+                  {order.orderStatus === 'READY_FOR_COLLECTION' && (
+                    <button className="primary_btn btn_sm" onClick={() => handleNextStatus(order, 'FULFILLED')} style={{ background: '#059669' }}>
+                      <UserCheck size={13} style={{ marginRight: 4 }} /> Hand Over
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
@@ -107,88 +215,32 @@ export default function KitchenDisplaySystem() {
         }
       `}</style>
 
-      <PageHeader 
-        title="Kitchen Display System (KDS)" 
-        breadcrumbs={[{ label: 'Canteen' }, { label: 'KDS Terminal' }]}
-      />
 
       <WhiteCard title="Preparation Queue">
-        {orders.length === 0 ? (
+        {normalOrders.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '50px 20px', color: '#888' }}>
             <Flame size={48} style={{ marginBottom: 12, opacity: 0.4 }} />
-            <h4>No active orders in KDS queue.</h4>
+            <h4>No active orders in prep queue.</h4>
             <p>New customer tickets will appear here automatically in real time.</p>
           </div>
         ) : (
-          <div className="kds-grid">
-            {orders.map(order => {
-              const elapsed = currentTimes[order.id] || 0;
-              const sla = getSlaClassAndText(elapsed);
-              const minutes = Math.floor(elapsed / 60);
-              const seconds = elapsed % 60;
+          renderOrderGrid(normalOrders)
+        )}
+      </WhiteCard>
 
-              return (
-                <div key={order.id} className="kds-card">
-                  {/* Visual Aging Alert Header */}
-                  <div className={`kds-card-header ${sla.className}`}>
-                    <div>{order.orderTokenId}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-                      <Clock size={14} />
-                      {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-                    </div>
-                  </div>
-
-                  <div className="kds-body">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#777' }}>
-                      <span>Card UID: {order.cardUid}</span>
-                      <span>{order.paymentMode}</span>
-                    </div>
-
-                    <div style={{ margin: '8px 0', borderBottom: '1px solid #f0f0f0' }} />
-
-                    {/* Order items loader */}
-                    <div style={{ flexGrow: 1 }}>
-                      <KdsItemsList orderId={order.id} />
-                    </div>
-
-                    {order.scheduledTime && (
-                      <div style={{ background: '#EFF6FF', border: '1px solid #3B82F6', borderRadius: 4, padding: 6, fontSize: 11, color: '#1E3A8A' }}>
-                        📅 Scheduled Pickup: {new Date(order.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    )}
-
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#4B5563' }}>
-                      Current State: <Badge text={order.orderStatus} color={order.orderStatus === 'CURRENTLY_PREPARING' ? 'orange' : 'blue'} />
-                    </div>
-                  </div>
-
-                  {/* Single tap status progression */}
-                  <div className="kds-footer">
-                    {order.orderStatus === 'ORDER_RECEIVED' && (
-                      <button className="primary_btn btn_sm" onClick={() => handleNextStatus(order, 'CURRENTLY_PREPARING')}>
-                        <Play size={13} style={{ marginRight: 4 }} /> Start Cooking
-                      </button>
-                    )}
-                    {order.orderStatus === 'PAYMENT_DONE' && (
-                      <button className="primary_btn btn_sm" onClick={() => handleNextStatus(order, 'CURRENTLY_PREPARING')}>
-                        <Play size={13} style={{ marginRight: 4 }} /> Start Cooking
-                      </button>
-                    )}
-                    {order.orderStatus === 'CURRENTLY_PREPARING' && (
-                      <button className="primary_btn btn_sm" onClick={() => handleNextStatus(order, 'READY_FOR_COLLECTION')} style={{ background: '#10B981' }}>
-                        <CheckCircle2 size={13} style={{ marginRight: 4 }} /> Mark Ready
-                      </button>
-                    )}
-                    {order.orderStatus === 'READY_FOR_COLLECTION' && (
-                      <button className="primary_btn btn_sm" onClick={() => handleNextStatus(order, 'FULFILLED')} style={{ background: '#059669' }}>
-                        <UserCheck size={13} style={{ marginRight: 4 }} /> Hand Over
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+      <WhiteCard title={
+        <span style={{ color: '#ef5f5f', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Clock size={16} /> Delayed Queue (Over 20 Mins)
+        </span>
+      }>
+        {delayedOrders.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '50px 20px', color: '#888' }}>
+            <Clock size={48} style={{ marginBottom: 12, opacity: 0.4 }} />
+            <h4>No delayed orders.</h4>
+            <p>Orders exceeding 20 minutes of preparation time will shift here automatically.</p>
           </div>
+        ) : (
+          renderOrderGrid(delayedOrders)
         )}
       </WhiteCard>
     </div>
@@ -196,7 +248,7 @@ export default function KitchenDisplaySystem() {
 }
 
 // Inner helper to fetch and display items for a specific KDS ticket
-function KdsItemsList({ orderId }) {
+function KdsItemsList({ orderId, menuItems }) {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
@@ -207,16 +259,22 @@ function KdsItemsList({ orderId }) {
 
   return (
     <div>
-      {items.map(item => (
-        <div key={item.id} className="kds-item-row">
-          <span>{item.quantity}x (Item ID: {item.menuItemId})</span>
-          {item.kitchenNotes && (
-            <span style={{ fontSize: 11, fontStyle: 'italic', color: '#EEF' }}>
-              Note: {item.kitchenNotes}
-            </span>
-          )}
-        </div>
-      ))}
+      {items.map(item => {
+        const menuItem = menuItems.find(m => String(m.id) === String(item.menuItemId));
+        const name = menuItem ? menuItem.itemName : `Item #${item.menuItemId}`;
+        return (
+          <div key={item.id} className="kds-item-row" style={{ display: 'flex', flexDirection: 'column', padding: '4px 0', borderBottom: '1px solid #f0f0f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 500 }}>
+              <span>{item.quantity}x {name}</span>
+            </div>
+            {item.kitchenNotes && (
+              <span style={{ fontSize: 11, fontStyle: 'italic', color: '#888', marginTop: 2 }}>
+                Note: {item.kitchenNotes}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
