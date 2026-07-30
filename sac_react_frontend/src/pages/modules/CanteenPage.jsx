@@ -2016,7 +2016,7 @@ function CanteenTransactions({ transactions, fetchTransactions, wallets, items }
                       return (
                         <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, color: '#333' }}>
                           <span>{item.quantity}x {name}</span>
-                          <span>₹{(parseFloat(item.priceOrdered || 0) * item.quantity).toFixed(2)}</span>
+                          <span>₹{(parseFloat(item.unitPrice || 0) * item.quantity).toFixed(2)}</span>
                         </div>
                       );
                     })}
