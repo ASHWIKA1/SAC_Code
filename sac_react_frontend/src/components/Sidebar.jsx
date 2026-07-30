@@ -551,26 +551,6 @@ function getMenuForRole(role) {
     default:                      
       return ADMIN_MENU;
   }
-
-  // Filter out operational/terminal items for Super/Ultra Super Admin roles
-  if (role === ROLES.ULTRA_SUPER_ADMIN || role === ROLES.SUPER_ADMIN) {
-    return menu.map(section => ({
-      ...section,
-      items: section.items.map(item => {
-        if (item.label === 'Canteen' && item.children) {
-          return {
-            ...item,
-            children: item.children.filter(child => 
-              child.label !== 'POS Terminal' && 
-              child.label !== 'Student App' && 
-              child.label !== 'Kitchen KDS'
-            )
-          };
-        }
-        return item;
-      })
-    }));
-  }
   return menu;
 }
 
