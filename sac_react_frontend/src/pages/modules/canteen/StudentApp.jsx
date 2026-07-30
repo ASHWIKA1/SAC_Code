@@ -325,7 +325,12 @@ export default function StudentApp() {
           <WhiteCard title="Quick Menu Ordering">
             <div style={{ maxHeight: 350, overflowY: 'auto' }}>
               {(selectedCategoryId 
-                ? menuItems.filter(item => String(item.categoryId) === String(selectedCategoryId))
+                ? menuItems.filter(item => {
+                    if (item.categoryIds) {
+                      return item.categoryIds.split(',').includes(String(selectedCategoryId));
+                    }
+                    return String(item.categoryId) === String(selectedCategoryId);
+                  })
                 : menuItems
               ).map(item => (
                 <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f9f9f9' }}>

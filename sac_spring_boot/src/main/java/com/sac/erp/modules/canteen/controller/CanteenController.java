@@ -130,6 +130,7 @@ public class CanteenController {
             map.put("calories", item.getCalories());
             map.put("image", item.getImage());
             map.put("schoolId", item.getSchoolId());
+            map.put("categoryIds", item.getCategoryIds());
             if (item.getCategory() != null) {
                 map.put("categoryId", item.getCategory().getId());
                 map.put("categoryName", item.getCategory().getName());
@@ -163,9 +164,22 @@ public class CanteenController {
         item.setIsVegetarian(payload.containsKey("isVegetarian") ? Integer.valueOf(payload.get("isVegetarian").toString()) : 1);
         item.setImage((String) payload.get("image"));
 
-        if (payload.containsKey("categoryId")) {
+        if (payload.containsKey("categoryIds")) {
+            String catIdsStr = payload.get("categoryIds").toString();
+            item.setCategoryIds(catIdsStr);
+            if (!catIdsStr.isEmpty()) {
+                String[] split = catIdsStr.split(",");
+                if (split.length > 0) {
+                    try {
+                        Long firstCatId = Long.valueOf(split[0].trim());
+                        categoryRepository.findById(firstCatId).ifPresent(item::setCategory);
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        } else if (payload.containsKey("categoryId")) {
             Long catId = Long.valueOf(payload.get("categoryId").toString());
             categoryRepository.findById(catId).ifPresent(item::setCategory);
+            item.setCategoryIds(String.valueOf(catId));
         }
 
         CanteenItem saved = canteenService.saveItem(item);

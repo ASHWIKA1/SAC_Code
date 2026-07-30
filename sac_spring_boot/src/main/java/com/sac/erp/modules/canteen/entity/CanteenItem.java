@@ -26,8 +26,12 @@ public class CanteenItem extends BaseEntity {
     private String sku;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private CanteenCategory category;
+
+    @Column(name = "category_ids")
+    private String categoryIds;
 
     private String description;
 

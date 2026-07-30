@@ -1306,8 +1306,9 @@ function CanteenItems({ items, categories, fetchItems }) {
   const [formCostPrice, setFormCostPrice] = useState('');
   const [formUnit, setFormUnit] = useState('piece');
   const [formIsVeg, setFormIsVeg] = useState(1);
-  const [formCategoryId, setFormCategoryId] = useState('');
+  const [formCategoryIds, setFormCategoryIds] = useState([]);
   const [formStock, setFormStock] = useState('50');
+  const [isCatDropdownOpen, setIsCatDropdownOpen] = useState(false);
 
   const filtered = items.filter(item => 
     item.itemName.toLowerCase().includes(search.toLowerCase()) || 
@@ -1315,6 +1316,7 @@ function CanteenItems({ items, categories, fetchItems }) {
   );
 
   const openForm = (action, item = null) => {
+    setIsCatDropdownOpen(false);
     if (action === 'edit' && item) {
       setItemModal(item);
       setFormName(item.itemName);
@@ -1324,7 +1326,10 @@ function CanteenItems({ items, categories, fetchItems }) {
       setFormCostPrice(item.costPrice?.toString() || '0');
       setFormUnit(item.unit || 'piece');
       setFormIsVeg(item.isVegetarian);
-      setFormCategoryId(item.categoryId?.toString() || '');
+      const activeIds = item.categoryIds 
+        ? item.categoryIds.split(',').filter(Boolean) 
+        : (item.categoryId ? [item.categoryId.toString()] : []);
+      setFormCategoryIds(activeIds);
       setFormStock(item.stock?.toString() || '0');
     } else {
       setItemModal('create');
@@ -1335,7 +1340,7 @@ function CanteenItems({ items, categories, fetchItems }) {
       setFormCostPrice('0');
       setFormUnit('piece');
       setFormIsVeg(1);
-      setFormCategoryId(categories[0]?.id?.toString() || '');
+      setFormCategoryIds(categories[0]?.id ? [categories[0].id.toString()] : []);
       setFormStock('50');
     }
   };
@@ -1350,7 +1355,7 @@ function CanteenItems({ items, categories, fetchItems }) {
         costPrice: parseFloat(formCostPrice),
         unit: formUnit,
         isVegetarian: formIsVeg,
-        categoryId: parseInt(formCategoryId),
+        categoryIds: formCategoryIds.join(','),
         stock: parseFloat(formStock)
       };
 
@@ -1428,7 +1433,26 @@ function CanteenItems({ items, categories, fetchItems }) {
                     <p style={{ margin: 0, fontWeight: 600 }}>{item.itemName}</p>
                     <p style={{ margin: 0, fontSize: '11px', color: '#888' }}>{item.itemCode || 'No Code'}</p>
                   </td>
-                  <td style={{ fontWeight: 600, color: '#555' }}>{item.categoryName || 'General'}</td>
+                  <td>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {item.categoryIds 
+                        ? item.categoryIds.split(',').map(id => {
+                            const cat = categories.find(c => String(c.id) === String(id));
+                            if (!cat) return null;
+                            return (
+                              <span key={id} className="canteen-badge" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366F1', fontSize: '10px', padding: '2px 6px', borderRadius: '4px' }}>
+                                {cat.name}
+                              </span>
+                            );
+                          }).filter(Boolean)
+                        : (
+                          <span className="canteen-badge" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366F1', fontSize: '10px', padding: '2px 6px', borderRadius: '4px' }}>
+                            {item.categoryName || 'General'}
+                          </span>
+                        )
+                      }
+                    </div>
+                  </td>
                   <td style={{ fontWeight: 700, color: 'var(--primary-color)' }}>₹{parseFloat(item.price).toFixed(2)}</td>
                   <td>
                     <Badge type={item.stock <= 10 ? 'danger' : 'success'}>
@@ -1583,13 +1607,91 @@ function CanteenItems({ items, categories, fetchItems }) {
                 <div className="canteen-col-6">
                   <div className="canteen-form-group">
                     <label>CATEGORY</label>
-                    <select
-                      value={formCategoryId}
-                      onChange={e => setFormCategoryId(e.target.value)}
-                      className="canteen-form-control"
-                    >
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                    <div style={{ position: 'relative' }}>
+                      <div 
+                        onClick={() => setIsCatDropdownOpen(!isCatDropdownOpen)}
+                        className="canteen-form-control"
+                        style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center', 
+                          cursor: 'pointer',
+                          minHeight: '38px',
+                          height: 'auto',
+                          padding: '6px 12px'
+                        }}
+                      >
+                        <span style={{ fontSize: '13px', color: formCategoryIds.length === 0 ? '#999' : '#333' }}>
+                          {formCategoryIds.length === 0 
+                            ? 'Select categories' 
+                            : formCategoryIds.map(id => categories.find(c => String(c.id) === String(id))?.name).filter(Boolean).join(', ')
+                          }
+                        </span>
+                        <span className={`ti-angle-${isCatDropdownOpen ? 'up' : 'down'}`} />
+                      </div>
+                      
+                      {isCatDropdownOpen && (
+                        <>
+                          <div 
+                            onClick={() => setIsCatDropdownOpen(false)}
+                            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}
+                          />
+                          <div 
+                            style={{ 
+                              position: 'absolute', 
+                              top: '100%', 
+                              left: 0, 
+                              right: 0, 
+                              background: '#fff', 
+                              border: '1px solid #ddd', 
+                              borderRadius: '4px', 
+                              boxShadow: '0 4px 15px rgba(0,0,0,0.1)', 
+                              zIndex: 1000,
+                              maxHeight: '180px',
+                              overflowY: 'auto',
+                              padding: '8px'
+                            }}
+                          >
+                            {categories.map(c => {
+                              const isChecked = formCategoryIds.includes(String(c.id));
+                              return (
+                                <label 
+                                  key={c.id} 
+                                  style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '8px', 
+                                    padding: '6px 8px', 
+                                    margin: 0,
+                                    cursor: 'pointer',
+                                    fontSize: '13px',
+                                    borderRadius: '4px',
+                                    transition: 'background 0.2s',
+                                    color: '#333'
+                                  }}
+                                  onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                                  onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                >
+                                  <input 
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => {
+                                      if (isChecked) {
+                                        setFormCategoryIds(formCategoryIds.filter(id => id !== String(c.id)));
+                                      } else {
+                                        setFormCategoryIds([...formCategoryIds, String(c.id)]);
+                                      }
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                  />
+                                  <span>{c.name}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="canteen-col-6">
