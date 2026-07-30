@@ -12,6 +12,7 @@ public interface HostelManagementService {
 
     // Rooms & Room Types
     List<HostelRoom> getAllRooms();
+    HostelRoom createRoom(HostelRoom room);
     List<HostelRoomType> getAllRoomTypes();
 
     // Allocations

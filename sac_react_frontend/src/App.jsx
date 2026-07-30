@@ -352,6 +352,9 @@ export default function App() {
           <Route path="modules/hostel" element={<Navigate to="/modules/hostel/dashboard" replace />} />
           <Route path="modules/hostel/dashboard" element={<HostelManagement active="dashboard" />} />
           <Route path="modules/hostel/rooms" element={<HostelManagement active="rooms" />} />
+          <Route path="modules/hostel/allocations" element={<HostelManagement active="allocations" />} />
+          <Route path="modules/hostel/leaves" element={<HostelManagement active="leaves" />} />
+          <Route path="modules/hostel/leave-approvals" element={<HostelManagement active="leave-approvals" />} />
           <Route path="modules/hostel/visitors" element={<HostelManagement active="visitors" />} />
           <Route path="modules/hostel/mess" element={<HostelManagement active="mess" />} />
           <Route path="modules/hostel/discipline" element={<HostelManagement active="discipline" />} />

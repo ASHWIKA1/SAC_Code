@@ -337,7 +337,10 @@ const ADMIN_MENU = [
       {
         label: 'Hostel', icon: 'ti-home', children: [
           { label: 'Dashboard', path: '/modules/hostel/dashboard' },
-          { label: 'Room Allocation', path: '/modules/hostel/rooms' },
+          { label: 'Rooms', path: '/modules/hostel/rooms' },
+          { label: 'Room Allocation', path: '/modules/hostel/allocations' },
+          { label: 'Leave Request', path: '/modules/hostel/leaves' },
+          { label: 'Leave Approval', path: '/modules/hostel/leave-approvals' },
           { label: 'Visitors & RFID', path: '/modules/hostel/visitors' },
           { label: 'Mess & Billing', path: '/modules/hostel/mess' },
           { label: 'Discipline', path: '/modules/hostel/discipline' }

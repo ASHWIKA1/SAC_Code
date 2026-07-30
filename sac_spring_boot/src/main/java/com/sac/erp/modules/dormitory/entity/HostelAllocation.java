@@ -20,6 +20,18 @@ public class HostelAllocation extends BaseEntity {
     @Column(name = "student_id", nullable = false)
     private Long studentId;
 
+    @Column(name = "student_name")
+    private String studentName;
+
+    @Column(name = "class_name")
+    private String className;
+
+    @Column(name = "section")
+    private String section;
+
+    @Column(name = "gender")
+    private String gender;
+
     @Column(name = "room_id", nullable = false)
     private Long roomId;
 

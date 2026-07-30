@@ -30,6 +30,12 @@ public class HostelManagementController {
         return ResponseEntity.ok(hostelManagementService.getAllRooms());
     }
 
+    @PostMapping("/rooms")
+    public ResponseEntity<HostelRoom> createRoom(@RequestBody HostelRoom room) {
+        log.info("REST request to create room: {}", room);
+        return ResponseEntity.ok(hostelManagementService.createRoom(room));
+    }
+
     @GetMapping("/room-types")
     public ResponseEntity<List<HostelRoomType>> getAllRoomTypes() {
         log.info("REST request to get all room types");

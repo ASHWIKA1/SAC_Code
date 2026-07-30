@@ -20,6 +20,21 @@ public class HostelDisciplineLog extends BaseEntity {
     @Column(name = "student_id", nullable = false)
     private Long studentId;
 
+    @Column(name = "student_name")
+    private String studentName;
+
+    @Column(name = "class_name")
+    private String className;
+
+    @Column(name = "section")
+    private String section;
+
+    @Column(name = "floor")
+    private Integer floor;
+
+    @Column(name = "room_no")
+    private String roomNo;
+
     @Column(name = "hostel_id", nullable = false)
     private Long hostelId;
 

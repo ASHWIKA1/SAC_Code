@@ -94,6 +94,21 @@ public class HostelManagementServiceImpl implements HostelManagementService {
     }
 
     @Override
+    @Transactional
+    public HostelRoom createRoom(HostelRoom room) {
+        log.info("Creating new hostel room: {}", room);
+        if (room.getCurrentOccupancy() == null) {
+            room.setCurrentOccupancy(0);
+        }
+        if (room.getStatus() == null) {
+            room.setStatus("available");
+        }
+        HostelRoom saved = hostelRoomRepository.save(room);
+        eventPublisher.publish("ROOM_ALLOCATED", Map.of("action", "ROOM_CREATED", "roomId", saved.getId()));
+        return saved;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<HostelRoomType> getAllRoomTypes() {
         return hostelRoomTypeRepository.findAll();
