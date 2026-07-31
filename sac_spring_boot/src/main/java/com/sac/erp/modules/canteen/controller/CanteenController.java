@@ -167,8 +167,14 @@ public class CanteenController {
         if (payload.containsKey("categoryIds")) {
             String catIdsStr = payload.get("categoryIds").toString();
             item.setCategoryIds(catIdsStr);
+            java.util.Set<CanteenCategory> catSet = new java.util.HashSet<>();
             if (!catIdsStr.isEmpty()) {
                 String[] split = catIdsStr.split(",");
+                for (String cId : split) {
+                    try {
+                        categoryRepository.findById(Long.valueOf(cId.trim())).ifPresent(catSet::add);
+                    } catch (NumberFormatException ignored) {}
+                }
                 if (split.length > 0) {
                     try {
                         Long firstCatId = Long.valueOf(split[0].trim());
@@ -176,9 +182,13 @@ public class CanteenController {
                     } catch (NumberFormatException ignored) {}
                 }
             }
+            item.setCategories(catSet);
         } else if (payload.containsKey("categoryId")) {
             Long catId = Long.valueOf(payload.get("categoryId").toString());
-            categoryRepository.findById(catId).ifPresent(item::setCategory);
+            categoryRepository.findById(catId).ifPresent(c -> {
+                item.setCategory(c);
+                item.setCategories(java.util.Set.of(c));
+            });
             item.setCategoryIds(String.valueOf(catId));
         }
 
@@ -354,12 +364,26 @@ public class CanteenController {
                 return ResponseEntity.badRequest().body(Map.of("message", "Insufficient wallet balance"));
             }
 
-            // Complete purchases
+            // Complete purchases with Saga Compensating transaction support
             CanteenTransaction lastTx = null;
-            for (Map<String, Object> cartItem : cartItems) {
-                Long itemId = Long.valueOf(cartItem.get("id").toString());
-                int qty = Integer.parseInt(cartItem.get("quantity").toString());
-                lastTx = canteenService.purchaseItem(studentId, itemId, qty, paymentMethod, notes);
+            java.util.List<CanteenTransaction> successfulPurchases = new java.util.ArrayList<>();
+            try {
+                for (Map<String, Object> cartItem : cartItems) {
+                    Long itemId = Long.valueOf(cartItem.get("id").toString());
+                    int qty = Integer.parseInt(cartItem.get("quantity").toString());
+                    lastTx = canteenService.purchaseItem(studentId, itemId, qty, paymentMethod, notes);
+                    successfulPurchases.add(lastTx);
+                }
+            } catch (Exception e) {
+                // Compensating transactions for Saga eventual consistency
+                for (CanteenTransaction tx : successfulPurchases) {
+                    try {
+                        canteenService.rechargeWallet(studentId, tx.getAmount(), tx.getPaymentMethod(), "SAGA_COMPENSATING", "Refund due to partial checkout failure");
+                    } catch (Exception compensatingError) {
+                        // Log critical rollback failure
+                    }
+                }
+                throw e;
             }
 
             eventPublisher.publish("PURCHASE_COMPLETED", lastTx);

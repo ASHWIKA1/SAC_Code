@@ -35,6 +35,7 @@ public class CanteenServiceImpl implements CanteenService {
     private final CanteenRawMaterialRepository rawMaterialRepository;
     private final CanteenRecipeBomRepository recipeBomRepository;
     private final KdsWebSocketHandler webSocketHandler;
+    private final CanteenAuditLogRepository auditLogRepository;
 
     @Override
     public List<CanteenCategory> getAllCategories() {
@@ -96,7 +97,7 @@ public class CanteenServiceImpl implements CanteenService {
     @Override
     @Transactional
     public CanteenWallet rechargeWallet(Long studentId, BigDecimal amount, String paymentMethod, String rechargedBy, String notes) {
-        CanteenWallet wallet = walletRepository.findByStudentId(studentId)
+        CanteenWallet wallet = walletRepository.findByStudentIdForUpdate(studentId)
             .orElseGet(() -> {
                 CanteenWallet cw = new CanteenWallet();
                 cw.setStudentId(studentId);
@@ -110,12 +111,19 @@ public class CanteenServiceImpl implements CanteenService {
             throw new IllegalArgumentException("Cannot recharge an inactive wallet");
         }
 
-        if (wallet.getBalance() == null) {
-            wallet.setBalance(BigDecimal.ZERO);
-        }
-        BigDecimal newBalance = wallet.getBalance().add(amount);
+        BigDecimal oldBalance = wallet.getBalance() != null ? wallet.getBalance() : BigDecimal.ZERO;
+        BigDecimal newBalance = oldBalance.add(amount);
         wallet.setBalance(newBalance);
         walletRepository.save(wallet);
+
+        CanteenAuditLog auditLog = new CanteenAuditLog();
+        auditLog.setOldBalance(oldBalance);
+        auditLog.setNewBalance(newBalance);
+        auditLog.setStudentId(studentId);
+        auditLog.setAmount(amount);
+        auditLog.setReasonCode("RECHARGE");
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLogRepository.save(auditLog);
 
         // Log transaction
         CanteenTransaction transaction = new CanteenTransaction();
@@ -154,7 +162,7 @@ public class CanteenServiceImpl implements CanteenService {
             throw new IllegalArgumentException("Item is not available");
         }
 
-        CanteenWallet wallet = walletRepository.findByStudentId(studentId)
+        CanteenWallet wallet = walletRepository.findByStudentIdForUpdate(studentId)
             .orElseThrow(() -> new IllegalArgumentException("Canteen wallet not found for student"));
 
         if (wallet.getIsActive() != 1) {
@@ -200,9 +208,19 @@ public class CanteenServiceImpl implements CanteenService {
         }
 
         // Deduct balance
-        BigDecimal newBalance = wallet.getBalance().subtract(totalCost);
+        BigDecimal oldBalance = wallet.getBalance() != null ? wallet.getBalance() : BigDecimal.ZERO;
+        BigDecimal newBalance = oldBalance.subtract(totalCost);
         wallet.setBalance(newBalance);
         walletRepository.save(wallet);
+
+        CanteenAuditLog auditLog = new CanteenAuditLog();
+        auditLog.setOldBalance(oldBalance);
+        auditLog.setNewBalance(newBalance);
+        auditLog.setStudentId(studentId);
+        auditLog.setAmount(totalCost);
+        auditLog.setReasonCode("PURCHASE");
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLogRepository.save(auditLog);
 
         // Record Transaction
         CanteenTransaction transaction = new CanteenTransaction();

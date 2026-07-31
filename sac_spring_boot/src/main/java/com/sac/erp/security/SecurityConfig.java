@@ -22,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final IdempotencyFilter idempotencyFilter;
 
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
@@ -58,6 +59,7 @@ public class SecurityConfig {
                 .anyRequest().permitAll()
             );
 
+        http.addFilterBefore(idempotencyFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

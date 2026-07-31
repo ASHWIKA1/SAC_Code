@@ -30,8 +30,27 @@ public class CanteenItem extends BaseEntity {
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private CanteenCategory category;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "sm_canteen_item_categories",
+        joinColumns = @JoinColumn(name = "item_id"),
+        inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private java.util.Set<CanteenCategory> categories = new java.util.HashSet<>();
+
     @Column(name = "category_ids")
     private String categoryIds;
+
+    @PostLoad
+    public void syncCategoryIdsOnLoad() {
+        if (this.categories != null && !this.categories.isEmpty()) {
+            java.util.List<String> ids = this.categories.stream()
+                .map(c -> String.valueOf(c.getId()))
+                .toList();
+            this.categoryIds = String.join(",", ids);
+        }
+    }
 
     private String description;
 
