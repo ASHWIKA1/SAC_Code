@@ -42,6 +42,11 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .headers(headers -> headers
+                .permissionsPolicy(permissions -> permissions
+                    .policy("unload 'self'")
+                )
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico", "/favicon.png", "/manifest.json", "/robots.txt").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
