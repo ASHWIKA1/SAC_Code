@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico", "/favicon.png", "/manifest.json", "/robots.txt").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/canteen/realtime/stream").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                 .requestMatchers("/api/v1/superadmin/**").hasRole("SUPERADMIN")
                 .requestMatchers("/api/**").authenticated()
