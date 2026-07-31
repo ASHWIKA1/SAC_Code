@@ -41,9 +41,19 @@ public class FlywayConfig {
                     } else {
                         System.out.println("DEBUG: Migrating Datasource: " + ds.getClass().getName());
                     }
+                    
+                    // Drop existing history table to force fresh baseline at version 23
+                    try (java.sql.Connection conn = ds.getConnection();
+                         java.sql.Statement stmt = conn.createStatement()) {
+                        stmt.execute("DROP TABLE IF EXISTS flyway_schema_history");
+                    } catch (Exception dropEx) {
+                        System.err.println("Could not drop flyway history table: " + dropEx.getMessage());
+                    }
+
                     Flyway flyway = Flyway.configure()
                             .dataSource(ds)
-                            .baselineOnMigrate(false)
+                            .baselineOnMigrate(true)
+                            .baselineVersion("23")
                             .locations("classpath:db/migration")
                             .load();
                     flyway.repair();
