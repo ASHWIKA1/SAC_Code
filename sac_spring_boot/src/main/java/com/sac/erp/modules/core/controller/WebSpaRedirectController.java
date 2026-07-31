@@ -1,8 +1,10 @@
 package com.sac.erp.modules.core.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 public class WebSpaRedirectController {
@@ -18,13 +20,18 @@ public class WebSpaRedirectController {
     public String redirectSpaTestingOfSac(HttpServletRequest request) {
         String servletPath = request.getServletPath();
         
-        // If it's an API, Swagger, Actuator request under the subpath, forward it to the root path without /testing_of_sac
+        // If it's a WebSocket connection under the subpath, forward it to root ws endpoint
+        if (servletPath.startsWith("/testing_of_sac/ws-")) {
+            return "forward:" + servletPath.substring("/testing_of_sac".length());
+        }
+        
+        // If it's an API, Swagger, Actuator request under the subpath, return 404 immediately
         if (servletPath.startsWith("/testing_of_sac/api") || 
             servletPath.startsWith("/testing_of_sac/swagger") || 
             servletPath.startsWith("/testing_of_sac/v3/api-docs") || 
             servletPath.startsWith("/testing_of_sac/actuator") ||
             servletPath.startsWith("/testing_of_sac/error")) {
-            return "forward:" + servletPath.substring("/testing_of_sac".length());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "API endpoint not found");
         }
         
         return "forward:/testing_of_sac/index.html";
@@ -38,12 +45,15 @@ public class WebSpaRedirectController {
     })
     public String redirectSpa(HttpServletRequest request) {
         String servletPath = request.getServletPath();
+        if (servletPath.startsWith("/ws-")) {
+            return "forward:" + servletPath;
+        }
         if (servletPath.startsWith("/api") || 
             servletPath.startsWith("/swagger") || 
             servletPath.startsWith("/v3/api-docs") || 
             servletPath.startsWith("/actuator") ||
             servletPath.startsWith("/error")) {
-            return "forward:" + servletPath;
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "API endpoint not found");
         }
         return "forward:/index.html";
     }
