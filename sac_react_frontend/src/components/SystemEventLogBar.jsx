@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Terminal, X, Trash2, Moon, Sun, ArrowUp, ArrowDown } from 'lucide-react';
+import api from '../utils/api';
 
 export default function SystemEventLogBar() {
   const [logs, setLogs] = useState([]);
@@ -21,7 +22,7 @@ export default function SystemEventLogBar() {
   }, [isDarkMode]);
 
   useEffect(() => {
-    const sse = new EventSource('/api/v1/canteen/realtime/stream');
+    const sse = new EventSource(api.defaults.baseURL + '/api/v1/canteen/realtime/stream');
     
     const handleNotification = (e) => {
       const newLog = {

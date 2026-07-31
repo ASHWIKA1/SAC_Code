@@ -34,7 +34,7 @@ export default function HostelManagement({ active }) {
 
   // Real-time SSE Connection
   useEffect(() => {
-    const sse = new EventSource('/api/v1/canteen/realtime/stream');
+    const sse = new EventSource(api.defaults.baseURL + '/api/v1/canteen/realtime/stream');
     
     const handleUpdate = () => {
       fetchStats();

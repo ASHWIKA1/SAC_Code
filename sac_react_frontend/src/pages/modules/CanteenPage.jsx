@@ -45,7 +45,7 @@ export default function CanteenPage({ active }) {
   
   // Real-time EventSource connection
   useEffect(() => {
-    const sse = new EventSource('/api/v1/canteen/realtime/stream');
+    const sse = new EventSource(api.defaults.baseURL + '/api/v1/canteen/realtime/stream');
     
     sse.addEventListener('INIT', (e) => {
       console.log('SSE Stream connected:', e.data);
