@@ -9,4 +9,12 @@ import java.util.Optional;
 public interface CanteenWalletRepository extends JpaRepository<CanteenWallet, Long> {
     Optional<CanteenWallet> findByStudentId(Long studentId);
     Optional<CanteenWallet> findByRfidCardUid(String rfid);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select w from CanteenWallet w where w.studentId = :studentId")
+    Optional<CanteenWallet> findByStudentIdForUpdate(Long studentId);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select w from CanteenWallet w where w.rfidCardUid = :rfid")
+    Optional<CanteenWallet> findByRfidCardUidForUpdate(String rfid);
 }

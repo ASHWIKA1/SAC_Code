@@ -3,7 +3,8 @@ package com.sac.erp.modules.canteen.entity;
 import com.sac.erp.modules.core.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;import java.math.BigDecimal;
+import lombok.Setter;
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -21,9 +22,35 @@ public class CanteenItem extends BaseEntity {
     @Column(name = "item_code")
     private String itemCode;
 
+    @Column(name = "sku")
+    private String sku;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private CanteenCategory category;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "sm_canteen_item_categories",
+        joinColumns = @JoinColumn(name = "item_id"),
+        inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private java.util.Set<CanteenCategory> categories = new java.util.HashSet<>();
+
+    @Column(name = "category_ids")
+    private String categoryIds;
+
+    @PostLoad
+    public void syncCategoryIdsOnLoad() {
+        if (this.categories != null && !this.categories.isEmpty()) {
+            java.util.List<String> ids = this.categories.stream()
+                .map(c -> String.valueOf(c.getId()))
+                .toList();
+            this.categoryIds = String.join(",", ids);
+        }
+    }
 
     private String description;
 
@@ -32,6 +59,9 @@ public class CanteenItem extends BaseEntity {
 
     @Column(name = "cost_price", nullable = false)
     private BigDecimal costPrice = BigDecimal.ZERO;
+
+    @Column(name = "tax_rate")
+    private BigDecimal taxRate = BigDecimal.ZERO;
 
     @Column(nullable = false)
     private String unit = "piece";
@@ -45,6 +75,22 @@ public class CanteenItem extends BaseEntity {
     private Integer calories;
 
     private String image;
+
+    @Column(name = "dietary_tags")
+    private String dietaryTags; // e.g. Veg, Non-Veg, Gluten-Free
+
+    @Column(name = "is_unlimited")
+    private Boolean isUnlimited = false;
+
+    @Column(name = "stock_quantity")
+    private BigDecimal stockQuantity = BigDecimal.ZERO;
+
+    @Column(name = "low_stock_threshold")
+    private BigDecimal lowStockThreshold = BigDecimal.valueOf(10.0);
+
+    @Column(name = "is_out_of_stock")
+    private Boolean isOutOfStock = false;
+
     @Column(name = "school_id")
     private String schoolId;
 }

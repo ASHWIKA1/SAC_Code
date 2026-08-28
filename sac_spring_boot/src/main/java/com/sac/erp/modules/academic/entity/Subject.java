@@ -24,6 +24,9 @@ public class Subject extends BaseEntity {
     @Column(name = "subject_code")
     private String subjectCode;
 
+    @Column(name = "class_name")
+    private String className;
+
     @Column(name = "pass_mark")
     private Double passMark;
 
@@ -38,4 +41,6 @@ public class Subject extends BaseEntity {
     private Long academicId;
     @Column(name = "school_id")
     private String schoolId;
+    @Column(name = "course_id")
+    private Long courseId;
 }

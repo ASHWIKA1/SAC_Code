@@ -8,4 +8,5 @@ public interface StudentService {
     Student admitStudent(StudentAdmissionDto dto);
     List<Student> getStudentsByClassAndSection(Long classId, Long sectionId);
     Student getStudentById(Long id);
+    Student toggleStudentSuspension(Long id);
 }

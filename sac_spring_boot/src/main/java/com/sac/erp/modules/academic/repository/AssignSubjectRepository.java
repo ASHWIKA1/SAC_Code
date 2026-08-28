@@ -11,4 +11,5 @@ import java.util.List;
 @Repository
 public interface AssignSubjectRepository extends JpaRepository<AssignSubject, Long> {
     List<AssignSubject> findByClassRecordAndSection(ClassRecord classRecord, Section section);
+    List<AssignSubject> findByTeacherId(Long teacherId);
 }

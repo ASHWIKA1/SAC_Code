@@ -40,8 +40,19 @@ const ADMIN_MENU = [
         label: 'Homework', icon: 'ti-pencil-alt', children: [
           { label: 'All Homework', path: '/homework/list' },
           { label: 'Add Homework', path: '/homework/create' },
+          { label: 'Submit Assignment', path: '/homework/submit' },
         ]
       },
+    ]
+  },
+  // ── LMS NAVIGATION ──
+  {
+    section: 'lms_navigation', label: 'LMS Navigation',
+    items: [
+      { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
+      { label: 'Online Quizzes', icon: 'ti-trophy', path: '/lms/quizzes' },
+      { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
+      { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
   },
   // ── STUDENT INFORMATION ──
@@ -240,6 +251,31 @@ const ADMIN_MENU = [
       },
     ]
   },
+  // ── VENDOR MANAGEMENT ──
+  {
+    section: 'vendor_section', label: 'Vendor Management',
+    items: [
+      {
+        label: 'Vendor Management', icon: 'ti-briefcase', children: [
+          { label: 'Dashboard', path: '/vendor/dashboard' },
+          { label: 'Vendor Registration', path: '/vendor/registration' },
+          { label: 'Vendor Documents', path: '/vendor/documents' },
+          { label: 'NDA Management', path: '/vendor/nda' },
+          { label: 'MOU Management', path: '/vendor/mou' },
+          { label: 'Agreement Management', path: '/vendor/agreements' },
+          { label: 'Consultant Management', path: '/vendor/consultants' },
+          { label: 'Purchase Request', path: '/vendor/purchase-request' },
+          { label: 'Purchase Order', path: '/vendor/purchase-order' },
+          { label: 'Delivery Tracking', path: '/vendor/delivery-tracking' },
+          { label: 'Goods Receipt Note', path: '/vendor/grn' },
+          { label: 'Vendor Performance', path: '/vendor/performance' },
+          { label: 'Vendor Payment', path: '/vendor/payment' },
+          { label: 'Reports', path: '/vendor/reports' },
+          { label: 'Audit Logs', path: '/vendor/audit-logs' },
+        ]
+      }
+    ]
+  },
   // ── COMMUNICATE ──
   {
     section: 'communicate_section', label: 'Communicate',
@@ -282,12 +318,31 @@ const ADMIN_MENU = [
       { label: 'Wallet', icon: 'ti-wallet', path: '/modules/wallet' },
       { label: 'Download Center', icon: 'ti-download', path: '/modules/downloads' },
       { label: 'Chat', icon: 'ti-comments', path: '/modules/chat' },
-      { label: 'LMS / Courses', icon: 'ti-cup', path: '/modules/lms' },
       { label: 'Alumni', icon: 'ti-crown', path: '/modules/alumni' },
       { label: 'Clubs & Activities', icon: 'ti-flag', path: '/modules/clubs' },
       { label: 'User Forum', icon: 'ti-comment', path: '/modules/forum' },
       { label: 'Visitors', icon: 'ti-eye', path: '/communicate/visitors' },
-      { label: 'Canteen', icon: 'ti-cup', path: '/modules/canteen' },
+      {
+        label: 'Canteen', icon: 'ti-cup', children: [
+          { label: 'Dashboard', path: '/modules/canteen/dashboard' },
+          { label: 'Checkout Counter', path: '/modules/canteen/pos' },
+          { label: 'Student Pre-Orders', path: '/modules/canteen/student-app' },
+          { label: 'Kitchen KDS', path: '/modules/canteen/kds' },
+          { label: 'Student Wallets', path: '/modules/canteen/wallets' },
+          { label: 'Menu Items', path: '/modules/canteen/items' },
+          { label: 'Categories', path: '/modules/canteen/categories' },
+          { label: 'Transactions', path: '/modules/canteen/transactions' }
+        ]
+      },
+      {
+        label: 'Hostel', icon: 'ti-home', children: [
+          { label: 'Dashboard', path: '/modules/hostel/dashboard' },
+          { label: 'Room Allocation', path: '/modules/hostel/rooms' },
+          { label: 'Visitors & RFID', path: '/modules/hostel/visitors' },
+          { label: 'Mess & Billing', path: '/modules/hostel/mess' },
+          { label: 'Discipline', path: '/modules/hostel/discipline' }
+        ]
+      },
     ]
   },
   // ── SYSTEM SETTINGS ──
@@ -390,8 +445,24 @@ const TEACHER_MENU = [
       },
       { label: 'Marks Entry', icon: 'ti-write', path: '/teacher/marks' },
       { label: 'My Students', icon: 'ti-user', path: '/teacher/students' },
-      { label: 'My Profile', icon: 'ti-id-badge', path: '/teacher/profile' },
       { label: 'Notice Board', icon: 'ti-comment-alt', path: '/teacher/notice-board' },
+      { label: 'My Profile', icon: 'ti-id-badge', path: '/teacher/profile' },
+      {
+        label: 'Canteen', icon: 'ti-cup', children: [
+          { label: 'Checkout Counter', path: '/modules/canteen/pos' },
+          { label: 'Kitchen KDS', path: '/modules/canteen/kds' }
+        ]
+      },
+    ]
+  },
+  // ── LMS NAVIGATION ──
+  {
+    section: 'lms_navigation', label: 'LMS Navigation',
+    items: [
+      { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
+      { label: 'Online Quizzes', icon: 'ti-trophy', path: '/lms/quizzes' },
+      { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
+      { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
   },
 ];
@@ -404,13 +475,28 @@ const STUDENT_MENU = [
       { label: 'My Attendance', icon: 'ti-check-box', path: '/student/attendance' },
       { label: 'My Results', icon: 'ti-bar-chart', path: '/student/results' },
       { label: 'My Fees', icon: 'ti-money', path: '/student/fees' },
-      { label: 'Homework', icon: 'ti-pencil-alt', path: '/student/homework' },
+      { label: 'Submit Assignment', icon: 'ti-pencil-alt', path: '/homework/submit' },
       { label: 'Online Exam', icon: 'ti-write', path: '/student/online-exam' },
       { label: 'Notice Board', icon: 'ti-comment-alt', path: '/student/notice-board' },
       { label: 'Video Watch', icon: 'ti-video-camera', path: '/student/videos' },
       { label: 'Downloads', icon: 'ti-download', path: '/student/downloads' },
       { label: 'My Wallet', icon: 'ti-wallet', path: '/student/wallet' },
       { label: 'My Profile', icon: 'ti-id-badge', path: '/student/profile' },
+      {
+        label: 'Canteen', icon: 'ti-cup', children: [
+          { label: 'Student Pre-Orders', path: '/modules/canteen/student-app' }
+        ]
+      },
+    ]
+  },
+  // ── LMS NAVIGATION ──
+  {
+    section: 'lms_navigation', label: 'LMS Navigation',
+    items: [
+      { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
+      { label: 'Online Quizzes', icon: 'ti-trophy', path: '/lms/quizzes' },
+      { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
+      { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
   },
 ];
@@ -425,20 +511,47 @@ const PARENT_MENU = [
       { label: "Child's Fees", icon: 'ti-money', path: '/parent/fees' },
       { label: 'Notice Board', icon: 'ti-comment-alt', path: '/parent/notice-board' },
       { label: 'My Profile', icon: 'ti-id-badge', path: '/parent/profile' },
+      {
+        label: 'Canteen', icon: 'ti-cup', children: [
+          { label: 'Student Wallets', path: '/modules/canteen/wallets' }
+        ]
+      },
+    ]
+  },
+  // ── LMS NAVIGATION ──
+  {
+    section: 'lms_navigation', label: 'LMS Navigation',
+    items: [
+      { label: 'Course Management', icon: 'ti-book', path: '/lms/courses' },
+      { label: 'Online Quizzes', icon: 'ti-trophy', path: '/lms/quizzes' },
+      { label: 'Discussion Forum', icon: 'ti-comments', path: '/lms/forum' },
+      { label: 'Progress & Analytics', icon: 'ti-stats-up', path: '/lms/progress' },
     ]
   },
 ];
 
 function getMenuForRole(role) {
+  let menu = ADMIN_MENU;
   switch (role) {
-    case ROLES.ULTRA_SUPER_ADMIN: return [...ULTRA_SUPER_ADMIN_MENU, ...SUPER_ADMIN_MENU, ...ADMIN_MENU];
-    case ROLES.SUPER_ADMIN:       return [...SUPER_ADMIN_MENU, ...ADMIN_MENU];
-    case ROLES.ADMIN:             return ADMIN_MENU;
-    case ROLES.TEACHER:           return TEACHER_MENU;
-    case ROLES.STUDENT:           return STUDENT_MENU;
-    case ROLES.PARENT:            return PARENT_MENU;
-    default:                      return ADMIN_MENU;
+    case ROLES.ULTRA_SUPER_ADMIN: 
+      menu = [...ULTRA_SUPER_ADMIN_MENU, ...SUPER_ADMIN_MENU, ...ADMIN_MENU];
+      break;
+    case ROLES.SUPER_ADMIN:       
+      menu = [...SUPER_ADMIN_MENU, ...ADMIN_MENU];
+      break;
+    case ROLES.ADMIN:             
+      menu = ADMIN_MENU;
+      break;
+    case ROLES.TEACHER:           
+      return TEACHER_MENU;
+    case ROLES.STUDENT:           
+      return STUDENT_MENU;
+    case ROLES.PARENT:            
+      return PARENT_MENU;
+    default:                      
+      return ADMIN_MENU;
   }
+  return menu;
 }
 
 // ─── Single Menu Item (leaf node) ────────────────────────────────────────────

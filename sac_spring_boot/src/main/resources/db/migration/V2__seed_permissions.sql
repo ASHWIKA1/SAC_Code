@@ -1,5 +1,5 @@
 -- Core Permission Data Seeds
-INSERT INTO `permissions` (`id`, `name`, `route`, `parent_id`, `type`, `status`) VALUES 
+INSERT IGNORE INTO `permissions` (`id`, `name`, `route`, `parent_id`, `type`, `status`) VALUES 
 (1, 'Dashboard', 'dashboard', 0, 1, 1),
 (2, 'Academics', 'academics', 0, 1, 1),
 (3, 'Class List', 'class', 2, 2, 1),

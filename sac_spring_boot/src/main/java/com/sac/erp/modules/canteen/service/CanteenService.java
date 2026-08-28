@@ -37,4 +37,7 @@ public interface CanteenService {
 
     // Sales Reports
     List<CanteenDailySale> getAllDailySales();
+
+    // Recipe BOM depletion
+    void depleteRecipeIngredients(Long orderId);
 }

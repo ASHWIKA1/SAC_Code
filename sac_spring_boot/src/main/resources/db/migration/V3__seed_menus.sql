@@ -1,5 +1,5 @@
 -- Core Menu Structure Seeds
-INSERT INTO `sm_menus` (`id`, `name`, `route`, `parent_id`, `status`, `menu_status`, `position`) VALUES 
+INSERT IGNORE INTO `sm_menus` (`id`, `name`, `route`, `parent_id`, `status`, `menu_status`, `position`) VALUES 
 (1, 'Dashboard', 'dashboard', NULL, 1, 1, 1),
 (2, 'Academics', 'academics', NULL, 1, 1, 2),
 (3, 'Class', 'class', 2, 1, 1, 1),

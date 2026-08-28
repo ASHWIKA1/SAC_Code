@@ -130,7 +130,17 @@ export default function Login() {
 
         {/* Demo Credentials Helper */}
         <div style={{ marginTop: 24, padding: '14px', background: '#f8f8ff', borderRadius: 6, border: '1px solid #e8e4ff', textAlign: 'left' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#7C32FF', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Demo Login Credentials</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#15803d', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>🟢 Live Database Credentials (MySQL)</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 6, color: '#15803d', borderBottom: '1px dashed #bbf7d0', paddingBottom: 4 }}>
+            <span style={{ fontWeight: 700 }}>School Admin (Live DB)</span>
+            <span style={{ fontWeight: 600 }}>admin@sacgotek.com / password</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 12, color: '#15803d', borderBottom: '1px dashed #bbf7d0', paddingBottom: 4 }}>
+            <span style={{ fontWeight: 700 }}>Super Admin (Live DB)</span>
+            <span style={{ fontWeight: 600 }}>superadmin / password</span>
+          </div>
+
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#7C32FF', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1, marginTop: 12 }}>⚠️ Sandbox Demo Credentials (Offline)</div>
           {DEMO_USERS.map(u => (
             <div key={u.email} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3, color: '#555' }}>
               <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{u.role.replace(/_/g, ' ')}</span>

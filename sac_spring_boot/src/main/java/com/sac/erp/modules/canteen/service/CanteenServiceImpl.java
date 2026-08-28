@@ -3,14 +3,19 @@ package com.sac.erp.modules.canteen.service;
 import com.sac.erp.modules.canteen.entity.*;
 import com.sac.erp.modules.canteen.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.sac.erp.modules.student.repository.StudentRepository;
+import com.sac.erp.modules.student.entity.Student;
+import com.sac.erp.modules.canteen.controller.KdsWebSocketHandler;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CanteenServiceImpl implements CanteenService {
@@ -23,6 +28,14 @@ public class CanteenServiceImpl implements CanteenService {
     private final CanteenRestrictionRepository restrictionRepository;
     private final CanteenTransactionRepository transactionRepository;
     private final CanteenDailySaleRepository dailySaleRepository;
+    private final StudentRepository studentRepository;
+    private final RealtimeEventPublisher realtimeEventPublisher;
+
+    private final CanteenOrderItemRepository orderItemRepository;
+    private final CanteenRawMaterialRepository rawMaterialRepository;
+    private final CanteenRecipeBomRepository recipeBomRepository;
+    private final KdsWebSocketHandler webSocketHandler;
+    private final CanteenAuditLogRepository auditLogRepository;
 
     @Override
     public List<CanteenCategory> getAllCategories() {
@@ -41,7 +54,9 @@ public class CanteenServiceImpl implements CanteenService {
 
     @Override
     public CanteenItem saveItem(CanteenItem item) {
-        return itemRepository.save(item);
+        CanteenItem saved = itemRepository.save(item);
+        webSocketHandler.sendEvent("STOCK_UPDATED", saved);
+        return saved;
     }
 
     @Override
@@ -82,20 +97,33 @@ public class CanteenServiceImpl implements CanteenService {
     @Override
     @Transactional
     public CanteenWallet rechargeWallet(Long studentId, BigDecimal amount, String paymentMethod, String rechargedBy, String notes) {
-        CanteenWallet wallet = walletRepository.findByStudentId(studentId)
+        CanteenWallet wallet = walletRepository.findByStudentIdForUpdate(studentId)
             .orElseGet(() -> {
                 CanteenWallet cw = new CanteenWallet();
                 cw.setStudentId(studentId);
                 return cw;
             });
 
+        if (wallet.getIsActive() == null) {
+            wallet.setIsActive(1);
+        }
         if (wallet.getIsActive() != 1) {
             throw new IllegalArgumentException("Cannot recharge an inactive wallet");
         }
 
-        BigDecimal newBalance = wallet.getBalance().add(amount);
+        BigDecimal oldBalance = wallet.getBalance() != null ? wallet.getBalance() : BigDecimal.ZERO;
+        BigDecimal newBalance = oldBalance.add(amount);
         wallet.setBalance(newBalance);
         walletRepository.save(wallet);
+
+        CanteenAuditLog auditLog = new CanteenAuditLog();
+        auditLog.setOldBalance(oldBalance);
+        auditLog.setNewBalance(newBalance);
+        auditLog.setStudentId(studentId);
+        auditLog.setAmount(amount);
+        auditLog.setReasonCode("RECHARGE");
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLogRepository.save(auditLog);
 
         // Log transaction
         CanteenTransaction transaction = new CanteenTransaction();
@@ -108,6 +136,9 @@ public class CanteenServiceImpl implements CanteenService {
         transaction.setRechargedBy(rechargedBy);
         transaction.setNotes(notes);
         transactionRepository.save(transaction);
+
+        realtimeEventPublisher.publish("WALLET_UPDATE", wallet);
+        webSocketHandler.sendEvent("WALLET_BALANCE_UPDATED", wallet);
 
         return wallet;
     }
@@ -131,11 +162,17 @@ public class CanteenServiceImpl implements CanteenService {
             throw new IllegalArgumentException("Item is not available");
         }
 
-        CanteenWallet wallet = walletRepository.findByStudentId(studentId)
+        CanteenWallet wallet = walletRepository.findByStudentIdForUpdate(studentId)
             .orElseThrow(() -> new IllegalArgumentException("Canteen wallet not found for student"));
 
         if (wallet.getIsActive() != 1) {
             throw new IllegalArgumentException("Canteen wallet is inactive");
+        }
+
+        Student student = studentRepository.findById(studentId)
+            .orElseThrow(() -> new IllegalArgumentException("Student record not found"));
+        if (student.getActiveStatus() != 1) {
+            throw new IllegalArgumentException("Student is suspended or inactive");
         }
 
         BigDecimal totalCost = item.getPrice().multiply(BigDecimal.valueOf(quantity));
@@ -162,7 +199,7 @@ public class CanteenServiceImpl implements CanteenService {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         if (spentToday.add(totalCost).compareTo(wallet.getDailyLimit()) > 0) {
-            throw new IllegalArgumentException("Daily spend limit exceeded. Spent today: " + spentToday + ", Purchase cost: " + totalCost + ", Limit: " + wallet.getDailyLimit());
+            throw new IllegalArgumentException("Daily spend limit exceeded.");
         }
 
         // Enforce wallet balance
@@ -170,20 +207,20 @@ public class CanteenServiceImpl implements CanteenService {
             throw new IllegalArgumentException("Insufficient wallet balance");
         }
 
-        // Enforce inventory stock levels
-        CanteenInventory inventory = inventoryRepository.findByItemId(itemId)
-            .orElseThrow(() -> new IllegalArgumentException("Inventory record not found for this item"));
-        if (inventory.getStockQuantity().compareTo(BigDecimal.valueOf(quantity)) < 0) {
-            throw new IllegalArgumentException("Insufficient inventory stock");
-        }
-
-        // Deduct balance and update inventory
-        BigDecimal newBalance = wallet.getBalance().subtract(totalCost);
+        // Deduct balance
+        BigDecimal oldBalance = wallet.getBalance() != null ? wallet.getBalance() : BigDecimal.ZERO;
+        BigDecimal newBalance = oldBalance.subtract(totalCost);
         wallet.setBalance(newBalance);
         walletRepository.save(wallet);
 
-        inventory.setStockQuantity(inventory.getStockQuantity().subtract(BigDecimal.valueOf(quantity)));
-        inventoryRepository.save(inventory);
+        CanteenAuditLog auditLog = new CanteenAuditLog();
+        auditLog.setOldBalance(oldBalance);
+        auditLog.setNewBalance(newBalance);
+        auditLog.setStudentId(studentId);
+        auditLog.setAmount(totalCost);
+        auditLog.setReasonCode("PURCHASE");
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLogRepository.save(auditLog);
 
         // Record Transaction
         CanteenTransaction transaction = new CanteenTransaction();
@@ -223,5 +260,51 @@ public class CanteenServiceImpl implements CanteenService {
     @Override
     public List<CanteenDailySale> getAllDailySales() {
         return dailySaleRepository.findAll();
+    }
+
+    @Override
+    @Transactional
+    public void depleteRecipeIngredients(Long orderId) {
+        List<CanteenOrderItem> items = orderItemRepository.findByOrderId(orderId);
+        for (CanteenOrderItem orderItem : items) {
+            Long itemId = orderItem.getMenuItemId();
+            int qty = orderItem.getQuantity();
+
+            // Fetch BOM
+            List<CanteenRecipeBom> boms = recipeBomRepository.findByMenuItemId(itemId);
+            for (CanteenRecipeBom bom : boms) {
+                CanteenRawMaterial material = rawMaterialRepository.findById(bom.getRawMaterialId())
+                        .orElseThrow(() -> new IllegalStateException("Raw material not found for BOM ID: " + bom.getId()));
+
+                BigDecimal required = bom.getRequiredQuantityPerUnit().multiply(BigDecimal.valueOf(qty));
+                BigDecimal current = material.getCurrentStockQuantity();
+
+                if (current.compareTo(required) < 0) {
+                    material.setCurrentStockQuantity(BigDecimal.ZERO);
+                } else {
+                    material.setCurrentStockQuantity(current.subtract(required));
+                }
+                rawMaterialRepository.save(material);
+            }
+
+            // Auto Toggle out of stock if item stock drops
+            CanteenItem menuItem = itemRepository.findById(itemId).orElse(null);
+            if (menuItem != null && !menuItem.getIsUnlimited()) {
+                BigDecimal currentStock = menuItem.getStockQuantity();
+                BigDecimal orderQty = BigDecimal.valueOf(qty);
+                if (currentStock.compareTo(orderQty) < 0) {
+                    menuItem.setStockQuantity(BigDecimal.ZERO);
+                    menuItem.setIsOutOfStock(true);
+                } else {
+                    menuItem.setStockQuantity(currentStock.subtract(orderQty));
+                    if (menuItem.getStockQuantity().compareTo(menuItem.getLowStockThreshold()) <= 0) {
+                        menuItem.setIsOutOfStock(true);
+                    }
+                }
+                itemRepository.save(menuItem);
+                webSocketHandler.sendEvent("STOCK_UPDATED", menuItem);
+            }
+        }
+        webSocketHandler.sendEvent("STOCK_UPDATED", "depleted");
     }
 }

@@ -19,6 +19,13 @@ public class CanteenCategory extends BaseEntity {
 
     @Column(name = "active_status")
     private Integer activeStatus = 1;
+
+    @Column(name = "start_time")
+    private java.time.LocalTime startTime;
+
+    @Column(name = "end_time")
+    private java.time.LocalTime endTime;
+
     @Column(name = "school_id")
     private String schoolId;
 }

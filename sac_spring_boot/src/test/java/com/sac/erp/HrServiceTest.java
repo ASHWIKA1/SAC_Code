@@ -1,7 +1,7 @@
 package com.sac.erp;
 
-import com.sac.erp.entity.Role;
-import com.sac.erp.entity.User;
+import com.sac.erp.modules.core.entity.Role;
+import com.sac.erp.modules.core.entity.User;
 import com.sac.erp.modules.hr.entity.LeaveDefine;
 import com.sac.erp.modules.hr.entity.LeaveRequest;
 import com.sac.erp.modules.hr.entity.LeaveType;
@@ -13,7 +13,7 @@ import com.sac.erp.modules.hr.repository.LeaveTypeRepository;
 import com.sac.erp.modules.hr.repository.PayrollGenerateRepository;
 import com.sac.erp.modules.hr.repository.StaffRepository;
 import com.sac.erp.modules.hr.service.HrServiceImpl;
-import com.sac.erp.repository.UserRepository;
+import com.sac.erp.modules.core.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

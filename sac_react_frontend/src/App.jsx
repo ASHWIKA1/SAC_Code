@@ -3,6 +3,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/Login';
 import AdminLayout from './layouts/AdminLayout';
+import AssignmentSubmission from './components/AssignmentSubmission';
+import LmsDashboard from './pages/modules/LmsDashboard';
+import VendorManagementPage from './pages/modules/VendorManagement';
+
 
 // Dashboards
 import AdminDashboard from './pages/Dashboard/AdminDashboard';
@@ -106,6 +110,7 @@ import {
   UserForumPage,
   VisitorsPage,
   CanteenPage,
+  HostelManagement,
   EmailSettingsPage,
   SmsSettingsPage,
   PaymentGatewayPage,
@@ -176,6 +181,7 @@ export default function App() {
           {/* Homework */}
           <Route path="homework/list" element={<HomeworkListPage />} />
           <Route path="homework/create" element={<HomeworkListPage />} /> {/* Form modal inside list */}
+          <Route path="homework/submit" element={<AssignmentSubmission />} />
 
           {/* Student Info Directory */}
           <Route path="students" element={<StudentListPage />} />
@@ -283,6 +289,23 @@ export default function App() {
           <Route path="inventory/sell" element={<InventoryItemsPage />} />
           <Route path="inventory/suppliers" element={<InventorySuppliersPage />} />
 
+          {/* Vendor Management */}
+          <Route path="vendor/registration" element={<VendorManagementPage />} />
+          <Route path="vendor/documents" element={<VendorManagementPage />} />
+          <Route path="vendor/nda" element={<VendorManagementPage />} />
+          <Route path="vendor/mou" element={<VendorManagementPage />} />
+          <Route path="vendor/agreements" element={<VendorManagementPage />} />
+          <Route path="vendor/consultants" element={<VendorManagementPage />} />
+          <Route path="vendor/purchase-request" element={<VendorManagementPage />} />
+          <Route path="vendor/purchase-order" element={<VendorManagementPage />} />
+          <Route path="vendor/delivery-tracking" element={<VendorManagementPage />} />
+          <Route path="vendor/grn" element={<VendorManagementPage />} />
+          <Route path="vendor/performance" element={<VendorManagementPage />} />
+          <Route path="vendor/payment" element={<VendorManagementPage />} />
+          <Route path="vendor/dashboard" element={<VendorManagementPage />} />
+          <Route path="vendor/reports" element={<VendorManagementPage />} />
+          <Route path="vendor/audit-logs" element={<VendorManagementPage />} />
+
           {/* Communicate */}
           <Route path="communicate/notice-board" element={<NoticeBoardPage />} />
           <Route path="communicate/email" element={<SendEmailPage />} />
@@ -307,11 +330,31 @@ export default function App() {
           <Route path="modules/wallet" element={<WalletPage />} />
           <Route path="modules/downloads" element={<DownloadCenterPage />} />
           <Route path="modules/chat" element={<ChatPage />} />
-          <Route path="modules/lms" element={<LmsCoursesPage />} />
+          <Route path="modules/lms" element={<LmsDashboard />} />
+          <Route path="lms/courses" element={<LmsDashboard />} />
+          <Route path="lms/quizzes" element={<LmsDashboard />} />
+          <Route path="lms/forum" element={<LmsDashboard />} />
+          <Route path="lms/progress" element={<LmsDashboard />} />
           <Route path="modules/alumni" element={<AlumniPage />} />
           <Route path="modules/clubs" element={<ClubsPage />} />
           <Route path="modules/forum" element={<UserForumPage />} />
-          <Route path="modules/canteen" element={<CanteenPage />} />
+          <Route path="modules/canteen" element={<Navigate to="/modules/canteen/dashboard" replace />} />
+          <Route path="modules/canteen/dashboard" element={<CanteenPage active="dashboard" />} />
+          <Route path="modules/canteen/pos" element={<CanteenPage active="pos" />} />
+          <Route path="modules/canteen/wallets" element={<CanteenPage active="wallets" />} />
+          <Route path="modules/canteen/items" element={<CanteenPage active="items" />} />
+          <Route path="modules/canteen/categories" element={<CanteenPage active="categories" />} />
+          <Route path="modules/canteen/transactions" element={<CanteenPage active="transactions" />} />
+          <Route path="modules/canteen/student-app" element={<CanteenPage active="student-app" />} />
+          <Route path="modules/canteen/kds" element={<CanteenPage active="kds" />} />
+
+          {/* Hostel Management */}
+          <Route path="modules/hostel" element={<Navigate to="/modules/hostel/dashboard" replace />} />
+          <Route path="modules/hostel/dashboard" element={<HostelManagement active="dashboard" />} />
+          <Route path="modules/hostel/rooms" element={<HostelManagement active="rooms" />} />
+          <Route path="modules/hostel/visitors" element={<HostelManagement active="visitors" />} />
+          <Route path="modules/hostel/mess" element={<HostelManagement active="mess" />} />
+          <Route path="modules/hostel/discipline" element={<HostelManagement active="discipline" />} />
 
           {/* System Settings */}
           <Route path="settings/general" element={<GeneralSettingsPage />} />

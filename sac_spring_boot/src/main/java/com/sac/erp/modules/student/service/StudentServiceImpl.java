@@ -18,6 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.sac.erp.modules.canteen.repository.CanteenWalletRepository;
+import com.sac.erp.modules.canteen.service.RealtimeEventPublisher;
+import com.sac.erp.modules.canteen.entity.CanteenWallet;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,6 +37,8 @@ public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
     private final StudentRecordRepository studentRecordRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CanteenWalletRepository canteenWalletRepository;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
     @Override
     @Transactional
@@ -128,5 +133,33 @@ public class StudentServiceImpl implements StudentService {
     public Student getStudentById(Long id) {
         return studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
+    }
+
+    @Override
+    @Transactional
+    public Student toggleStudentSuspension(Long id) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+        
+        int nextStatus = student.getActiveStatus() == 1 ? 0 : 1;
+        student.setActiveStatus(nextStatus);
+        
+        // Also update CanteenWallet isActive status in real-time
+        canteenWalletRepository.findByStudentId(id).ifPresent(wallet -> {
+            wallet.setIsActive(nextStatus);
+            canteenWalletRepository.save(wallet);
+            realtimeEventPublisher.publish("WALLET_UPDATE", wallet);
+        });
+
+        Student saved = studentRepository.save(student);
+        
+        // Emit cross-module SSE event
+        String eventType = nextStatus == 1 ? "STUDENT_ACTIVATED" : "STUDENT_SUSPENDED";
+        realtimeEventPublisher.publish(eventType, saved);
+        realtimeEventPublisher.publish("SYSTEM_NOTIFICATION", 
+            String.format("[STUDENT-INFO -> VENDOR] Student %s (#%d) status changed to %s. Canteen wallet synced.", 
+                student.getFullName(), student.getId(), nextStatus == 1 ? "Active" : "Suspended"));
+        
+        return saved;
     }
 }
